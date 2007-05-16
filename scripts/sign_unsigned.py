@@ -13,6 +13,14 @@ import optparse
 import inspect
 import getpass
 
+# AbstractTool class
+#     parent for all classes, just to define the options only once
+#
+# Copyright (c) 2006 Red Hat
+#
+# Authors:
+#     Daniel Mach <dmach@redhat.com>
+
 class AbstractTool:
     def __init__(self):
         # create 'options' instance just once
@@ -24,6 +32,12 @@ class AbstractTool:
         self.options.debug = False
         self.options.show_time = False
         self.options.retries = 5
+
+# CliTool
+# Copyright (c) 2006 Red Hat
+#
+# Authors:
+#     Daniel Mach <dmach@redhat.com>
 
 class CliTool(AbstractTool):
 
@@ -281,6 +295,15 @@ class CliTool(AbstractTool):
         self.print_msg("ERROR: cannot run command '%s'!" % command.replace('_', '-'))
         self.print_msg("ERROR: There's definitely something wrong with the script, even the default command handler is missing!")
         sys.exit(1)
+
+# KojiTool class
+#     interface to Koji
+#
+# Copyright (c) 2007 Red Hat
+#
+# Authors:
+#     Daniel Mach <dmach@redhat.com>
+#     Jesse Keating <jkeating@redhat.com>
 
 class KojiTool(AbstractTool):
     def __init__(self,):
