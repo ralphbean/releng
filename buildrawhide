@@ -1,0 +1,37 @@
+#!/bin/sh
+
+# runs currently on xen6.fedora.phx.redhat.com
+# invoked by a script on porkchop.redhat.com (internal) that does the rsync afterwards
+# the chroot in /var/tmp/mash-root is premade (ick)
+
+DATE=$1
+
+[ -z "$DATE" ] && {
+	echo "usage: buildrawhide <date>"
+	exit 1
+}
+
+cp /home/fedora/notting/mash-latest.rpm /var/tmp/mash-root/tmp
+chroot /var/tmp/mash-root bash -- << EOF
+set -x
+yum -y upgrade
+yum -y install koji yum createrepo cvs make intltool findutils
+yum -y install /tmp/mash-latest.rpm
+
+OLD=$(find /mnt/koji/mash/ -maxdepth 1 -type d -name "rawhide-20*" 2>/dev/null| sort | tail -1)
+mkdir /tmp/mashbuild.$DATE
+cd /tmp/mashbuild.$DATE
+cvs -d :pserver:anonymous@cvs.fedora.redhat.com:/cvs/extras -z3 co comps && {
+	cd comps
+	make comps-f7.xml
+	cp comps-f7.xml ../comps.xml
+	cd ..
+}
+mkdir -p /mnt/koji/mash/rawhide-$DATE/logs
+mash -o /mnt/koji/mash/rawhide-$DATE --compsfile /tmp/mashbuild.$DATE/comps.xml development 2>&1 | tee /mnt/koji/mash/rawhide-$DATE/logs/mash.log
+rc=$?
+if [ $rc -eq 0 ]; then
+	[ -n "$OLD" ] && /usr/share/mash/treediff /mnt/koji/mash/rawhide-$DATE/development $OLD/development > /mnt/koji/mash/rawihde-$DATE/logs/treediff
+fi
+exit $rc
+EOF
