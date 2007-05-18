@@ -1,0 +1,5 @@
+To generate an upgrade check report, run this:
+
+sudo ./upgradecheck.py -c upgradecheck-core+extras.conf -n -w -x
+
+If you want to include packages they may be missing from F7 repos but are in F6 repos, add a -m parameter to the above.
