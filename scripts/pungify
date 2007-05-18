@@ -1,0 +1,76 @@
+#!/bin/sh
+
+# pungify - run pungi on a particular rawhide tree
+# needs passed:
+#	the tree version (usually a datestamp)
+#	the arch
+#	the hostname to connect to (can be user@host)
+#
+# Hosts must have valid mock development configs. More paths are hardcoded in this script than probably should be.
+
+TREE=$1
+
+ARCH=$2
+
+HOST=$3
+
+usage() {
+	echo "Usage: pungify <tree> <arch> <host>"
+	exit 1
+}	
+
+[ -z "$TREE" -o -z "$ARCH" -o -z "$HOST" ] && usage
+
+ssh $HOST /bin/bash -- << EOF
+	set -x
+	mock -r fedora-devel-$ARCH-core --uniqueext=$TREE init || exit 1
+	/usr/sbin/mock-helper yum --installroot /var/lib/mock/fedora-development-$ARCH-core-$TREE/root install pungi nfs-utils setarch || exit 1
+	cp /etc/resolv.conf /var/lib/mock/fedora-development-$ARCH-core-$TREE/root/tmp
+	mock -r fedora-devel-$ARCH-core --uniqueext=$TREE shell -- << EEE
+		set -x
+		cp /tmp/resolv.conf /etc/
+		mkdir -p /tmp/treebuild.$TREE/{output,cache,development}
+		cd /tmp/treebuild.$TREE
+		cat > pungi.conf << EOP
+[default]
+product_name = Fedora
+product_path = Fedora
+iso_basename = F
+bugurl = http://bugzilla.redhat.com
+comps = /etc/pungi/comps-fc7.xml 
+manifest = /etc/pungi/minimal-manifest
+yumconf = /etc/yum.conf
+destdir = /tmp/treebuild.$TREE/output
+cachedir = /tmp/treebuild.$TREE/cache
+arch = $ARCH
+version = development
+EOP
+		cat > /etc/yum.conf << EOY
+[main]
+pkgpolicy=newest
+distroverpkg=redhat-release
+tolerant=1
+exactarch=1
+obsoletes=1
+gpgcheck=0
+reposdir=/var/empty
+metadata_expire=1800
+
+[development]
+name=Fedora Core - Development
+baseurl=file:///tmp/treebuild.$TREE/development/$ARCH/os/
+enabled=1
+gpgcheck=0
+EOY
+		mount -t nfs -o ro,nolock ntap-fedora1.fedora.phx.redhat.com:/vol/fedora/build/koji/mash/rawhide-$TREE/development development
+		rm -f /var/lib/rpm/__db*
+		yum -y upgrade
+		mkdir -p output/development/$ARCH/os/repodata
+		ln -s /tmp/treebuild.$TREE/development/$ARCH/os/Fedora output/development/$ARCH/os/Fedora
+		pungi -c ./pungi.conf -B
+		umount development
+		rm -f /var/lib/rpm/__db*
+		rm -rf output/development/$ARCH/os/{Fedora,repodata}
+EEE
+EOF
+rsync -vae ssh $HOST /var/lib/mock/fedora-development-$ARCH-core-$TREE/root/tmp/treebuild.$TREE/development/$ARCH/os/ /mnt/koji/mash/rawhide-$TREE/development/$ARCH/os/
