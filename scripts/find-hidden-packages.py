@@ -92,7 +92,7 @@ def print_hidden_packages(session, tag, opts, pkg_list=None):
     main_top = {}       #latest by tag ordering
     if opts['verbose']:
         print "%s ..." % tag['name']
-    tagged_pkgs = session.listTagged(tag['id'])
+    tagged_pkgs = session.listTagged(tag['id'], latest=True)
     if opts['verbose']:
         print " [%d packages]" % len(tagged_pkgs)
     for pkg in tagged_pkgs:
@@ -108,7 +108,7 @@ def print_hidden_packages(session, tag, opts, pkg_list=None):
     for ctag in comp_tags:
         if opts['verbose']:
             print "%s ..." % ctag['name']
-        tagged_pkgs = session.listTagged(ctag[ctag_id_key])
+        tagged_pkgs = session.listTagged(ctag[ctag_id_key], latest=True)
         if opts['verbose']:
             print " [%d packages]" % len(tagged_pkgs)
         comp_latest[ctag['name']] = {}
