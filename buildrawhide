@@ -1,8 +1,8 @@
 #!/bin/sh
 
-# runs currently on xen6.fedora.phx.redhat.com
+# runs currently on app5.fedora.phx.redhat.com
 # invoked by a script on porkchop.redhat.com (internal) that does the rsync afterwards
-# the chroot in /var/tmp/mash-root is premade (ick)
+# the chroot in /mashroot is premade (ick)
 
 DATE=$1
 
@@ -11,8 +11,9 @@ DATE=$1
 	exit 1
 }
 
-cp /home/fedora/notting/mash-latest.rpm /var/tmp/mash-root/tmp
-chroot /var/tmp/mash-root bash -- << EOF
+cp /home/fedora/notting/mash-latest.rpm /mashroot/tmp
+mount -t nfs -o rw,defaults ntap-fedora1.fedora.phx.redhat.com:/vol/fedora/build/koji /mashroot/mnt/koji/
+chroot /mashroot bash -- << EOF
 set -x
 yum -y upgrade
 yum -y install koji yum createrepo cvs make intltool findutils
@@ -33,5 +34,9 @@ rc=$?
 if [ $rc -eq 0 ]; then
 	[ -n "$OLD" ] && /usr/share/mash/treediff /mnt/koji/mash/rawhide-$DATE/development $OLD/development > /mnt/koji/mash/rawihde-$DATE/logs/treediff
 fi
+rm -rf /tmp/mashbuild.$DATE
 exit $rc
 EOF
+rc=$?
+umount /mashroot/mnt/koji
+exit $rc
