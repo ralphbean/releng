@@ -39,4 +39,10 @@ exit $rc
 EOF
 rc=$?
 umount /mashroot/mnt/koji
+# hack
+# i386
+/home/fedora/notting/pungify $DATE i386 mock@hammer2 2>&1 | tee /mnt/koji/mash/rawhide-$DATE/logs/pungify-i386.log &
+/home/fedora/notting/pungify $DATE x86_64 mock@xenbuilder3 2>&1 | tee /mnt/koji/mash/rawhide-$DATE/logs/pungify-x86_64.log &
+/home/fedora/notting/pungify $DATE ppc mock@ppc2 2>&1 | tee /mnt/koji/mash/rawhide-$DATE/logs/pungify-ppc.log &
+wait
 exit $rc
