@@ -31,11 +31,11 @@ cvs -d :pserver:anonymous@cvs.fedora.redhat.com:/cvs/extras -z3 co comps && {
 mkdir -p /mnt/koji/mash/rawhide-$DATE/logs
 mash -o /mnt/koji/mash/rawhide-$DATE --compsfile /tmp/mashbuild.$DATE/comps.xml development 2>&1 | tee /mnt/koji/mash/rawhide-$DATE/logs/mash.log
 rc=$?
-if [ "$rc" = "0" ]; then
-	[ -n "$OLD" ] && /usr/share/mash/treediff /mnt/koji/mash/rawhide-$DATE/development $OLD/development > /mnt/koji/mash/rawihde-$DATE/logs/treediff
+if [ "\$rc" = "0" ]; then
+	[ -n "\$OLD" ] && /usr/share/mash/treediff /mnt/koji/mash/rawhide-$DATE/development \$OLD/development > /mnt/koji/mash/rawhide-$DATE/logs/treediff
 fi
 rm -rf /tmp/mashbuild.$DATE
-exit $rc
+exit \$rc
 EOF
 rc=$?
 umount /mashroot/mnt/koji

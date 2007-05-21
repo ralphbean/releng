@@ -21,7 +21,7 @@ usage() {
 
 [ -z "$TREE" -o -z "$ARCH" -o -z "$HOST" ] && usage
 
-ssh $HOST /bin/bash -- << EOF
+su mock -c "ssh $HOST /bin/bash --" << EOF
 	set -x
 	mock -r fedora-devel-$ARCH-core --uniqueext=$TREE init || exit 1
 	/usr/sbin/mock-helper yum --installroot /var/lib/mock/fedora-development-$ARCH-core-$TREE/root install pungi nfs-utils setarch || exit 1
@@ -75,7 +75,7 @@ EEE
 EOF
 # so, so wrong
 rsync -vae "ssh -i /var/lib/mock/.ssh/id_dsa" $HOST /var/lib/mock/fedora-development-$ARCH-core-$TREE/root/tmp/treebuild.$TREE/development/$ARCH/os/ /mnt/koji/mash/rawhide-$TREE/development/$ARCH/os/
-ssh $HOST /bin/bash -- << EOF
+su mock -c "ssh $HOST /bin/bash --" << EOF
 	set -x
 	mock -r fedora-devel-$ARCH-core --uniqueext=$TREE clean
 EOF
