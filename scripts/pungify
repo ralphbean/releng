@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -x
 
 # pungify - run pungi on a particular rawhide tree
 # needs passed:
