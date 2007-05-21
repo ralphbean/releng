@@ -39,10 +39,9 @@ exit \$rc
 EOF
 rc=$?
 umount /mashroot/mnt/koji
-# hack
-# i386
-/home/fedora/notting/pungify $DATE i386 mock@hammer2 2>&1 | tee /mnt/koji/mash/rawhide-$DATE/logs/pungify-i386.log &
-/home/fedora/notting/pungify $DATE x86_64 mock@xenbuilder3 2>&1 | tee /mnt/koji/mash/rawhide-$DATE/logs/pungify-x86_64.log &
-/home/fedora/notting/pungify $DATE ppc mock@ppc2 2>&1 | tee /mnt/koji/mash/rawhide-$DATE/logs/pungify-ppc.log &
+for arch in i386 x86_64 ppc ; do
+	HOST=$(koji list-hosts --quiet --ready --arch=$arch | sed 's|/| |g' | sort -gn -k4 -k5r | awk -F '.' '{ print $1 ; exit }')
+	/home/fedora/notting/pungify $DATE $arch mock@$HOST 2>&1 | tee /mnt/koji/mash/rawhide-$DATE/logs/pungify-$arch.log &
+done
 wait
 exit $rc
