@@ -74,7 +74,7 @@ EOY
 EEE
 EOF
 # so, so wrong
-rsync -vae "ssh -i /var/lib/mock/.ssh/id_dsa" $HOST /var/lib/mock/fedora-development-$ARCH-core-$TREE/root/tmp/treebuild.$TREE/development/$ARCH/os/ /mnt/koji/mash/rawhide-$TREE/development/$ARCH/os/
+rsync -vae "ssh -i /var/lib/mock/.ssh/id_dsa" $HOST:/var/lib/mock/fedora-development-$ARCH-core-$TREE/root/tmp/treebuild.$TREE/output/development/$ARCH/os/ /mnt/koji/mash/rawhide-$TREE/development/$ARCH/os/
 su mock -c "ssh $HOST /bin/bash --" << EOF
 	set -x
 	mock -r fedora-devel-$ARCH-core --uniqueext=$TREE clean
