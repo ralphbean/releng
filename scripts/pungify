@@ -67,8 +67,8 @@ EOY
 		yum -y upgrade
 		mkdir -p output/development/$ARCH/os/repodata
 		ln -s /tmp/treebuild.$TREE/development/$ARCH/os/Fedora output/development/$ARCH/os/Fedora
-		for f in 0 1 2 3 4 5 6 7 ; do
-			mknod /dev/loop$f b 7 $f
+		for minor in 0 1 2 3 4 5 6 7 ; do
+			mknod /dev/loop\\\$minor b 7 \\\$minor
 		done
 		pungi -c ./pungi.conf -B
 		umount development
