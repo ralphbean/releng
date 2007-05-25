@@ -30,6 +30,7 @@ su mock -c "ssh $HOST /bin/bash --" << EOF
 		set -x
 		cp /tmp/resolv.conf /etc/
 		mkdir -p /tmp/treebuild.$TREE/{output,cache,development}
+		touch /tmp/treebuild.$TREE/manifest
 		cd /tmp/treebuild.$TREE
 		cat > pungi.conf << EOP
 [default]
@@ -37,8 +38,8 @@ product_name = Fedora
 product_path = Fedora
 iso_basename = F
 bugurl = http://bugzilla.redhat.com
-comps = /etc/pungi/comps-fc7.xml 
-manifest = /etc/pungi/minimal-manifest
+comps = /etc/pungi/comps-f7.xml 
+manifest = /tmp/treebuild.$TREE/manifest
 yumconf = /etc/yum.conf
 destdir = /tmp/treebuild.$TREE/output
 cachedir = /tmp/treebuild.$TREE/cache
