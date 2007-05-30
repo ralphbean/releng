@@ -11,21 +11,21 @@ DATE=$1
 	exit 1
 }
 
-cp /home/fedora/notting/mash-latest.rpm /mashroot/tmp
 mount -t nfs -o rw,defaults ntap-fedora1.fedora.phx.redhat.com:/vol/fedora/build/koji /mashroot/mnt/koji/
 chroot /mashroot bash -- << EOF
 set -x
+# we want clean config files
+yum -y remove mash
 yum -y upgrade
-yum -y install koji yum createrepo cvs make intltool findutils
-yum -y install /tmp/mash-latest.rpm
+yum -y install koji yum createrepo cvs make intltool findutils mash
 
 OLD=$(find /mnt/koji/mash/ -maxdepth 1 -type d -name "rawhide-20*" 2>/dev/null| sort | tail -1)
 mkdir /tmp/mashbuild.$DATE
 cd /tmp/mashbuild.$DATE
 cvs -d :pserver:anonymous@cvs.fedora.redhat.com:/cvs/extras -z3 co comps && {
 	cd comps
-	make comps-f7.xml
-	cp comps-f7.xml ../comps.xml
+	make comps-f8.xml
+	cp comps-f8.xml ../comps.xml
 	cd ..
 }
 mkdir -p /mnt/koji/mash/rawhide-$DATE/logs
