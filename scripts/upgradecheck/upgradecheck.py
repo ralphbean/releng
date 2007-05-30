@@ -107,16 +107,26 @@ class MySolver(yum.YumBase):
 def evrstr(evr):
     return evr and "%s:%s-%s" % evr or "(missing)"
 
-def koji_get_info(name, report, tags=["dist-fc7", "f7-final", "dist-fc7-updates-candidate"]):
+def koji_get_info(name, report, pkg_evr, tags=["dist-fc7", "f7-final", "dist-fc7-updates-candidate"]):
     koji_server = "http://koji.fedoraproject.org/kojihub"
     koji_session = koji.ClientSession(koji_server, {})
     fmt = "     %(nvr)-40s %(tag_name)-20s %(owner_name)s"
 
     for tag in tags:
         pkg = koji_session.getLatestBuilds(tag, package=name);
-        output = [ fmt % x for x in pkg ]
-        for line in output:
-            report.append(line)
+        if len(pkg) == 0:
+            continue
+        evr = ()
+        e = u'0'
+        if pkg[0]['epoch']:
+            e = u'%s' % pkg[0]['epoch']
+        v = u'%s' % pkg[0]['version']
+        r = u'%s' % pkg[0]['release']
+        evr = e, v, r
+        if compareEVR(evr, pkg_evr) > 0:
+            output = [ fmt % x for x in pkg ]
+            for line in output:
+                report.append(line)
 
 def main():
     (opts, cruft) = parseArgs()
@@ -208,7 +218,7 @@ def main():
                         missing = "%s %s %s not in next repo" % \
                         (name, evrstr(curr["evr"]), curr["repo"])
                         missing_report.append(missing)
-                        koji_get_info(name, missing_report)
+                        koji_get_info(name, missing_report, pkg_evr = curr["evr"])
                         missing_report.append("")
                     continue
 
@@ -240,7 +250,7 @@ def main():
                         evrstr(broken[0]["evr"]), evrstr(broken[1]["evr"]))
                 reports[owner].append(what)
                 report.append(what)
-                koji_get_info(name, report)
+                koji_get_info(name, report, pkg_evr = broken[1]["evr"])
             reports[owner].append("")
             report.append("")
 
