@@ -33,6 +33,7 @@ mash -o /mnt/koji/mash/rawhide-$DATE --compsfile /tmp/mashbuild.$DATE/comps.xml 
 rc=$?
 if [ "\$rc" = "0" ]; then
 	[ -n "\$OLD" ] && /usr/share/mash/treediff /mnt/koji/mash/rawhide-$DATE/development \$OLD/development > /mnt/koji/mash/rawhide-$DATE/logs/treediff
+	/usr/share/mash/spam-o-matic /mnt/koji/mash/rawhide-$DATE/development >/mnt/koji/mash/rawhide-$DATE/logs/depcheck
 fi
 rm -rf /tmp/mashbuild.$DATE
 exit \$rc
