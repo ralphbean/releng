@@ -17,7 +17,7 @@ set -x
 # we want clean config files
 yum -y remove mash
 yum -y upgrade
-yum -y install koji yum createrepo cvs make intltool findutils mash
+yum -y install koji yum createrepo cvs make intltool findutils mash yum-utils
 
 OLD=$(find /mnt/koji/mash/ -maxdepth 1 -type d -name "rawhide-20*" 2>/dev/null| sort | tail -1)
 mkdir /tmp/mashbuild.$DATE
