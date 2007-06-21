@@ -13,23 +13,22 @@ DATE=$1
 
 mount -t nfs -o rw,defaults ntap-fedora1.fedora.phx.redhat.com:/vol/fedora/build/koji /mashroot/mnt/koji/
 /usr/sbin/chroot /mashroot bash -- << EOF
-set -x
 # we want clean config files
-yum -y remove mash
-yum -y upgrade
-yum -y install koji yum createrepo cvs make intltool findutils mash yum-utils
+yum -y remove mash >/dev/null
+yum -y upgrade > /dev/null
+yum -y install koji yum createrepo cvs make intltool findutils mash yum-utils >/dev/null
 
 OLD=$(find /mnt/koji/mash/ -maxdepth 1 -type d -name "rawhide-20*" 2>/dev/null| sort | tail -1)
 mkdir /tmp/mashbuild.$DATE
 cd /tmp/mashbuild.$DATE
-cvs -d :pserver:anonymous@cvs.fedora.redhat.com:/cvs/extras -z3 co comps && {
+cvs -d :pserver:anonymous@cvs.fedora.redhat.com:/cvs/extras -z3 -q co comps && {
 	cd comps
 	make comps-f8.xml
 	cp comps-f8.xml ../comps.xml
 	cd ..
 }
 mkdir -p /mnt/koji/mash/rawhide-$DATE/logs
-mash -o /mnt/koji/mash/rawhide-$DATE --compsfile /tmp/mashbuild.$DATE/comps.xml development 2>&1 | tee /mnt/koji/mash/rawhide-$DATE/logs/mash.log
+mash -o /mnt/koji/mash/rawhide-$DATE --compsfile /tmp/mashbuild.$DATE/comps.xml development > /mnt/koji/mash/rawhide-$DATE/logs/mash.log 2>&1
 rc=$?
 if [ "\$rc" = "0" ]; then
 	[ -n "\$OLD" ] && /usr/share/mash/treediff /mnt/koji/mash/rawhide-$DATE/development \$OLD/development > /mnt/koji/mash/rawhide-$DATE/logs/treediff
@@ -42,7 +41,7 @@ rc=$?
 umount /mashroot/mnt/koji
 for arch in i386 x86_64 ppc ; do
 	HOST=$(koji list-hosts --quiet --ready --arch=$arch | sed 's|/| |g' | sort -gn -k4 -k5r | awk -F '.' '{ print $1 ; exit }')
-	/home/fedora/notting/pungify $DATE $arch mock@$HOST 2>&1 | tee /mnt/koji/mash/rawhide-$DATE/logs/pungify-$arch.log &
+	/home/fedora/notting/pungify $DATE $arch mock@$HOST > /mnt/koji/mash/rawhide-$DATE/logs/pungify-$arch.log 2>&1 &
 done
 wait
 exit $rc
