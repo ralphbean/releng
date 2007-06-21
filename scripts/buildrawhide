@@ -12,7 +12,7 @@ DATE=$1
 }
 
 mount -t nfs -o rw,defaults ntap-fedora1.fedora.phx.redhat.com:/vol/fedora/build/koji /mashroot/mnt/koji/
-chroot /mashroot bash -- << EOF
+/usr/sbin/chroot /mashroot bash -- << EOF
 set -x
 # we want clean config files
 yum -y remove mash
