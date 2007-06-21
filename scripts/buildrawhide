@@ -16,7 +16,7 @@ mount -t nfs -o rw,defaults ntap-fedora1.fedora.phx.redhat.com:/vol/fedora/build
 # we want clean config files
 yum -y remove mash >/dev/null
 yum -y upgrade > /dev/null
-yum -y install koji yum createrepo cvs make intltool findutils mash yum-utils >/dev/null
+yum -y install koji yum createrepo cvs make intltool findutils mash yum-utils /bin/mail >/dev/null
 
 OLD=$(find /mnt/koji/mash/ -maxdepth 1 -type d -name "rawhide-20*" 2>/dev/null| sort | tail -1)
 mkdir /tmp/mashbuild.$DATE
