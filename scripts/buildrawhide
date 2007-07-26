@@ -28,20 +28,19 @@ cvs -d :pserver:anonymous@cvs.fedora.redhat.com:/cvs/extras -z3 -q co comps && {
 	cd ..
 }
 mkdir -p /mnt/koji/mash/rawhide-$DATE/logs
-mash -o /mnt/koji/mash/rawhide-$DATE --compsfile /tmp/mashbuild.$DATE/comps.xml development > /mnt/koji/mash/rawhide-$DATE/logs/mash.log 2>&1
-rc=$?
-if [ "\$rc" = "0" ]; then
-	[ -n "\$OLD" ] && /usr/share/mash/treediff /mnt/koji/mash/rawhide-$DATE/development \$OLD/development > /mnt/koji/mash/rawhide-$DATE/logs/treediff
-	/usr/share/mash/spam-o-matic /mnt/koji/mash/rawhide-$DATE/development >/mnt/koji/mash/rawhide-$DATE/logs/depcheck
-fi
+mash -o /mnt/koji/mash/rawhide-$DATE --compsfile /tmp/mashbuild.$DATE/comps.xml development > /mnt/koji/mash/rawhide-$DATE/logs/mash.log 2>&1 || exit 1
+[ -n "\$OLD" ] && /usr/share/mash/treediff /mnt/koji/mash/rawhide-$DATE/development \$OLD/development > /mnt/koji/mash/rawhide-$DATE/logs/treediff
+/usr/share/mash/spam-o-matic /mnt/koji/mash/rawhide-$DATE/development >/mnt/koji/mash/rawhide-$DATE/logs/depcheck
 rm -rf /tmp/mashbuild.$DATE
-exit \$rc
+exit 0
 EOF
 rc=$?
 umount /mashroot/mnt/koji
-for arch in i386 x86_64 ppc ; do
-	HOST=$(koji list-hosts --quiet --ready --arch=$arch | sed 's|/| |g' | sort -gn -k4 -k5r | awk -F '.' '{ print $1 ; exit }')
-	/home/fedora/notting/pungify $DATE $arch mock@$HOST > /mnt/koji/mash/rawhide-$DATE/logs/pungify-$arch.log 2>&1 &
-done
-wait
+if [ "$rc" = "0" ]; then
+	for arch in i386 x86_64 ppc ; do
+		HOST=$(koji list-hosts --quiet --ready --arch=$arch | sed 's|/| |g' | sort -gn -k4 -k5r | awk -F '.' '{ print $1 ; exit }')
+		/home/fedora/notting/pungify $DATE $arch mock@$HOST > /mnt/koji/mash/rawhide-$DATE/logs/pungify-$arch.log 2>&1 &
+	done
+	wait
+fi
 exit $rc
