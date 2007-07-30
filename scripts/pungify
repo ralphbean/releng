@@ -26,7 +26,7 @@ su mock -c "ssh $HOST /bin/bash --" << EOF
 	mock -r fedora-devel-$ARCH-core --uniqueext=$TREE init || exit 1
 	/usr/sbin/mock-helper yum --installroot /var/lib/mock/fedora-development-$ARCH-core-$TREE/root install pungi nfs-utils setarch || exit 1
 	cp /etc/resolv.conf /var/lib/mock/fedora-development-$ARCH-core-$TREE/root/tmp
-	mock -r fedora-devel-$ARCH-core --uniqueext=$TREE shell -- << EEE
+	setarch $ARCH mock -r fedora-devel-$ARCH-core --uniqueext=$TREE shell -- << EEE
 		set -x
 		cp /tmp/resolv.conf /etc/
 		mkdir -p /tmp/treebuild.$TREE/{output,cache,development}
