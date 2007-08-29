@@ -30,23 +30,9 @@ su mock -c "ssh $HOST /bin/bash --" << EOF
 		set -x
 		cp /tmp/resolv.conf /etc/
 		mkdir -p /tmp/treebuild.$TREE/{output,cache,development}
-		touch /tmp/treebuild.$TREE/manifest
 		cd /tmp/treebuild.$TREE
-		cat > pungi.conf << EOP
-[default]
-product_name = Fedora
-product_path = Fedora
-iso_basename = F
-bugurl = http://bugzilla.redhat.com
-comps = /etc/pungi/comps-f8.xml
-manifest = /tmp/treebuild.$TREE/manifest
-yumconf = /etc/yum.conf
-destdir = /tmp/treebuild.$TREE/output
-cachedir = /tmp/treebuild.$TREE/cache
-arch = $ARCH
-version = development
-EOP
-		cat > /etc/yum.conf << EOY
+		touch rawhide.ks
+                cat > /etc/yum.conf << EOY
 [main]
 pkgpolicy=newest
 distroverpkg=redhat-release
@@ -67,19 +53,20 @@ EOY
 		rm -f /var/lib/rpm/__db*
 		yum -y upgrade
 		mkdir -p output/development/$ARCH/os/
-		ln -s /tmp/treebuild.$TREE/development/$ARCH/os/Fedora output/development/$ARCH/os/Fedora
+		ln -s /tmp/treebuild.$TREE/development/$ARCH/os/Packages output/development/$ARCH/os/Packages
 		ln -s /tmp/treebuild.$TREE/development/$ARCH/os/repodata output/development/$ARCH/os/repodata
 		for minor in 0 1 2 3 4 5 6 7 ; do
 			mknod /dev/loop\\\$minor b 7 \\\$minor
 		done
-		pungi -c ./pungi.conf -B
+		pungi -c ./rawhide.ks -B --destdir /tmp/treebuild.$TREE/output --cachedir /tmp/treebuild.$TREE/cache --ver development
 		umount development
 		rm -f /var/lib/rpm/__db*
-		rm -rf output/development/$ARCH/os/{Fedora,repodata}
+		rm -rf output/development/$ARCH/os/{Packages,repodata}
 EEE
 EOF
 # so, so wrong
 rsync -vae "ssh -i /var/lib/mock/.ssh/id_dsa" $HOST:/var/lib/mock/fedora-development-$ARCH-core-$TREE/root/tmp/treebuild.$TREE/output/development/$ARCH/os/ /mnt/koji/mash/rawhide-$TREE/development/$ARCH/os/
+rsync -vae "ssh -i /var/lib/mock/.ssh/id_dsa" $HOST:/var/lib/mock/fedora-development-$ARCH-core-$TREE/root/tmp/treebuild.$TREE/output/logs/* /mnt/koji/mash/rawhide-$TREE/logs/
 su mock -c "ssh $HOST /bin/bash --" << EOF
 	set -x
 	mock -r fedora-devel-$ARCH-core --uniqueext=$TREE clean
