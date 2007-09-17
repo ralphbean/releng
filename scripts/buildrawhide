@@ -28,6 +28,11 @@ cvs -d :pserver:anonymous@cvs.fedora.redhat.com:/cvs/extras -z3 -q co comps && {
 	cd ..
 }
 mkdir -p /mnt/koji/mash/rawhide-$DATE/logs
+for dir in $OLD/development/*
+  do
+  rsync -aR `dirname $dir`/./`basename $dir`/os/repodata /mnt/koji/mash/rawhide-$DATE/development/
+  rsync -aR `dirname $dir`/./`basename $dir`/os/repoview /mnt/koji/mash/rawhide-$DATE/development/
+done
 mash -o /mnt/koji/mash/rawhide-$DATE --compsfile /tmp/mashbuild.$DATE/comps.xml development > /mnt/koji/mash/rawhide-$DATE/logs/mash.log 2>&1 || exit 1
 [ -n "\$OLD" ] && /usr/share/mash/treediff /mnt/koji/mash/rawhide-$DATE/development \$OLD/development > /mnt/koji/mash/rawhide-$DATE/logs/treediff
 /usr/share/mash/spam-o-matic /mnt/koji/mash/rawhide-$DATE/development >/mnt/koji/mash/rawhide-$DATE/logs/depcheck
