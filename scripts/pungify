@@ -14,8 +14,6 @@ ARCH=$2
 
 HOST=$3
 
-Hi there.
-
 usage() {
 	echo "Usage: pungify <tree> <arch> <host>"
 	exit 1
