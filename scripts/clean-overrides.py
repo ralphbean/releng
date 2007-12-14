@@ -15,17 +15,27 @@ import sys
 
 def usage():
     print """
-    override-cleanup.py overridetag updatetag
+    clean-overrides.py overridetag updatetag
     """
 
 def compare(pkgA, pkgB):
     pkgdictA = koji.parse_NVR(pkgA)
     pkgdictB = koji.parse_NVR(pkgB)
 
-    rc = rpm.labelCompare(('0', pkgdictA['version'], pkgdictA['release']),
-                         ('0', pkgdictB['version'], pkgdictB['release']))
+    rc = rpm.labelCompare((pkgdictA['epoch'], pkgdictA['version'], pkgdictA['release']),
+                         (pkgdictB['epoch'], pkgdictB['version'], pkgdictB['release']))
 
     return rc
+
+def buildToNvr(build):
+    if build['epoch']:
+        return '%s:%s' % (build['epoch'], build['nvr'])
+    else:
+        return build['nvr']
+
+def printBuild(build):
+    pkgdict = koji.parse_NVR(build)
+    return '%s-%s-%s' % (pkgdict['name'], pkgdict['version'], pkgdict['release'])
 
 if len(sys.argv) > 1 and sys.argv[1] in ['-h', '--help', '-help', '--usage']:
     usage()
@@ -46,15 +56,15 @@ equal = []
 older = []
 
 for build in f7stables:
-    stabledict[build['package_id']] = build['nvr']
+    stabledict[build['package_id']] = buildToNvr(build)
 
 for build in f7overrides:
     if build['package_id'] in stabledict.keys():
-        rc = compare(build['nvr'], stabledict[build['package_id']])
+        rc = compare(buildToNvr(build), stabledict[build['package_id']])
         if rc == 0:
-            equal.append(build['nvr'])
+            equal.append(buildToNvr(build))
         if rc < 0:
-            older.append(build['nvr'])
+            older.append(buildToNvr(build))
 
 if equal:
     print "Builds that exist both in %s and %s:" % (overtag, updatetag)
@@ -69,4 +79,4 @@ if older:
     print ""
 
 if equal or older:
-    print "Suggest: koji untag-pkg --force %s %s %s" % (overtag, ' '.join(equal), ' '.join(older))
+    print "Suggest: koji untag-pkg --force %s %s %s" % (overtag, ' '.join([printBuild(e) for e in equal]), ' '.join([printBuild(o) for o in older]))
