@@ -23,16 +23,14 @@ usage() {
 
 su mock -c "ssh $HOST /bin/bash --" << EOF
 	set -x
-	mock -r fedora-devel-$ARCH-core --uniqueext=$TREE init || exit 1
-	/usr/sbin/mock-helper yum --installroot /var/lib/mock/fedora-development-$ARCH-core-$TREE/root install pungi nfs-utils setarch || exit 1
-	cp /etc/resolv.conf /var/lib/mock/fedora-development-$ARCH-core-$TREE/root/tmp
-	setarch $ARCH mock -r fedora-devel-$ARCH-core --uniqueext=$TREE shell -- << EEE
-		set -x
-		cp /tmp/resolv.conf /etc/
-		mkdir -p /tmp/treebuild.$TREE/{output,cache,development}
-		cd /tmp/treebuild.$TREE
-		touch rawhide.ks
-                cat > /etc/yum.conf << EOY
+	mock -r fedora-devel-pungi-$ARCH --uniqueext=$TREE --init || exit 1
+	mock -r fedora-devel-pungi-$ARCH --uniqueext=$TREE --install pungi nfs-utils setarch || exit 1
+	mock -r fedora-devel-pungi-$ARCH --uniqueext=$TREE --arch $ARCH shell -- << EEE
+set -x
+mkdir -p /tmp/treebuild.$TREE/{output,cache,development}
+cd /tmp/treebuild.$TREE
+touch rawhide.ks
+cat > /etc/yum.conf << EOY
 [main]
 pkgpolicy=newest
 distroverpkg=redhat-release
@@ -44,30 +42,27 @@ reposdir=/var/empty
 metadata_expire=1800
 
 [development]
-name=Fedora Core - Development
+name=Fedora - Development
 baseurl=file:///tmp/treebuild.$TREE/development/$ARCH/os/
 enabled=1
 gpgcheck=0
 EOY
-		mount -t nfs -o ro,nolock ntap-fedora1.fedora.phx.redhat.com:/vol/fedora/build/koji/mash/rawhide-$TREE/development development
-		rm -f /var/lib/rpm/__db*
-		yum -y upgrade
-		mkdir -p output/development/$ARCH/os/
-		ln -s /tmp/treebuild.$TREE/development/$ARCH/os/Packages output/development/$ARCH/os/Packages
-		ln -s /tmp/treebuild.$TREE/development/$ARCH/os/repodata output/development/$ARCH/os/repodata
-		for minor in 0 1 2 3 4 5 6 7 ; do
-			mknod /dev/loop\\\$minor b 7 \\\$minor
-		done
-		pungi -c ./rawhide.ks -B --destdir /tmp/treebuild.$TREE/output --cachedir /tmp/treebuild.$TREE/cache --ver development
-		umount development
-		rm -f /var/lib/rpm/__db*
-		rm -rf output/development/$ARCH/os/{Packages,repodata}
+mount -t nfs -o ro,nolock ntap-fedora1.fedora.phx.redhat.com:/vol/fedora/build/koji/mash/rawhide-$TREE/development development
+rm -f /var/lib/rpm/__db*
+yum -y upgrade
+mkdir -p output/development/$ARCH/os/
+ln -s /tmp/treebuild.$TREE/development/$ARCH/os/Packages output/development/$ARCH/os/Packages
+ln -s /tmp/treebuild.$TREE/development/$ARCH/os/repodata output/development/$ARCH/os/repodata
+pungi -c ./rawhide.ks -B --destdir /tmp/treebuild.$TREE/output --cachedir /tmp/treebuild.$TREE/cache --ver development
+umount development
+rm -f /var/lib/rpm/__db*
+rm -rf output/development/$ARCH/os/{Packages,repodata}
 EEE
 EOF
 # so, so wrong
-rsync -vae "ssh -i /var/lib/mock/.ssh/id_dsa" $HOST:/var/lib/mock/fedora-development-$ARCH-core-$TREE/root/tmp/treebuild.$TREE/output/development/$ARCH/os/ /mnt/koji/mash/rawhide-$TREE/development/$ARCH/os/
-rsync -vae "ssh -i /var/lib/mock/.ssh/id_dsa" $HOST:/var/lib/mock/fedora-development-$ARCH-core-$TREE/root/tmp/treebuild.$TREE/output/logs/* /mnt/koji/mash/rawhide-$TREE/logs/
+rsync -vae "ssh -i /var/lib/mock/.ssh/id_dsa" $HOST:/var/lib/mock/fedora-development-pungi-$ARCH-$TREE/root/tmp/treebuild.$TREE/output/development/$ARCH/os/ /mnt/koji/mash/rawhide-$TREE/development/$ARCH/os/
+rsync -vae "ssh -i /var/lib/mock/.ssh/id_dsa" $HOST:/var/lib/mock/fedora-development-pungi-$ARCH-$TREE/root/tmp/treebuild.$TREE/output/logs/* /mnt/koji/mash/rawhide-$TREE/logs/
 su mock -c "ssh $HOST /bin/bash --" << EOF
 	set -x
-	mock -r fedora-devel-$ARCH-core --uniqueext=$TREE clean
+	mock -r fedora-devel-pungi-$ARCH --uniqueext=$TREE clean
 EOF
