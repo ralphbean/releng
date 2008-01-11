@@ -23,8 +23,8 @@ mkdir /tmp/mashbuild.$DATE
 cd /tmp/mashbuild.$DATE
 cvs -d :pserver:anonymous@cvs.fedora.redhat.com:/cvs/extras -z3 -q co comps && {
 	cd comps
-	make comps-f8.xml
-	cp comps-f8.xml ../comps.xml
+	make comps-f9.xml
+	cp comps-f9.xml ../comps.xml
 	cd ..
 }
 mkdir -p /mnt/koji/mash/rawhide-$DATE/logs
