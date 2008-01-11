@@ -1,8 +1,7 @@
 #!/bin/sh
 
-# runs currently on app5.fedora.phx.redhat.com
+# runs currently on releng1.fedora.phx.redhat.com
 # invoked by a script on porkchop.redhat.com (internal) that does the rsync afterwards
-# the chroot in /mashroot is premade (ick)
 
 DATE=$1
 
@@ -11,49 +10,34 @@ DATE=$1
 	exit 1
 }
 
-mount -t nfs -o rw,defaults ntap-fedora1.fedora.phx.redhat.com:/vol/fedora/build/koji /mashroot/mnt/koji/
-/usr/sbin/chroot /mashroot bash -- << EOF
-# we want clean config files
-yum -y remove mash >/dev/null
-yum -y upgrade > /dev/null
-yum -y install koji yum createrepo cvs make intltool findutils mash yum-utils rsync repoview /bin/mail >/dev/null
-
 OLD=$(find /mnt/koji/mash/ -maxdepth 1 -type d -name "rawhide-20*" 2>/dev/null| sort | tail -1)
+
 mkdir /tmp/mashbuild.$DATE
-cd /tmp/mashbuild.$DATE
-cvs -d :pserver:anonymous@cvs.fedora.redhat.com:/cvs/extras -z3 -q co comps && {
-	cd comps
-	make comps-f9.xml
-	cp comps-f9.xml ../comps.xml
-	cd ..
-}
 mkdir -p /mnt/koji/mash/rawhide-$DATE/logs
-for dir in $OLD/development/* ; do
-	arch=${dir##*/}
-	if [ -d "$dir/os" ] ; then
-   		mkdir -p /mnt/koji/mash/rawhide-$DATE/development/$arch/os/
-  		rsync -va $dir/os/repodata /mnt/koji/mash/rawhide-$DATE/development/$arch/os/
-  		rsync -va $dir/os/repoview /mnt/koji/mash/rawhide-$DATE/development/$arch/os/
-  	elif [ -d "$dir/SRPMS" ]; then
-  		mkdir -p /mnt/koji/mash/rawhide-$DATE/development/source/SRPMS/
-  		rsync -va $dir/os/repodata /mnt/koji/mash/rawhide-$DATE/development/source/SRPMS/
-  		rsync -va $dir/os/repoview /mnt/koji/mash/rawhide-$DATE/development/source/SRPMS/
-  	fi
-done
-mash -o /mnt/koji/mash/rawhide-$DATE --compsfile /tmp/mashbuild.$DATE/comps.xml development > /mnt/koji/mash/rawhide-$DATE/logs/mash.log 2>&1 || exit 1
-[ -n "\$OLD" ] && /usr/share/mash/treediff /mnt/koji/mash/rawhide-$DATE/development \$OLD/development > /mnt/koji/mash/rawhide-$DATE/logs/treediff &
-/usr/share/mash/spam-o-matic /mnt/koji/mash/rawhide-$DATE/development >/mnt/koji/mash/rawhide-$DATE/logs/depcheck &
-rm -rf /tmp/mashbuild.$DATE
-wait
-exit 0
-EOF
-rc=$?
-umount /mashroot/mnt/koji
-if [ "$rc" = "0" ]; then
-	for arch in i386 x86_64 ppc ; do
-		HOST=$(koji list-hosts --quiet --enabled --ready --arch=$arch | sed 's|/| |g' | sort -gn -k4 -k5r | awk -F '.' '{ print $1 ; exit }')
-		/home/fedora/notting/pungify $DATE $arch mock@$HOST > /mnt/koji/mash/rawhide-$DATE/logs/pungify-$arch.log 2>&1 &
-	done
-	wait
+pushd /tmp/mashbuild.$DATE
+cvs -d :pserver:anonymous@cvs.fedora.redhat.com:/cvs/pkgs -z3 -q co comps && {
+	pushd comps
+	make comps-rawhide.xml
+	cp comps-rawhide.xml /mnt/koji/mash/rawhide-$DATE/logs/
+	popd
+}
+popd
+
+mock -r fedora-rawhide-x86_64 --init
+mock -r fedora-rawhide-x86_64 --no-clean --install koji yum createrepo cvs make intltool findutils mash yum-utils rsync repoview
+mock -r fedora-rawhide-x86_64 --shell "mash -o /mnt/koji/mash/rawhide-$DATE --compsfile /mnt/koji/mash/rawhide-$DATE/logs/comps-rawhide.xml development > /mnt/koji/mash/rawhide-$DATE/logs/mash.log 2>&1" || exit 1
+
+if [ -n "\$OLD" ]:
+  then
+  mock -r fedora-rawhide-x86_64 --shell "/usr/share/mash/treediff /mnt/koji/mash/rawhide-$DATE/development \$OLD/development > /mnt/koji/mash/rawhide-$DATE/logs/treediff"
 fi
-exit $rc
+
+mock -r fedora-rawhide-x86_64 --shell "/usr/share/mash/spam-o-matic /mnt/koji/mash/rawhide-$DATE/development >/mnt/koji/mash/rawhide-$DATE/logs/depcheck" &
+
+for arch in i386 x86_64 ppc ; do
+    HOST=$(koji list-hosts --quiet --enabled --ready --arch=$arch | sed 's|/| |g' | sort -gn -k4 -k5r | awk -F '.' '{ print $1 ; exit }')
+    /home/fedora/notting/pungify $DATE $arch mock@$HOST > /mnt/koji/mash/rawhide-$DATE/logs/pungify-$arch.log 2>&1 &
+    done
+
+wait
+mock -r fedora-rawhide-x86_64 --clean
