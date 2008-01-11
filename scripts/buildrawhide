@@ -17,7 +17,7 @@ mkdir -p /mnt/koji/mash/rawhide-$DATE/logs
 pushd /tmp/mashbuild.$DATE
 cvs -d :pserver:anonymous@cvs.fedora.redhat.com:/cvs/pkgs -z3 -q co comps && {
 	pushd comps
-	make comps-rawhide.xml
+	make comps-rawhide
 	cp comps-rawhide.xml /mnt/koji/mash/rawhide-$DATE/logs/
 	popd
 }
