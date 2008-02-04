@@ -24,6 +24,9 @@ for build in tocheck:
         if build in needbuild:
             continue
         if task['method'] == 'buildArch':
+            if task['arch'] == 'noarch':
+                print "noarch build, skipping task", task['id']
+                continue
             for rootid in kojisession.listBuildroots(taskID=task['id']):
                 for pkg in kojisession.listRPMs(componentBuildrootID=rootid['id']):
                     if pkg['name'] == 'gcc':
