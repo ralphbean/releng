@@ -20,6 +20,9 @@ checknum = len(tocheck)
 
 for build in tocheck:
     print "Checking %s (%s of %s)" % (build['nvr'], tocheck.index(build)+1, checknum)
+    if not build['task_id']:
+        needbuild.append(build)
+        continue
     for task in kojisession.getTaskChildren(build['task_id']):
         if build in needbuild:
             continue
