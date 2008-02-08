@@ -9,8 +9,13 @@ kojisession = koji.ClientSession('http://koji.fedoraproject.org/kojihub')
 tocheck = []
 needbuild = []
 reallyneedbuild = []
+ownermap = {}
 
 f9builds = kojisession.listTagged('dist-f9', inherit=True, latest=True)
+pkgs = kojisession.listPackages('dist-f9', inherited=True)
+
+for pkg in pkgs:
+    ownermap[pkg['package_name']] = pkg['owner_name']
 
 for build in f9builds:
     if build['creation_time'] < '2008-01-30 15:22:10.000000':
@@ -44,7 +49,7 @@ rebuildnames = []
 for build in needbuild:
     if not build in reallyneedbuild:
         reallyneedbuild.append(build)
-        rebuildnames.append(build['name'])
+        rebuildnames.append("%s %s" % (ownermap[build['name']], build['name']))
 
 rebuildnames.sort()
 for build in rebuildnames:
