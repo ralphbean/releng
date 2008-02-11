@@ -4,12 +4,15 @@
 # Edit to suit.
 
 import koji
+import datetime
 
 kojisession = koji.ClientSession('http://koji.fedoraproject.org/kojihub')
 tocheck = []
 needbuild = []
 reallyneedbuild = []
 ownermap = {}
+
+print datetime.datetime.isoformat(datetime.datetime.utcnow())
 
 f9builds = kojisession.listTagged('dist-f9', inherit=True, latest=True)
 pkgs = kojisession.listPackages('dist-f9', inherited=True)
