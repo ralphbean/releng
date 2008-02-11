@@ -28,7 +28,7 @@ for build in tocheck:
     if not build['task_id']:
         rpms = kojisession.listRPMs(buildID=build['build_id'])
         for rpm in rpms:
-            if rpm['arch'] != 'src' or rpm['arch'] != 'noarch':
+            if rpm['arch'] != 'src' and rpm['arch'] != 'noarch':
                 needbuild.append(build)
                 continue
         continue
