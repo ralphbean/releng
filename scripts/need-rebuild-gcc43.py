@@ -6,6 +6,11 @@
 import koji
 import datetime
 
+## releng folks, update the blacklist below for packages that the maintainer
+## wishes to opt-out of autorebuilding.
+
+blacklist = []
+
 kojisession = koji.ClientSession('http://koji.fedoraproject.org/kojihub')
 tocheck = []
 needbuild = []
@@ -27,6 +32,8 @@ for build in f9builds:
 checknum = len(tocheck)
 
 for build in tocheck:
+    if build['name'] in blacklist:
+        continue
     print "Checking %s (%s of %s)" % (build['nvr'], tocheck.index(build)+1, checknum)
     if not build['task_id']:
         rpms = kojisession.listRPMs(buildID=build['build_id'])
