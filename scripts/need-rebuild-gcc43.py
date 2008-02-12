@@ -9,7 +9,7 @@ import datetime
 ## releng folks, update the blacklist below for packages that the maintainer
 ## wishes to opt-out of autorebuilding.
 
-blacklist = ['thunderbird','banshee','epiphany','epiphany-extensions','libipoddevice','malaga-suomi-voikko']
+blacklist = ['thunderbird','banshee','epiphany','epiphany-extensions','libipoddevice','malaga-suomi-voikko','bless']
 
 kojisession = koji.ClientSession('http://koji.fedoraproject.org/kojihub')
 tocheck = []
