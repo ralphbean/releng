@@ -47,7 +47,7 @@ baseurl=file:///tmp/treebuild.$TREE/development/$ARCH/os/
 enabled=1
 gpgcheck=0
 EOY
-mount -t nfs -o ro,nolock ntap-fedora1.fedora.phx.redhat.com:/vol/fedora/build/koji/mash/rawhide-$TREE/development development
+mount -t nfs -o ro,nolock xen2.fedora.phx.redhat.com:/mnt/koji/mash/rawhide-$TREE/development development
 rm -f /var/lib/rpm/__db*
 yum -y upgrade
 mkdir -p output/development/$ARCH/os/
