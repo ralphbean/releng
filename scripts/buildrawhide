@@ -1,7 +1,6 @@
 #!/bin/sh
 
 # runs currently on releng1.fedora.phx.redhat.com
-# invoked by a script on porkchop.redhat.com (internal) that does the rsync afterwards
 
 DATE=$1
 
@@ -41,3 +40,17 @@ for arch in i386 x86_64 ppc ; do
 
 wait
 mock -r fedora-rawhide-x86_64 --clean
+
+  	wait
+  fi
+
+[ -n "$NOSYNC" ] && exit $rc
+cd /tmp
+# data
+su ftpsync -c "rsync $RSYNC_OPTS -avH --exclude repodata/ /mnt/koji/mash/rawhide-$VER/development/ $DESTPATH"
+# repodata & cleanup
+su ftpsync -c "rsync $RSYNC_OPTS -avH --delete --delete-after /mnt/koji/mash/rawhide-$VER/development/ $DESTPATH"
+if [ "$?" = "0" ]; then
+    cat /mnt/koji/mash/rawhide-$VER/logs/treediff /mnt/koji/mash/rawhide-$VER/logs/depcheck | su rawhide -c "mail -s 'rawhide report: '$VER' changes' fedora-devel-list@redhat.com,fedora-test-list@redhat.com"
+fi
+exit 0
