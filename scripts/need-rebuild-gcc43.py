@@ -10,7 +10,7 @@ import datetime
 ## wishes to opt-out of autorebuilding.
 
 blacklist = ['thunderbird','banshee','epiphany','epiphany-extensions','libipoddevice','malaga-suomi-voikko','bless','sysvinit','mecab-ipadic','mecab-jumandic','kazehakase','qt','knetworkmanager','autogen','bacula','xfdesktop','fontforge',
-'anjuta','gengetopt','pida','openbabel']
+'anjuta','gengetopt','pida','openbabel','plplot','paraview']
 
 kojisession = koji.ClientSession('http://koji.fedoraproject.org/kojihub')
 tocheck = []
