@@ -42,7 +42,7 @@ smtp_server = None
 # and all repos containing that number in their id's will be associated with
 # the corresponding distro version.  For example, repo id "foo9bar" will be
 # associated with distro "9".
-dists = ('4', '5', '6', '7')
+dists = ('8', '9')
 
 # Architectures to operate on.
 archs = rpmUtils.arch.getArchList('src')
@@ -107,7 +107,7 @@ class MySolver(yum.YumBase):
 def evrstr(evr):
     return evr and "%s:%s-%s" % evr or "(missing)"
 
-def koji_get_info(name, report, pkg_evr, tags=["dist-fc7", "f7-final", "dist-fc7-updates-candidate"]):
+def koji_get_info(name, report, pkg_evr, tags=["dist-rawhide"]):
     koji_server = "http://koji.fedoraproject.org/kojihub"
     koji_session = koji.ClientSession(koji_server, {})
     fmt = "     %(nvr)-40s %(tag_name)-20s %(owner_name)s"
