@@ -692,9 +692,9 @@ class SignUnsigned(CliTool, KojiTool):
 
     def cmd_default(self):
         self.tweak_options()
-        clientcert = os.path.join(os.path.expanduser('~'), '.koji/client.crt')
-        clientca = os.path.join(os.path.expanduser('~'), '.koji/clientca.crt')
-        serverca = os.path.join(os.path.expanduser('~'), '.koji/serverca.crt')
+        clientcert = os.path.join(os.path.expanduser('~'), '.fedora.cert')
+        clientca = os.path.join(os.path.expanduser('~'), '.fedora-upload-ca.cert')
+        serverca = os.path.join(os.path.expanduser('~'), '.fedora-server-ca.cert')
         self.koji_session.ssl_login(clientcert, clientca, serverca) # NEEDSWORK
         "Getting rpm list from koji"
         if self.options.builds:
