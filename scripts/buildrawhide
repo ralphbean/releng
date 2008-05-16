@@ -3,7 +3,7 @@
 # runs currently on releng1.fedora.phx.redhat.com
 
 DATE=$1
-RSYNC_OPTS="-rlptDHhv"
+RSYNC_OPTS="-rlptDHhv --delay-updates"
 DESTPATH="/pub/fedora/linux/development/"
 
 
