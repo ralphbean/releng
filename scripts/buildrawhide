@@ -44,9 +44,6 @@ for arch in i386 x86_64 ppc ; do
 wait
 mock -r fedora-rawhide-x86_64 --clean
 
-  	wait
-  fi
-
 [ -n "$NOSYNC" ] && exit $rc
 cd /tmp
 # data
