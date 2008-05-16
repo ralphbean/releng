@@ -31,7 +31,7 @@ mock -r fedora-rawhide-x86_64 --shell "mash -o /mnt/koji/mash/rawhide-$DATE --co
 
 if [ -n "\$OLD" ]:
   then
-  mock -r fedora-rawhide-x86_64 --shell "/usr/share/mash/treediff /mnt/koji/mash/rawhide-$DATE/development \$OLD/development > /mnt/koji/mash/rawhide-$DATE/logs/treediff"
+  mock -r fedora-rawhide-x86_64 --shell "/usr/bin/repodiff -q --new=file:///mnt/koji/mash/rawhide-$DATE/development/source/SRPMS --old=file://\$OLD/development/source/SRPMS > /mnt/koji/mash/rawhide-$DATE/logs/repodiff"
 fi
 
 mock -r fedora-rawhide-x86_64 --shell "/usr/share/mash/spam-o-matic /mnt/koji/mash/rawhide-$DATE/development >/mnt/koji/mash/rawhide-$DATE/logs/depcheck" &
