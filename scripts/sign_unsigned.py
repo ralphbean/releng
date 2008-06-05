@@ -502,6 +502,23 @@ class SignUnsigned(CliTool, KojiTool):
         sighdr = koji.rip_rpm_sighdr(path)
         return sighdr, sigkey
 
+    def write_sigs(self, rpmlist, sigkey):
+        self.koji_session.multicall = True
+        for rpminfo in rpmlist:
+            x = os.path.join(koji.pathinfo.build(rpminfo['build']),
+                             koji.pathinfo.signed(rpminfo, sigkey))
+            if self.options.test:
+                self.print_msg("Would have written: %s" % x)
+                continue
+            self.koji_session.writeSignedRPM(rpminfo, sigkey)
+
+        self.print_debug("Writing rpms...")
+        results = self.koji_session.multiCall()
+
+        for rpm, result in zip(rpmlist, results):
+            if isinstance(result, dict):
+                print "Error writing out %s" % self.rpm_nvra(rpm)
+
     def write_sig(self, rpminfo, sigkey):
         x = os.path.join(koji.pathinfo.build(rpminfo['build']),
                          koji.pathinfo.signed(rpminfo, sigkey))
@@ -656,8 +673,7 @@ class SignUnsigned(CliTool, KojiTool):
         self.import_sig_from_files(rpms, level, workdir)
         if self.options.write_rpms:
             self.print_msg("Writing RPMs")
-            for rpminfo in rpms:
-                self.write_sig(rpminfo, self.get_key_id(level).lower())
+            self.write_sigs(rpms, self.get_key_id(level).lower())
         #clean up
         for fn in os.listdir(workdir):
             path = "%s/%s" % (workdir,fn)
@@ -732,8 +748,7 @@ class SignUnsigned(CliTool, KojiTool):
         self.print_debug("got %d rpms" % len(rpms))
         if self.options.just_write_rpms:
             sigkey = self.get_key_id(self.options.level).lower()
-            for rpm in rpms:
-                self.write_sig(rpm, sigkey)
+            self.write_sigs(rpms, sigkey)
         else:
             self.print_debug("Checking cached signatures")
             uncached = self.find_uncached(rpms, level=self.options.level)
