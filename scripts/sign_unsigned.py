@@ -644,12 +644,18 @@ class SignUnsigned(CliTool, KojiTool):
 
     def get_build_rpms(self, builds):
         ret = []
+        self.koji_session.multicall = True
         for b in builds:
-            binfo = self.koji_session.getBuild(b, strict=True)
-            rpms = self.koji_session.listRPMs(buildID=binfo['id'])
-            for r in rpms:
-                r['build'] = binfo
-            ret.extend(rpms)
+            self.koji_session.getBuild(b, strict=True)
+        binfos = self.koji_session.multiCall()
+        self.koji_session.multicall = True
+        for binfo in binfos:
+            self.koji_session.listRPMs(buildID=binfo[0]['id'])
+        results = self.koji_session.multiCall()
+        for binfo, rpms in zip(binfos, results):
+            for r in rpms[0]:
+                r['build'] = binfo[0]
+            ret.extend(rpms[0])
         return ret
 
     def get_koji_rpms(self, tag, pkg=None):
