@@ -716,8 +716,8 @@ class SignUnsigned(CliTool, KojiTool):
             self.print_debug("Checking cached signatures")
             uncached = self.find_uncached(rpms, level=self.options.level)
             #because we're in transition, some rpms may be signed, but not have that signature cached
-            self.print_debug("Checking for uncached signatures (%d rpms)" % len(uncached))
-            unsigned = self.try_import(uncached, level=self.options.level)
+            #self.print_debug("Checking for uncached signatures (%d rpms)" % len(uncached))
+            #unsigned = self.try_import(uncached, level=self.options.level)
             self.print_debug("Signing to cache (%d rpms)" % len(unsigned))
             self.sign_to_cache(unsigned, self.options.level)
 
