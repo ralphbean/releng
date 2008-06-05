@@ -528,10 +528,34 @@ class SignUnsigned(CliTool, KojiTool):
         else:
             self.koji_session.addRPMSig(rpminfo['id'], base64.encodestring(sighdr))
 
+    def import_sigs(self, importdict, sigkey):
+        self.koji_session.multicall = True
+        for rpm in importdict.keys():
+            if self.options.test:
+                self.print_msg("Would have imported signature '%s' from %s" % (sigkey, importdict[rpm][2]))
+            else:
+                self.koji_session.addRPMSig(rpm, base64.encodestring(importdict[rpm][0]))
+
+        self.koji_session.multiCall()
+
     def get_key_id(self, keyname):
          for id, data in self.gpg_keys.items():
               if keyname.lower() in (data.get('name', ""), data.get('signing_server_id', "")):
                    return id
+
+    def import_sig_from_files(self, rpminfos, level, workdir):
+        importdict = {}
+        # Verify that sigs are correct
+        for rpm in rpminfos:
+            src = self.rpm_path(rpm)
+            fn = "%s.rpm" % self.rpm_nvra(rpm)
+            path = "%s/%s" % (workdir, fn)
+            sighdr, sigkey = self.rip_sighdr(path)
+            if self.get_key_id(level).lower() != sigkey.lower():
+                self.print_msg("Error: unexpected signature key [%s], skipping import from %s" % (sigkey, path))
+                continue
+            importdict[rpm['id']] = (sighdr, sigkey.lower(), self.rpm_nvra(rpm))
+        self.import_sigs(importdict, self.get_key_id(level).lower())
 
     def import_sig_from_file(self, rpminfo, path=None, level=None):
         if path is None:
@@ -629,9 +653,7 @@ class SignUnsigned(CliTool, KojiTool):
         if self.options.test:
             return
         self.print_debug("Importing signatures")
-        for rpminfo in rpms:
-            fn = "%s.rpm" % self.rpm_nvra(rpminfo)
-            self.import_sig_from_file(rpminfo, path="%s/%s" % (workdir, fn), level=level)
+        self.import_sig_from_files(rpms, level, workdir)
         if self.options.write_rpms:
             self.print_msg("Writing RPMs")
             for rpminfo in rpms:
