@@ -504,20 +504,24 @@ class SignUnsigned(CliTool, KojiTool):
 
     def write_sigs(self, rpmlist, sigkey):
         self.koji_session.multicall = True
+        signable = False
         for rpminfo in rpmlist:
             x = os.path.join(koji.pathinfo.build(rpminfo['build']),
                              koji.pathinfo.signed(rpminfo, sigkey))
-            if self.options.test:
-                self.print_msg("Would have written: %s" % x)
-                continue
-            self.koji_session.writeSignedRPM(rpminfo, sigkey)
+            if not os.path.exists(x):
+                signable = True
+                if self.options.test:
+                    self.print_msg("Would have written: %s" % x)
+                    continue
+                self.koji_session.writeSignedRPM(rpminfo, sigkey)
 
-        self.print_debug("Writing rpms...")
-        results = self.koji_session.multiCall()
+        if signable:
+            self.print_debug("Writing rpms...")
+            results = self.koji_session.multiCall()
 
-        for rpm, result in zip(rpmlist, results):
-            if isinstance(result, dict):
-                print "Error writing out %s" % self.rpm_nvra(rpm)
+            for rpm, result in zip(rpmlist, results):
+                if isinstance(result, dict):
+                    print "Error writing out %s" % self.rpm_nvra(rpm)
 
     def write_sig(self, rpminfo, sigkey):
         x = os.path.join(koji.pathinfo.build(rpminfo['build']),
@@ -649,7 +653,8 @@ class SignUnsigned(CliTool, KojiTool):
         """
         if not rpms:
             self.print_debug("No unsigned rpms")
-            return
+            if not self.options.write_rpms:
+                return
         if self.options.test:
             self.print_msg("Would have signed:")
             for rpminfo in rpms:
@@ -755,8 +760,8 @@ class SignUnsigned(CliTool, KojiTool):
             #because we're in transition, some rpms may be signed, but not have that signature cached
             #self.print_debug("Checking for uncached signatures (%d rpms)" % len(uncached))
             #unsigned = self.try_import(uncached, level=self.options.level)
-            self.print_debug("Signing to cache (%d rpms)" % len(unsigned))
-            self.sign_to_cache(unsigned, self.options.level)
+            self.print_debug("Signing to cache (%d rpms)" % len(uncached))
+            self.sign_to_cache(uncached, self.options.level)
 
 if __name__ == '__main__':
     x = SignUnsigned()
