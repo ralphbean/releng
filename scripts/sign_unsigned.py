@@ -445,14 +445,13 @@ class SignUnsigned(CliTool, KojiTool):
         """Return the rpms that do not have a cached signature of sufficient level"""
         ret = []
         self.print_debug("Reading signature data")
-        if len(rpms) < 200:
-            sigdata = []
-            for rinfo in rpms:
-                sigdata.extend(self.koji_session.queryRPMSigs(rpm_id=rinfo['id']))
-        else:
-            #XXX - this is overkill, but individual queries are too slow
-            #      do something smarter server-side?
-            sigdata = self.koji_session.queryRPMSigs()
+        sigdata = []
+        self.koji_session.multicall = True
+        for rinfo in rpms:
+            self.koji_session.queryRPMSigs(rpm_id=rinfo['id'])
+        results = self.koji_session.multiCall()
+        for result in results:
+            sigdata.extend(result[0])
         sig_idx = {}
         #index by rpm and sigkey
         self.print_debug("Indexing %d signatures" % len(sigdata))
