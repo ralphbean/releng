@@ -674,7 +674,7 @@ class SignUnsigned(CliTool, KojiTool):
         self.do_signing(pkglist, level)
         if self.options.test:
             return
-        self.print_debug("Importing signatures")
+        self.print_msg("Importing signatures")
         self.import_sig_from_files(rpms, level, workdir)
         if self.options.write_rpms:
             self.print_msg("Writing RPMs")
@@ -744,7 +744,7 @@ class SignUnsigned(CliTool, KojiTool):
         clientca = os.path.join(os.path.expanduser('~'), '.fedora-upload-ca.cert')
         serverca = os.path.join(os.path.expanduser('~'), '.fedora-server-ca.cert')
         self.koji_session.ssl_login(clientcert, clientca, serverca) # NEEDSWORK
-        "Getting rpm list from koji"
+        self.print_msg("Getting rpm list from koji")
         if self.options.builds:
             rpms = self.get_build_rpms(self.options.builds)
         else:
