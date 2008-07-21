@@ -9,6 +9,14 @@
 #     Jesse Keating <jkeating@redhat.com>
 #
 # This script is loosely based on previous Extras script found at http://cvs.fedoraproject.org/viewcvs/upgradecheck/upgradecheck.py
+# We don't actually do checking of subpackages, nor upgrade testing with Obsoletes/Provides.  In an ideal world these kinds of
+# tests would be done as part of automated testing post-build or post-update submission.  We're getting close to these things
+# so I decided to leave it out of this script for now.
+#
+# We also don't generate a owner sorted list of packages, because our packages can have different owners per
+# tag and that makes the output kind of weird.  Hopefully soon we'll have package aliases that we can mail
+# thus we'll be able to send mail to those that are interested in given packages about upgrade path problems.
+# For now we just print out something suitable to be sent through /bin/mail
 
 
 import koji
