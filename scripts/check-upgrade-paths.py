@@ -83,6 +83,8 @@ for pkg in pkgdict:
                         badpaths[pkg].append('%s > %s (%s %s)' % (tag, nexttag, pkgdict[pkg][tag], pkgdict[pkg][nexttag]))
 
 # TODO We should print ownership here
+print """Broken upgrade path report for tags %s""" % tags
+print "\n"
 pkgs = badpaths.keys()
 pkgs.sort()
 for pkg in pkgs:
