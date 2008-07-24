@@ -13,8 +13,10 @@
 # tests would be done as part of automated testing post-build or post-update submission.  We're getting close to these things
 # so I decided to leave it out of this script for now.
 #
-# We also don't generate a owner sorted list of packages, because our packages can have different owners per
-# tag and that makes the output kind of weird.  Hopefully soon we'll have package aliases that we can mail
+# We also don't generate a owner sorted list of packages, instead we create a /builder/ sorted list, since
+# the builder is the more interesting person involved.
+#
+# Hopefully soon we'll have package aliases that we can mail
 # thus we'll be able to send mail to those that are interested in given packages about upgrade path problems.
 # For now we just print out something suitable to be sent through /bin/mail
 
@@ -57,6 +59,7 @@ kojisession = koji.ClientSession('http://koji.fedoraproject.org/kojihub')
 tagdict = {}
 pkgdict = {}
 badpaths = {}
+badpathsbybuilder = {}
 
 # Use multicall to get the latest tagged builds from each tag
 kojisession.multicall = True
@@ -74,7 +77,7 @@ for tag in tags:
     for pkg in tagdict[tag]:
         if not pkgdict.has_key(pkg['name']):
             pkgdict[pkg['name']] = {}
-        pkgdict[pkg['name']][tag] = buildToNvr(pkg)
+        pkgdict[pkg['name']][tag] = {'nvr': buildToNvr(pkg), 'builder': pkg['owner_name']}
 
 # Loop through the packages, compare e:n-v-rs from the first tag upwards
 # then proceed to the next given tag and again compare upwards
@@ -83,14 +86,19 @@ for pkg in pkgdict:
         for nexttag in tags[tags.index(tag)+1:]: # Compare from current tag up
             if pkgdict[pkg].has_key(tag):
                 if pkgdict[pkg].has_key(nexttag): # only compare if the next tag knows about this package
-                    rc = compare(pkgdict[pkg][tag], pkgdict[pkg][nexttag])
+                    rc = compare(pkgdict[pkg][tag]['nvr'], pkgdict[pkg][nexttag]['nvr'])
                     if rc <= 0:
                         continue
                     if rc > 0:
                         # We've got something broken here.
                         if not badpaths.has_key(pkg):
                             badpaths[pkg] = []
-                        badpaths[pkg].append('%s > %s (%s %s)' % (tag, nexttag, pkgdict[pkg][tag], pkgdict[pkg][nexttag]))
+                        if not badpathsbybuilder.has_key(pkgdict[pkg][tag]['builder']):
+                            badpathsbybuilder[pkgdict[pkg][tag]['builder']] = {}
+                        if not badpathsbybuilder[pkgdict[pkg][tag]['builder']].has_key(pkg):
+                            badpathsbybuilder[pkgdict[pkg][tag]['builder']][pkg] = []
+                        badpaths[pkg].append('%s > %s (%s %s)' % (tag, nexttag, pkgdict[pkg][tag]['nvr'], pkgdict[pkg][nexttag]['nvr']))
+                        badpathsbybuilder[pkgdict[pkg][tag]['builder']][pkg].append('%s > %s (%s %s)' % (tag, nexttag, pkgdict[pkg][tag]['nvr'], pkgdict[pkg][nexttag]['nvr']))
 
 # TODO We should print ownership here
 print """Broken upgrade path report for tags %s""" % tags
@@ -101,6 +109,20 @@ for pkg in pkgs:
     print "%s:" % pkg
     for path in badpaths[pkg]:
         print "    %s" % path
+    print "\n"
+
+print "-----------------------\n"
+print "Broken paths by builder:\n"
+builders = badpathsbybuilder.keys()
+builders.sort()
+for builder in builders:
+    print "%s:" % builder
+    pkgs = badpathsbybuilder[builder].keys()
+    pkgs.sort()
+    for pkg in pkgs:
+        print "    %s:" % pkg
+        for path in badpathsbybuilder[builder][pkg]:
+            print "        %s" % path
     print "\n"
 
 print "---------------"
