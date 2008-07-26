@@ -57,7 +57,7 @@ def genPackageMail(builder, package):
        Mail is set out once per broken package."""
 
     # This relies on the package-owner alias sets
-    addresses = [builder, '%s-owner']
+    addresses = [builder, '%s-owner' % package]
     msg = """From: %s
 To: %s
 Subject: Broken upgrade path(s) detected for: %s
