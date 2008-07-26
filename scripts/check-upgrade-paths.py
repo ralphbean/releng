@@ -16,9 +16,8 @@
 # We also don't generate a owner sorted list of packages, instead we create a /builder/ sorted list, since
 # the builder is the more interesting person involved.
 #
-# Hopefully soon we'll have package aliases that we can mail
-# thus we'll be able to send mail to those that are interested in given packages about upgrade path problems.
-# For now we just print out something suitable to be sent through /bin/mail
+# This script will mail the owners and the builder of packages that are broken directly
+# as well as send a mail to a mailing list with an overall report.
 
 
 import koji
