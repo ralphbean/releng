@@ -64,7 +64,7 @@ badpathsbybuilder = {}
 # Use multicall to get the latest tagged builds from each tag
 kojisession.multicall = True
 for tag in tags:
-    kojisession.listTagged(tag, latest=True, inherit=True)
+    kojisession.listTagged(tag, latest=True)
 
 results = kojisession.multiCall()
 
