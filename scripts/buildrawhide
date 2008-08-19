@@ -29,7 +29,7 @@ mock -r fedora-rawhide-x86_64 --init
 mock -r fedora-rawhide-x86_64 --no-clean --install koji yum createrepo cvs make intltool findutils mash yum-utils rsync repoview
 mock -r fedora-rawhide-x86_64 --shell "mash -o /mnt/koji/mash/rawhide-$DATE --compsfile /mnt/koji/mash/rawhide-$DATE/logs/comps-rawhide.xml development > /mnt/koji/mash/rawhide-$DATE/logs/mash.log 2>&1" || exit 1
 
-if [ -n "\$OLD" ]:
+if [ -n "\$OLD" ]
   then
   mock -r fedora-rawhide-x86_64 --shell "/usr/bin/repodiff -q --new=file:///mnt/koji/mash/rawhide-$DATE/development/source/SRPMS --old=file://\$OLD/development/source/SRPMS > /mnt/koji/mash/rawhide-$DATE/logs/repodiff"
 fi
