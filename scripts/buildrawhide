@@ -29,7 +29,10 @@ popd
 
 mock -r $MOCKCONFIG --init
 mock -r $MOCKCONFIG --no-clean --install koji yum createrepo cvs make intltool findutils mash yum-utils rsync repoview
-mock -r $MOCKCONFIG --chroot "mash -o /mnt/koji/mash/rawhide-$DATE --compsfile /mnt/koji/mash/rawhide-$DATE/logs/comps-rawhide.xml development > /mnt/koji/mash/rawhide-$DATE/logs/mash.log 2>&1" || exit 1
+# Copy in the hosts file so that we get the right address for koji
+mock -r $MOCKCONFIG --copyin /etc/hosts /etc/hosts >/dev/null 2>&1 # this reports to fail, but actually works
+# Drop privs here so that we run as the masher UID
+mock -r $MOCKCONFIG --unpriv --chroot "mash -o /mnt/koji/mash/rawhide-$DATE --compsfile /mnt/koji/mash/rawhide-$DATE/logs/comps-rawhide.xml development > /mnt/koji/mash/rawhide-$DATE/logs/mash.log 2>&1" || exit 1
 
 if [ -n "\$OLD" ]
   then
