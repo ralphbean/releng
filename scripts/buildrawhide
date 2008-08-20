@@ -16,7 +16,7 @@ MOCKCONFIG=fedora-rawhide-compose-i386
 
 OLD=$(find /mnt/koji/mash/ -maxdepth 1 -type d -name "rawhide-20*" 2>/dev/null| sort | tail -1)
 
-TMPDIR=`mktemp /tmp/rawhide.$DATE.XXXX`
+TMPDIR=`mktemp -d /tmp/rawhide.$DATE.XXXX`
 mkdir -p /mnt/koji/mash/rawhide-$DATE/logs
 pushd $TMPDIR
 cvs -d :pserver:anonymous@cvs.fedora.redhat.com:/cvs/pkgs -z3 -q co comps && {
