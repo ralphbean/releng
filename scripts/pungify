@@ -21,7 +21,7 @@ usage() {
 
 [ -z "$TREE" -o -z "$ARCH" -o -z "$HOST" ] && usage
 
-su mock -c "ssh $HOST /bin/bash --" << EOF
+ssh mock@$HOST /bin/bash -- << EOF
 	set -x
 	mock -r fedora-devel-pungi-$ARCH --uniqueext=$TREE --init || exit 1
 	mock -r fedora-devel-pungi-$ARCH --uniqueext=$TREE --install pungi nfs-utils setarch || exit 1
@@ -60,9 +60,9 @@ rm -rf output/development/$ARCH/os/{Packages,repodata}
 EEE
 EOF
 # so, so wrong
-rsync -vae "ssh -i /var/lib/mock/.ssh/id_dsa" $HOST:/var/lib/mock/fedora-development-pungi-$ARCH-$TREE/root/tmp/treebuild.$TREE/output/development/$ARCH/os/ /mnt/koji/mash/rawhide-$TREE/development/$ARCH/os/
-rsync -vae "ssh -i /var/lib/mock/.ssh/id_dsa" $HOST:/var/lib/mock/fedora-development-pungi-$ARCH-$TREE/root/tmp/treebuild.$TREE/output/logs/* /mnt/koji/mash/rawhide-$TREE/logs/
-su mock -c "ssh $HOST /bin/bash --" << EOF
+rsync -va mock@$HOST:/var/lib/mock/fedora-development-pungi-$ARCH-$TREE/root/tmp/treebuild.$TREE/output/development/$ARCH/os/ /mnt/koji/mash/rawhide-$TREE/development/$ARCH/os/
+rsync -va mock@$HOST:/var/lib/mock/fedora-development-pungi-$ARCH-$TREE/root/tmp/treebuild.$TREE/output/logs/* /mnt/koji/mash/rawhide-$TREE/logs/
+ssh mock@$HOST /bin/bash -- << EOF
 	set -x
 	mock -r fedora-devel-pungi-$ARCH --uniqueext=$TREE clean
 EOF
