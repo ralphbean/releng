@@ -30,26 +30,8 @@ set -x
 mkdir -p /tmp/treebuild.$TREE/{output,cache,development}
 cd /tmp/treebuild.$TREE
 touch rawhide.ks
-cat > /etc/yum.conf << EOY
-[main]
-pkgpolicy=newest
-distroverpkg=redhat-release
-tolerant=1
-exactarch=1
-obsoletes=1
-gpgcheck=0
-reposdir=/var/empty
-metadata_expire=1800
-
-[development]
-name=Fedora - Development
-baseurl=file:///tmp/treebuild.$TREE/development/$ARCH/os/
-enabled=1
-gpgcheck=0
-EOY
 mount -t nfs -o ro,nolock xen2.fedora.phx.redhat.com:/mnt/koji/mash/rawhide-$TREE/development development
 rm -f /var/lib/rpm/__db*
-yum -y upgrade
 mkdir -p output/development/$ARCH/os/
 ln -s /tmp/treebuild.$TREE/development/$ARCH/os/Packages output/development/$ARCH/os/Packages
 ln -s /tmp/treebuild.$TREE/development/$ARCH/os/repodata output/development/$ARCH/os/repodata
