@@ -30,7 +30,7 @@ set -x
 mkdir -p /tmp/treebuild.$TREE/{output,cache,development}
 cd /tmp/treebuild.$TREE
 touch rawhide.ks
-mount -t nfs -o ro,nolock xen2.fedora.phx.redhat.com:/mnt/koji/mash/rawhide-$TREE/development development
+mount -t nfs -o ro,nolock nfs1.fedora.phx.redhat.com:/mnt/koji/mash/rawhide-$TREE/development development
 rm -f /var/lib/rpm/__db*
 mkdir -p output/development/$ARCH/os/
 ln -s /tmp/treebuild.$TREE/development/$ARCH/os/Packages output/development/$ARCH/os/Packages
