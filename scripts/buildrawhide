@@ -3,8 +3,7 @@
 # runs currently on releng1.fedora.phx.redhat.com
 
 DATE=$1
-#RSYNC_OPTS="-rlptDHhv --delay-updates"
-RSYNC_OPTS="-rlptDHhvn --delay-updates"
+RSYNC_OPTS="-rlptDHhv --delay-updates"
 DESTPATH="/pub/fedora/linux/development/"
 MOCKCONFIG=fedora-rawhide-compose-i386
 
@@ -41,8 +40,7 @@ if [ -n "\$OLD" ]
   mock -r $MOCKCONFIG --chroot "/usr/bin/repodiff -q --new=file:///mnt/koji/mash/rawhide-$DATE/development/source/SRPMS --old=file:///pub/fedora/linux/development/source/SRPMS > /mnt/koji/mash/rawhide-$DATE/logs/repodiff"
 fi
 
-#mock -r $MOCKCONFIG --chroot "/usr/share/mash/spam-o-matic /mnt/koji/mash/rawhide-$DATE/development >/mnt/koji/mash/rawhide-$DATE/logs/depcheck" &
-touch /mnt/koji/mash/rawhide-$DATE/logs/depcheck
+mock -r $MOCKCONFIG --chroot "/usr/share/mash/spam-o-matic /mnt/koji/mash/rawhide-$DATE/development >/mnt/koji/mash/rawhide-$DATE/logs/depcheck" &
 
 for arch in i386 x86_64 ppc ; do
     HOST=$(koji list-hosts --quiet --enabled --ready --arch=$arch | sed 's|/| |g' | sort -gn -k4 -k5r | awk -F '.' '{ print $1 ; exit }')
@@ -59,7 +57,6 @@ su ftpsync -c "rsync $RSYNC_OPTS --exclude repodata/ /mnt/koji/mash/rawhide-$DAT
 # repodata & cleanup
 su ftpsync -c "rsync $RSYNC_OPTS --delete --delete-after /mnt/koji/mash/rawhide-$DATE/development/ $DESTPATH"
 if [ "$?" = "0" ]; then
-#    cat /mnt/koji/mash/rawhide-$DATE/logs/repodiff /mnt/koji/mash/rawhide-$DATE/logs/depcheck | su rawhide -c "mail -s 'rawhide report: '$DATE' changes' fedora-devel-list@redhat.com,fedora-test-list@redhat.com"
-    cat /mnt/koji/mash/rawhide-$DATE/logs/repodiff /mnt/koji/mash/rawhide-$DATE/logs/depcheck | su rawhide -c "mail -s 'rawhide report: '$DATE' changes' jkeating@redhat.com"
+    cat /mnt/koji/mash/rawhide-$DATE/logs/repodiff /mnt/koji/mash/rawhide-$DATE/logs/depcheck | su rawhide -c "mail -s 'rawhide report: '$DATE' changes' fedora-devel-list@redhat.com,fedora-test-list@redhat.com"
 fi
 exit 0
