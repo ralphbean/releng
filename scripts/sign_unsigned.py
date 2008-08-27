@@ -627,7 +627,7 @@ class SignUnsigned(CliTool, KojiTool):
                    raise RuntimeError, "%s is not set up for the signing server" % key
               cmd = "rpm-sign --key=%s %s" % (ssid, ' '.join(paths))
          else:
-              cmd = "rpm --define '_gpg_name %s' --resign %s"  % (self.get_key_description(keyid), ' '.join(paths))
+              cmd = "rpm --define '_gpg_name %s' --define '_signature gpg' --resign %s"  % (self.get_key_description(keyid), ' '.join(paths))
          return cmd
 
     def do_signing(self, pathargs, level):
