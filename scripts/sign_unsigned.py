@@ -388,10 +388,14 @@ class SignUnsigned(CliTool, KojiTool):
                           'signing_server_id': 'redhatbeta' },
             'E418E3AA': { 'name': 'rawhide',
                           'description': 'Red Hat, Inc. automated build signing key (2003) <rawhide@redhat.com>' },
-            '4F2A6FD2': { 'name': 'fedora-gold',
-                          'description': 'Fedora Project <fedora@redhat.com>' },
-            '30C9ECF8': { 'name': 'fedora-test',
-                          'description': 'Fedora Project (Test Software) <rawhide@redhat.com>' },
+            '6DF2196F': { 'name': 'fedora-gold',
+                          'description': 'Fedora (8 and 9) <fedora@fedoraproject.org>' },
+            'DF9B0AE9': { 'name': 'fedora-test',
+                          'description': 'Fedora (8 and 9 testing) <fedora@fedoraproject.org>' },
+            '4EBFC273': { 'name': 'f10',
+                          'description': 'Fedora (10) <fedora@fedoraproject.org>' },
+            '0B86274E': { 'name': 'f10-test',
+                          'description': 'Fedora (10 testing) <fedora@fedoraproject.org>' },
             '1CDDBCA9': { 'name': 'fedora-rawhide',
                           'description': 'Fedora Project automated build signing key (2003) <rawhide@redhat.com>' },
             '5A27881F': { 'name': 'rhn-feedback',
@@ -413,7 +417,7 @@ class SignUnsigned(CliTool, KojiTool):
     def sig_level(self, sigs, level='rawhide', exact=False):
         """Check if signature(s) satisfy required level"""
 
-        orderings = [['fedora-rawhide', 'rawhide', 'fedora-test', 'fedora-gold'],
+        orderings = [['fedora-rawhide', 'rawhide', 'fedora-test', 'fedora-gold', 'f10-test', 'f10'],
              ['beta', 'security', 'gold', 'redhatrelease']]
         if not sigs:
              return False
