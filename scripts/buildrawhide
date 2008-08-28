@@ -47,10 +47,10 @@ mock -r $MOCKCONFIG --clean
 [ -n "$NOSYNC" ] && exit $rc
 cd /tmp
 # data
-su ftpsync -c "rsync $RSYNC_OPTS --exclude repodata/ /mnt/koji/mash/rawhide-$DATE/development/ $DESTPATH"
+sudo -u ftpsync /usr/bin/rsync $RSYNC_OPTS --exclude repodata/ /mnt/koji/mash/rawhide-$DATE/development/ $DESTPATH
 # repodata & cleanup
-su ftpsync -c "rsync $RSYNC_OPTS --delete --delete-after /mnt/koji/mash/rawhide-$DATE/development/ $DESTPATH"
+sudo -u ftpsync /usr/bin/rsync $RSYNC_OPTS --delete --delete-after /mnt/koji/mash/rawhide-$DATE/development/ $DESTPATH
 if [ "$?" = "0" ]; then
-    cat /mnt/koji/mash/rawhide-$DATE/logs/repodiff /mnt/koji/mash/rawhide-$DATE/logs/depcheck | su rawhide -c "mail -s 'rawhide report: '$DATE' changes' fedora-devel-list@redhat.com,fedora-test-list@redhat.com"
+    cat /mnt/koji/mash/rawhide-$DATE/logs/repodiff /mnt/koji/mash/rawhide-$DATE/logs/depcheck | sudo -u rawhide mail -s 'rawhide report: '$DATE' changes' fedora-devel-list@redhat.com,fedora-test-list@redhat.com
 fi
 exit 0
