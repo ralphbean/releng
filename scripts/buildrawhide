@@ -13,8 +13,6 @@ MOCKCONFIG=fedora-rawhide-compose-i386
 	exit 1
 }
 
-OLD=$(find /mnt/koji/mash/ -maxdepth 1 -type d -name "rawhide-20*" 2>/dev/null| sort | tail -1)
-
 TMPDIR=`mktemp -d /tmp/rawhide.$DATE.XXXX`
 mkdir -p /mnt/koji/mash/rawhide-$DATE/logs
 pushd $TMPDIR
@@ -33,12 +31,8 @@ mock -r $MOCKCONFIG --copyin /etc/hosts /etc/hosts >/dev/null 2>&1 # this report
 # Drop privs here so that we run as the masher UID
 mock -r $MOCKCONFIG --unpriv --chroot "mash -o /mnt/koji/mash/rawhide-$DATE --compsfile /mnt/koji/mash/rawhide-$DATE/logs/comps-rawhide.xml development > /mnt/koji/mash/rawhide-$DATE/logs/mash.log 2>&1" || exit 1
 
-if [ -n "\$OLD" ]
-  then
-  # clean out the rpmdb cache first to save a mismatch error
-  mock -r $MOCKCONFIG --chroot "rm -f /var/lib/rpm/__db*"
-  mock -r $MOCKCONFIG --chroot "/usr/bin/repodiff -q --new=file:///mnt/koji/mash/rawhide-$DATE/development/source/SRPMS --old=file:///pub/fedora/linux/development/source/SRPMS > /mnt/koji/mash/rawhide-$DATE/logs/repodiff"
-fi
+mock -r $MOCKCONFIG --chroot "rm -f /var/lib/rpm/__db*"
+mock --unpriv -r $MOCKCONFIG --chroot "/usr/bin/repodiff -q --new=file:///mnt/koji/mash/rawhide-$DATE/development/source/SRPMS --old=file:///pub/fedora/linux/development/source/SRPMS > /mnt/koji/mash/rawhide-$DATE/logs/repodiff"
 
 mock -r $MOCKCONFIG --chroot "/usr/share/mash/spam-o-matic /mnt/koji/mash/rawhide-$DATE/development >/mnt/koji/mash/rawhide-$DATE/logs/depcheck" &
 
