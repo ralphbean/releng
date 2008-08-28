@@ -37,7 +37,6 @@ ln -s /tmp/treebuild.$TREE/development/$ARCH/os/Packages output/development/$ARC
 ln -s /tmp/treebuild.$TREE/development/$ARCH/os/repodata output/development/$ARCH/os/repodata
 pungi -c ./rawhide.ks -B --destdir /tmp/treebuild.$TREE/output --cachedir /tmp/treebuild.$TREE/cache --ver development
 umount development
-rm -f /var/lib/rpm/__db*
 rm -rf output/development/$ARCH/os/{Packages,repodata}
 EEE
 EOF
