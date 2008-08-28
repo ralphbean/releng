@@ -51,6 +51,6 @@ sudo -u ftpsync /usr/bin/rsync $RSYNC_OPTS --exclude repodata/ /mnt/koji/mash/ra
 # repodata & cleanup
 sudo -u ftpsync /usr/bin/rsync $RSYNC_OPTS --delete --delete-after /mnt/koji/mash/rawhide-$DATE/development/ $DESTPATH
 if [ "$?" = "0" ]; then
-    cat /mnt/koji/mash/rawhide-$DATE/logs/repodiff /mnt/koji/mash/rawhide-$DATE/logs/depcheck | sudo -u rawhide mail -s 'rawhide report: '$DATE' changes' fedora-devel-list@redhat.com,fedora-test-list@redhat.com
+    cat /mnt/koji/mash/rawhide-$DATE/logs/repodiff /mnt/koji/mash/rawhide-$DATE/logs/depcheck | mail -s 'rawhide report: '$DATE' changes' fedora-devel-list@redhat.com,fedora-test-list@redhat.com -- -f rawhide@fedoraproject.org -F "Rawhide Report"
 fi
 exit 0
