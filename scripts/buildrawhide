@@ -29,7 +29,7 @@ mock -r $MOCKCONFIG --no-clean --install koji yum createrepo cvs make intltool f
 # Copy in the hosts file so that we get the right address for koji
 mock -r $MOCKCONFIG --copyin /etc/hosts /etc/hosts >/dev/null 2>&1 # this reports to fail, but actually works
 # Drop privs here so that we run as the masher UID
-mock -r $MOCKCONFIG --unpriv --chroot "mash -o /mnt/koji/mash/rawhide-$DATE --compsfile /mnt/koji/mash/rawhide-$DATE/logs/comps-rawhide.xml development > /mnt/koji/mash/rawhide-$DATE/logs/mash.log 2>&1" || exit 1
+mock -r $MOCKCONFIG --unpriv --chroot "mash -o /mnt/koji/mash/rawhide-$DATE --compsfile /mnt/koji/mash/rawhide-$DATE/logs/comps-rawhide.xml rawhide > /mnt/koji/mash/rawhide-$DATE/logs/mash.log 2>&1" || exit 1
 
 mock -r $MOCKCONFIG --chroot "rm -f /var/lib/rpm/__db*"
 mock -r $MOCKCONFIG --unpriv --chroot "/usr/bin/repodiff -q --new=file:///mnt/koji/mash/rawhide-$DATE/development/source/SRPMS --old=file:///pub/fedora/linux/development/source/SRPMS > /mnt/koji/mash/rawhide-$DATE/logs/repodiff"
