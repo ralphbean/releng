@@ -55,4 +55,8 @@ sudo -u ftpsync /usr/bin/rsync $RSYNC_OPTS --delete --delete-after /mnt/koji/mas
 if [ "$?" = "0" ]; then
     cat /mnt/koji/mash/rawhide-$DATE/logs/start /mnt/koji/mash/rawhide-$DATE/logs/repodiff /mnt/koji/mash/rawhide-$DATE/logs/depcheck | mail -s 'rawhide report: '$DATE' changes' fedora-devel-list@redhat.com,fedora-test-list@redhat.com -- -f rawhide@fedoraproject.org -F "Rawhide Report"
 fi
+pushd /pub/fedora/
+TMPFILE = `mktemp -p /tmp/`
+find * -print > $TMPFILE
+mv $TMPFILE fullfilelist
 exit 0
