@@ -41,8 +41,8 @@ rm -rf output/development/$ARCH/os/{Packages,repodata}
 EEE
 EOF
 # so, so wrong
-rsync -va mock@$HOST:/var/lib/mock/fedora-development-pungi-$ARCH-$TREE/root/tmp/treebuild.$TREE/output/development/$ARCH/os/ /mnt/koji/mash/rawhide-$TREE/development/$ARCH/os/
-rsync -va mock@$HOST:/var/lib/mock/fedora-development-pungi-$ARCH-$TREE/root/tmp/treebuild.$TREE/output/logs/* /mnt/koji/mash/rawhide-$TREE/logs/
+rsync -vaH mock@$HOST:/var/lib/mock/fedora-development-pungi-$ARCH-$TREE/root/tmp/treebuild.$TREE/output/development/$ARCH/os/ /mnt/koji/mash/rawhide-$TREE/development/$ARCH/os/
+rsync -vaH mock@$HOST:/var/lib/mock/fedora-development-pungi-$ARCH-$TREE/root/tmp/treebuild.$TREE/output/logs/* /mnt/koji/mash/rawhide-$TREE/logs/
 ssh mock@$HOST /bin/bash -- << EOF
 	set -x
 	mock -r fedora-devel-pungi-$ARCH --uniqueext=$TREE clean
