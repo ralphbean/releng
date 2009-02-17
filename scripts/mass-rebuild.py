@@ -12,6 +12,7 @@ import koji
 import os
 import subprocess
 import sys
+import operator
 
 # Set some variables
 # Some of these could arguably be passed in as args.
@@ -54,8 +55,9 @@ kojisession.ssl_login(clientcert, clientca, serverca)
 # Generate a list of packages to iterate over
 pkgs = kojisession.listPackages(buildtag, inherited=True)
 
-# reduce the list to those that are not blocked.
-pkgs = [pkg for pkg in pkgs if not pkg['blocked']]
+# reduce the list to those that are not blocked and sort by package name
+pkgs = sorted([pkg for pkg in pkgs if not pkg['blocked'],
+              key=operator.itemgetter('package_name'))
 
 print "Checking %s packages..." % len(pkgs)
 
