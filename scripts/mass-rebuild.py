@@ -16,12 +16,13 @@ import sys
 # Set some variables
 # Some of these could arguably be passed in as args.
 buildtag = 'dist-f11' # tag to build from
-epoch = '2007-02-16 0:0:0.000000' # rebuild anything not built after this date
+epoch = '2009-02-23 0:0:0.000000' # rebuild anything not built after this date
 user = 'Fedora Release Engineering <rel-eng@lists.fedoraproject.org>'
 comment = '- Rebuilt for https://fedoraproject.org/wiki/Fedora_11_Mass_Rebuild'
 workdir = os.path.expanduser('~/massbuild')
 enviro = os.environ
 enviro['BUILD_FLAGS'] = '--nowait --background' # do builds with low priority
+enviro['CVS_RSH'] = 'ssh' # do builds with low priority
 
 # Define functions
 
