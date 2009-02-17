@@ -56,7 +56,7 @@ kojisession.ssl_login(clientcert, clientca, serverca)
 pkgs = kojisession.listPackages(buildtag, inherited=True)
 
 # reduce the list to those that are not blocked and sort by package name
-pkgs = sorted([pkg for pkg in pkgs if not pkg['blocked'],
+pkgs = sorted([pkg for pkg in pkgs if not pkg['blocked']],
               key=operator.itemgetter('package_name'))
 
 print "Checking %s packages..." % len(pkgs)
