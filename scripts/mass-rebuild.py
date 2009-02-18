@@ -76,6 +76,11 @@ for pkg in pkgs:
     if runme(cvs, 'checkout', name, enviro):
         continue
 
+    # Check for a devel branch
+    if not os.path.exists(os.path.join(workdir, name, 'devel')):
+        sys.stderr.write('%s failed devel branch check.' % name)
+        continue
+
     # Check for a noautobuild file
     if os.path.exists(os.path.join(workdir, name, 'devel', 'noautobuild')):
         # Maintainer does not want us to auto build.
@@ -91,7 +96,7 @@ for pkg in pkgs:
             break
 
     if not spec:
-        sys.stderr.write('No spec found for %s' % name)
+        sys.stderr.write('%s failed spec check' % name)
         continue
 
     # rpmdev-bumpspec
