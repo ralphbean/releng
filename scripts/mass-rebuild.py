@@ -53,7 +53,7 @@ pkgs = kojisession.listPackages(buildtag, inherited=True)
 pkgs = sorted([pkg for pkg in pkgs if not pkg['blocked']],
               key=operator.itemgetter('package_name'))
 
-print "Checking %s packages..." % len(pkgs)
+print 'Checking %s packages...' % len(pkgs)
 
 # Loop over each package
 for pkg in pkgs:
@@ -66,7 +66,7 @@ for pkg in pkgs:
     # This version won't catch builds in flight
     if kojisession.listBuilds(id, completeAfter=epoch):
         # We've already got an attempt made, skip.
-        print "Skipping %s, already attempted." % name
+        print 'Skipping %s, already attempted.' % name
         continue
 
     # Check out cvs
