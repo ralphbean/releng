@@ -38,7 +38,7 @@ def runme(cmd, action, pkg, env, cwd=workdir):
     try:
         subprocess.check_call(cmd, env=env, cwd=cwd)
     except subprocess.CalledProcessError, e:
-        sys.stderr.write('%s failed %s: %s' % (pkg, action, e))
+        sys.stderr.write('%s failed %s: %s\n' % (pkg, action, e))
         return 1
     return 0
 
@@ -78,7 +78,7 @@ for pkg in pkgs:
 
     # Check for a devel branch
     if not os.path.exists(os.path.join(workdir, name, 'devel')):
-        sys.stderr.write('%s failed devel branch check.' % name)
+        sys.stderr.write('%s failed devel branch check.\n' % name)
         continue
 
     # Check for a noautobuild file
@@ -96,7 +96,7 @@ for pkg in pkgs:
             break
 
     if not spec:
-        sys.stderr.write('%s failed spec check' % name)
+        sys.stderr.write('%s failed spec check\n' % name)
         continue
 
     # rpmdev-bumpspec
