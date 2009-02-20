@@ -24,6 +24,7 @@ workdir = os.path.expanduser('~/massbuild')
 enviro = os.environ
 enviro['BUILD_FLAGS'] = '--nowait --background' # do builds with low priority
 enviro['CVS_RSH'] = 'ssh' # do builds with low priority
+enviro['TARGET'] = 'dist-f11-rebuild'
 
 # Define functions
 
