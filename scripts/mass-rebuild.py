@@ -63,10 +63,18 @@ for pkg in pkgs:
 
     # Query to see if a build has already been attempted
     # this version requires newer koji:
-    #  if  kojisession.listBuilds(id, createdAfter=epoch):
+    #  builds = kojisession.listBuilds(id, createdAfter=epoch)
     # This version won't catch builds in flight
-    if kojisession.listBuilds(id, completeAfter=epoch):
-        # We've already got an attempt made, skip.
+    builds = kojisession.listBuilds(id, completeAfter=epoch)
+    newbuild = False
+    # Check the builds to make sure they were for the target we care about
+    for build in builds:
+        if kojisession.getTaskInfo(oldbuild['task_id'],
+                                   request=True)['request'][1] == buildtag:
+            # We've already got an attempt made, skip.
+            newbuild = True
+            break
+    if newbuild:
         print 'Skipping %s, already attempted.' % name
         continue
 
