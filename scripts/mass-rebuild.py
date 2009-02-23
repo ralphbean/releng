@@ -83,7 +83,7 @@ for pkg in pkgs:
     newbuild = False
     # Check the builds to make sure they were for the target we care about
     for build in builds:
-        if kojisession.getTaskInfo(oldbuild['task_id'],
+        if kojisession.getTaskInfo(build['task_id'],
                                    request=True)['request'][1] == buildtag:
             # We've already got an attempt made, skip.
             newbuild = True
