@@ -43,7 +43,7 @@ def runme(cmd, action, pkg, env, cwd=workdir):
     return 0
 
 # This function needs a dry-run like option
-def runmeout(cmd, action, pkg, env, cwd=workdir):
+def runmeoutput(cmd, action, pkg, env, cwd=workdir):
     """Simple function to run a command and return output if successful. 
        cmd is a list of the command and arguments, action is a
        name for the action (for logging), pkg is the name of the package
@@ -56,7 +56,7 @@ def runmeout(cmd, action, pkg, env, cwd=workdir):
     except BaseException, e:
         sys.stderr.write('%s failed %s: %s\n' % (pkg, action, e))
         return 0
-    result = pid.communicate().rstrip('\n')
+    result = pid.communicate()[0].rstrip('\n')
     return result
 
 
