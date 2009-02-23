@@ -22,9 +22,8 @@ user = 'Fedora Release Engineering <rel-eng@lists.fedoraproject.org>'
 comment = '- Rebuilt for https://fedoraproject.org/wiki/Fedora_11_Mass_Rebuild'
 workdir = os.path.expanduser('~/massbuild')
 enviro = os.environ
-enviro['BUILD_FLAGS'] = '--nowait --background' # do builds with low priority
-enviro['CVS_RSH'] = 'ssh' # do builds with low priority
-enviro['TARGET'] = 'dist-f11-rebuild'
+target = 'dist-f11-rebuild'
+enviro['CVS_RSH'] = 'ssh' # use ssh for cvs
 
 # Define functions
 
@@ -42,6 +41,23 @@ def runme(cmd, action, pkg, env, cwd=workdir):
         sys.stderr.write('%s failed %s: %s\n' % (pkg, action, e))
         return 1
     return 0
+
+# This function needs a dry-run like option
+def runmeout(cmd, action, pkg, env, cwd=workdir):
+    """Simple function to run a command and return output if successful. 
+       cmd is a list of the command and arguments, action is a
+       name for the action (for logging), pkg is the name of the package
+       being operated on, env is the environment dict, and cwd is where
+       the script should be executed from.  Returns 0 for failure"""
+
+    try:
+        pid = subprocess.Popen(cmd, env=env, cwd=cwd,
+                               stdout=subprocess.PIPE)
+    except BaseException, e:
+        sys.stderr.write('%s failed %s: %s\n' % (pkg, action, e))
+        return 0
+    result = pid.communicate().rstrip('\n')
+    return result
 
 
 # Create a koji session
@@ -127,8 +143,16 @@ for pkg in pkgs:
                  cwd=os.path.join(workdir, name, 'devel')):
         continue
 
+    # get cvs url
+    urlcmd = ['make', 'cvsurl']
+    print 'Getting cvs url for %s' % name
+    url = runmeoutput(urlcmd, 'cvsurl', name, enviro,
+                 cwd=os.path.join(workdir, name, 'devel'))
+    if not url:
+        continue
+
     # build
-    build = ['make', 'build']
+    build = ['koji', 'build', '--nowait', '--background', target, url]
     print 'Building %s' % name
     runme(build, 'build', name, enviro, 
           cwd=os.path.join(workdir, name, 'devel'))
