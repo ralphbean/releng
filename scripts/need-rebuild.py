@@ -13,15 +13,15 @@ import os
 
 # Set some variables
 # Some of these could arguably be passed in as args.
-buildtag = 'dist-f11' # tag to build from
-epoch = '2009-02-23 0:0:0.000000' # rebuild anything not built after this date
+buildtaglist = ['dist-f11', 'dist-f11-rebuild'] # tag(s) to check
+epoch = '2009-02-23 18:31:07.000000' # rebuild anything not built after this date
 tobuild = {} # dict of owners to lists of packages needing to be built
 
 # Create a koji session
 kojisession = koji.ClientSession('https://koji.fedoraproject.org/kojihub')
 
 # Generate a list of packages to iterate over
-pkgs = kojisession.listPackages(buildtag, inherited=True)
+pkgs = kojisession.listPackages(buildtaglist[0], inherited=True)
 
 # reduce the list to those that are not blocked.
 pkgs = [pkg for pkg in pkgs if not pkg['blocked']]
@@ -48,7 +48,17 @@ results = kojisession.multiCall()
 
 # Loop through the results and build up a list of things to build
 for pkg, result in zip(pkgs, results):
-    if not result[0]:
+    newbuild = 0
+    if result[0]:
+        for build in result[0]:
+            buildtarget = kojisession.getTaskInfo(build['task_id'],
+                                       request=True)['request'][1]
+            if buildtarget in buildtaglist:
+                # We've already got an attempt made, skip.
+                newbuild = True
+                break
+
+    if not newbuild:
         if tobuild.has_key(pkg['owner_name']):
             tobuild[pkg['owner_name']].append(pkg['package_name'])
         else:
