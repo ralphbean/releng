@@ -16,7 +16,7 @@ import operator
 # Some of these could arguably be passed in as args.
 target = 'dist-f11' # tag to tag into
 holdingtag = 'dist-f11-rebuild' # tag holding the rebuilds
-totag = []
+newbuilds = [] # list of packages that have a newer build attempt
 
 # Create a koji session
 kojisession = koji.ClientSession('https://koji.fedoraproject.org/kojihub')
@@ -31,6 +31,10 @@ kojisession.ssl_login(clientcert, clientca, serverca)
 builds = sorted(kojisession.listTagged(holdingtag, latest=True),
                 key=operator.itemgetter('package_name'))
 
+# Generate a list of packages in the target, reduced by not blocked.
+pkgs = kojisession.listPackages(target, inherited=True)
+pkgs = [pkg['package_name'] for pkg in pkgs if not pkg['blocked']]
+
 print 'Checking %s builds...' % len(builds)
 
 # Use multicall
@@ -42,33 +46,39 @@ for build in builds:
     builddate = build['creation_time']
 
     # Query to see if a build has already been attempted
-    # this version requires newer koji:
-    # kojisession.listBuilds(id, createdAfter=builddate):
-    # This version won't catch builds in flight
-    kojisession.listBuilds(id, completeAfter=builddate)
+    kojisession.listBuilds(id, createdAfter=builddate)
 
 # Get the results
 results = kojisession.multiCall()
 
-# Loop through the results and tag if necessary
+# For each build, get it's request info
+kojisession.multicall = True
 for build, result in zip(builds, results):
-    newerbuild = False
+    if not build['package_name'] in pkgs:
+        print 'Skipping %s, blocked in %s' % (pkg['package_name'], target)
+        continue
     for oldbuild in result[0]:
-        if kojisession.getTaskInfo(oldbuild['task_id'],
-                                   request=True)['request'][1] == target:
-            newerbuild = True
-            break
-    if newerbuild:
+        kojisession.getTaskInfo(oldbuild['task_id'],
+                                request=True)
+
+# For each request, compare to our target and populate the newbuild list.
+requests = kojisession.multiCall()
+for request in requests:
+    tasktarget = request[0]['request'][1]
+    taskpkg = request[0]['request'][0].rsplit('/')[-2]
+    if tasktarget == target:
+        if not taskpkg in newbuilds:
+            newbuilds.append(taskpkg)
+
+# Loop through the results and tag if necessary
+kojisession.multicall = True
+for build, result in zip(builds, results):
+    if not build['package_name'] in pkgs:
+        continue
+    if build['package_name'] in newbuilds:
         print 'Newer build found for %s.' % build['package_name']
     else:
-        totag.append(build)
-
-# use multicall again
-kojisession.multicall = True
-
-# Tag all the things needing to be tagged
-for build in totag:
-    print 'Tagging %s into %s' % (build['nvr'], target)
-    kojisession.tagBuildBypass(target, build)
+        print 'Tagging %s into %s' % (build['nvr'], target)
+        kojisession.tagBuildBypass(target, build)
 
 results = kojisession.multiCall()
