@@ -76,12 +76,15 @@ for build in failbuilds:
     failures.setdefault(owner, {})[pkg] = taskurl
         
 print '<html>'
+print '<body>'
 print '%s failed builds:<p>' % len(failed)
 
 # Print the results
+print '<dl>'
 for owner in sorted(failures.keys()):
-    print '%s (%s):<br>' % (owner, len(failures[owner]))
+    print '<dt>%s (%s):</dt>' % (owner, len(failures[owner]))
     for pkg in sorted(failures[owner].keys()):
-        print '&nbsp;&nbsp;&nbsp;&nbsp;<a href="%s">%s</a><br>' % (failures[owner][pkg], pkg)
+        print '<dd><a href="%s">%s</a></dd>' % (failures[owner][pkg], pkg)
     print '<p>'
+print '</body>'
 print '</html>'
