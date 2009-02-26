@@ -81,10 +81,11 @@ print '%s failed builds:<p>' % len(failed)
 
 # Print the results
 print '<dl>'
+print '<style type="text/css"> dt { margin-top: 1em } </style>'
 for owner in sorted(failures.keys()):
     print '<dt>%s (%s):</dt>' % (owner, len(failures[owner]))
     for pkg in sorted(failures[owner].keys()):
         print '<dd><a href="%s">%s</a></dd>' % (failures[owner][pkg], pkg)
-    print '<p>'
+print '</dl>'
 print '</body>'
 print '</html>'
