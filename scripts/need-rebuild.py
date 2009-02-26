@@ -16,62 +16,39 @@ import os
 buildtaglist = ['dist-f11', 'dist-f11-rebuild'] # tag(s) to check
 epoch = '2009-02-23 18:31:07.000000' # rebuild anything not built after this date
 tobuild = {} # dict of owners to lists of packages needing to be built
-built = [] # raw list of built packages
 unbuilt = [] # raw list of unbuilt packages
+built = {} # raw list of built packages
 
 # Create a koji session
 kojisession = koji.ClientSession('https://koji.fedoraproject.org/kojihub')
 
-# Generate a list of packages to iterate over
-pkgs = kojisession.listPackages(buildtaglist[0], inherited=True)
-
-# reduce the list to those that are not blocked.
-pkgs = [pkg for pkg in pkgs if not pkg['blocked']]
-
-print "Checking %s packages..." % len(pkgs)
-
-# Get builds for the packages
-# Use multicall for quickness
 kojisession.multicall = True
+for tag in buildtaglist:
+    kojisession.listTagged(tag, latest=True, inherit=True)
 
-# Loop over each package
-for pkg in pkgs:
-    name = pkg['package_name']
-    id = pkg['package_id']
-    kojisession.listBuilds(id, completeAfter=epoch)
+builds = kojisession.multiCall()
 
-# Get all the results
-results = kojisession.multiCall()
+for [tag] in builds:
+    for build in tag:
+        if build['creation_time'] > epoch:
+            built[build['package_name']] = build
 
-# For each build, get it's request info
 kojisession.multicall = True
-for result in results:
-    for oldbuild in result[0]:
-        kojisession.getTaskInfo(oldbuild['task_id'],
-                                request=True)
+for [tag] in builds:
+    for build in tag:
+        if build['package_name'] in built.keys():
+            continue
+        if not build in unbuilt:
+            unbuilt.append(build)
+            kojisession.listPackages(tagID=buildtaglist[0],
+                                     pkgID=build['package_id'],
+                                     inherited=True)
 
-# For each request, compare to our target and populate the newbuild list.
-requests = kojisession.multiCall()
-for request in requests:
-    tasktarget = request[0]['request'][1]
-    taskpkg = request[0]['request'][0].rsplit('/')[-2]
-    if tasktarget in buildtaglist:
-        if not taskpkg in built:
-            built.append(taskpkg)
-
-# Loop through the results and build up a list of things to build
-for pkg in pkgs:
-    pkgname = pkg['package_name']
-    if not pkgname in built:
-        unbuilt.append(pkgname)
-        if tobuild.has_key(pkg['owner_name']):
-            tobuild[pkg['owner_name']].append(pkgname)
-        else:
-            tobuild[pkg['owner_name']] = [pkgname]
-
+pkginfo = kojisession.multiCall()
+for [pkg] in pkginfo:
+    tobuild.setdefault(pkg[0]['owner_name'], []).append(pkg[0]['package_name'])
+        
 print "%s unbuilt packages:" % len(unbuilt)
-
-print sorted(unbuilt)
 
 # Print the results
 for owner in sorted(tobuild.keys()):
@@ -79,4 +56,3 @@ for owner in sorted(tobuild.keys()):
     for pkg in sorted(tobuild[owner]):
         print "    %s" % pkg
     print
-
