@@ -48,11 +48,17 @@ pkginfo = kojisession.multiCall()
 for [pkg] in pkginfo:
     tobuild.setdefault(pkg[0]['owner_name'], []).append(pkg[0]['package_name'])
         
-print "%s unbuilt packages:" % len(unbuilt)
+print '<html>'
+print '<body>'
+print "%s unbuilt packages:<p>" % len(unbuilt)
 
 # Print the results
+print '<dl>'
+print '<style type="text/css"> dt { margin-top: 1em } </style>'
 for owner in sorted(tobuild.keys()):
-    print "%s:" % owner
+    print '<dt>%s (%s):</dt>' % (owner, len(tobuild[owner]))
     for pkg in sorted(tobuild[owner]):
-        print "    %s" % pkg
-    print
+        print '<dd><a href="http://koji.fedoraproject.org/koji/packageinfo?packageID=%s">%s</a></dd>' % (pkg, pkg)
+    print '</dl>'
+print '</body>'
+print '</html>'
