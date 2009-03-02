@@ -33,7 +33,8 @@ pkgs = pkgdb.send_request('/users/packages/orphan',
 for p in pkgs.pkgs:
     for listing in p['listings']:
         if listing['collectionid'] == develbranch:
-            develorphs.append(p['name']) 
+            if listing['owner'] == 9900:
+                develorphs.append(p['name'])
 
 # Get koji listings for each orphaned package
 kojisession.multicall = True
