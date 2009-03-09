@@ -479,31 +479,15 @@ class SignUnsigned(CliTool, KojiTool):
     def rpm_nvra(self, rpminfo):
         return "%(name)s-%(version)s-%(release)s.%(arch)s" % rpminfo
 
-    def get_keys_from_rpm(self, path):
-         retval = []
-         hdr = koji.get_rpm_header(path)
-         head_keys = []
-         for field in self.head_header_tags:
-             sigkey = koji.get_header_field(hdr, field)
-             if not sigkey:
-                 continue
-             head_keys.append(koji.hex_string(sigkey[13:17]))
-         for field in self.body_header_tags:
-             sigkey = koji.get_header_field(hdr, field)
-             if sigkey:
-                 keyid = koji.hex_string(sigkey[13:17])
-                 if keyid in head_keys:
-                     retval.append(keyid)
-         if len(retval) > 1:
-             raise RuntimeError, "More than one key found %s %s" % (path, retval)
-         if len(retval) == 1:
-             return retval[0]
-
     def rip_sighdr(self, path):
-        sigkey = self.get_keys_from_rpm(path)
-        if sigkey is None:
-            sigkey=""
+        sigkey = ""
         sighdr = koji.rip_rpm_sighdr(path)
+        rawhdr = koji.RawHeader(sighdr)
+        sigpkt = rawhdr.get(koji.RPM_SIGTAG_GPG)
+        if not sigpkt:
+            sigpkt = rawhdr.get(koji.RPM_SIGTAG_PGP)
+        if sigpkt:
+            sigkey = koji.get_sigpacket_key_id(sigpkt)
         return sighdr, sigkey
 
     def write_sigs(self, rpmlist, sigkey):
