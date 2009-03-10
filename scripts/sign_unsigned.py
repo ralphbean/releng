@@ -389,13 +389,17 @@ class SignUnsigned(CliTool, KojiTool):
             'E418E3AA': { 'name': 'rawhide',
                           'description': 'Red Hat, Inc. automated build signing key (2003) <rawhide@redhat.com>' },
             '6DF2196F': { 'name': 'fedora-gold',
-                          'description': 'Fedora (8 and 9) <fedora@fedoraproject.org>' },
+                          'description': 'Fedora (8 and 9) <fedora@fedoraproject.org>',
+                          'size': 1024 },
             'DF9B0AE9': { 'name': 'fedora-test',
-                          'description': 'Fedora (8 and 9 testing) <fedora@fedoraproject.org>' },
+                          'description': 'Fedora (8 and 9 testing) <fedora@fedoraproject.org>',
+                          'size': 1024 },
             '4EBFC273': { 'name': 'f10',
-                          'description': 'Fedora (10) <fedora@fedoraproject.org>' },
+                          'description': 'Fedora (10) <fedora@fedoraproject.org>',
+                          'size': 1024 },
             '0B86274E': { 'name': 'f10-test',
-                          'description': 'Fedora (10 testing) <fedora@fedoraproject.org>' },
+                          'description': 'Fedora (10 testing) <fedora@fedoraproject.org>',
+                          'size': 1024 },
             '1CDDBCA9': { 'name': 'fedora-rawhide',
                           'description': 'Fedora Project automated build signing key (2003) <rawhide@redhat.com>' },
             '5A27881F': { 'name': 'rhn-feedback',
@@ -611,7 +615,10 @@ class SignUnsigned(CliTool, KojiTool):
                    raise RuntimeError, "%s is not set up for the signing server" % key
               cmd = "rpm-sign --key=%s %s" % (ssid, ' '.join(paths))
          else:
-              cmd = "rpm --define '_gpg_name %s' --define '_signature gpg' --resign %s"  % (self.get_key_description(keyid), ' '.join(paths))
+              if self.gpg_keys[keyid]['size'] == 4096:
+                  cmd = """rpm --define '__gpg_sign_cmd %%{__gpg} gpg --force-v3-sigs --digest-algo sha256 --batch --no-verbose --no-armor --passphrase-fd 3 --no-secmem-warning -u "%%{_gpg_name}" -sbo %%{__signature_filename} %%{__plaintext_filename}' --define '_gpg_name %s' --define '_signature gpg' --resign %s"""  % (self.get_key_description(keyid), ' '.join(paths))
+              else:
+                  cmd = "rpm --define '_gpg_name %s' --define '_signature gpg' --resign %s"  % (self.get_key_description(keyid), ' '.join(paths))
          return cmd
 
     def do_signing(self, pathargs, level):
