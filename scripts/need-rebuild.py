@@ -52,14 +52,19 @@ for pkg, [result] in zip(pkgs, results):
 requests = kojisession.multiCall()
 
 # Populate the task info dict
-for [request] in requests:
-    tasks[request['id']] = request
+for request in requests:
+    if len(request) > 1:
+        continue
+    tasks[request[0]['id']] = request[0]
 
 for pkg in pkgs:
     for newbuild in newbuilds[pkg['package_name']]:
         # Scrape the task info out of the tasks dict from the newbuild task ID
-        if tasks[newbuild['task_id']]['request'][1] in [target, buildtag]:
-            break
+        try:
+            if tasks[newbuild['task_id']]['request'][1] in [target, buildtag]:
+                break
+        except:
+            pass
     else:
         tobuild.setdefault(pkg['owner_name'], []).append(pkg['package_name'])
         unbuilt.append(pkg)
