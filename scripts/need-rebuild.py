@@ -11,6 +11,7 @@
 import koji
 import os
 import operator
+import datetime
 
 # Set some variables
 # Some of these could arguably be passed in as args.
@@ -69,17 +70,25 @@ for pkg in pkgs:
         tobuild.setdefault(pkg['owner_name'], []).append(pkg['package_name'])
         unbuilt.append(pkg)
 
-print '<html>'
-print '<body>'
-print "%s unbuilt packages:<p>" % len(unbuilt)
+now = datetime.datetime.now()
+now_str = "%s UTC" % str(now.utcnow())
+
+print '<html><head>'
+print '<title>Unbuilt packages as of %s</title>' % now_str
+print '<style type="text/css"> dt { margin-top: 1em } </style>'
+print '</head><body>'
+print "<p>%s unbuilt packages:</p>" % len(unbuilt)
+print "<p>Last run: %s</p>" % now_str
 
 # Print the results
 print '<dl>'
-print '<style type="text/css"> dt { margin-top: 1em } </style>'
 for owner in sorted(tobuild.keys()):
     print '<dt>%s (%s):</dt>' % (owner, len(tobuild[owner]))
     for pkg in sorted(tobuild[owner]):
         print '<dd><a href="http://koji.fedoraproject.org/koji/packageinfo?packageID=%s">%s</a></dd>' % (pkg, pkg)
     print '</dl>'
+print '<p>The script that generated this page can be found at '
+print '<a href="https://fedorahosted.org/rel-eng/browser/scripts">https://fedorahosted.org/rel-eng/browser/scripts</a>.'
+print 'There you can also report bugs and RFEs.</p>'
 print '</body>'
 print '</html>'
