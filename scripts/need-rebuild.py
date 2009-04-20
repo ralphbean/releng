@@ -74,10 +74,10 @@ now = datetime.datetime.now()
 now_str = "%s UTC" % str(now.utcnow())
 
 print '<html><head>'
-print '<title>Unbuilt packages as of %s</title>' % now_str
+print '<title>Packages that need to be rebuild as of %s</title>' % now_str
 print '<style type="text/css"> dt { margin-top: 1em } </style>'
 print '</head><body>'
-print "<p>%s unbuilt packages:</p>" % len(unbuilt)
+print "<p>%s packages need rebuilding:</p>" % len(unbuilt)
 print "<p>Last run: %s</p>" % now_str
 
 # Print the results
