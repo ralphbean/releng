@@ -403,7 +403,7 @@ class SignUnsigned(CliTool, KojiTool):
             '1CDDBCA9': { 'name': 'fedora-rawhide',
                           'description': 'Fedora Project automated build signing key (2003) <rawhide@redhat.com>' },
             'D22E77F2': { 'name': 'f11',
-                          'description': 'Fedora (11 testing) <fedora@fedoraproject.org>',
+                          'description': 'Fedora (11) <fedora@fedoraproject.org>',
                           'size': 4096 },
             '5A27881F': { 'name': 'rhn-feedback',
                           'description': 'Red Hat, Inc (Red Hat Network) <rhn-feedback@redhat.com>' },
