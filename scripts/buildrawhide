@@ -47,6 +47,11 @@ wait
 mock -r $MOCKCONFIG --uniqueext=$DATE --clean
 
 [ -n "$NOSYNC" ] && exit $rc
+
+# Create a rawhide link in /mnt/koji/mash, deltas et al depend on this
+rm /mnt/koji/mash/rawhide
+ln -s /mnt/koji/mash/rawhide-$DATE/development/ /mnt/koji/mash/rawhide
+
 cd /tmp
 # data
 sudo -u ftpsync /usr/bin/rsync $RSYNC_OPTS --exclude repodata/ /mnt/koji/mash/rawhide-$DATE/development/ $DESTPATH
