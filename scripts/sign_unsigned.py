@@ -402,7 +402,7 @@ class SignUnsigned(CliTool, KojiTool):
                           'size': 1024 },
             '1CDDBCA9': { 'name': 'fedora-rawhide',
                           'description': 'Fedora Project automated build signing key (2003) <rawhide@redhat.com>' },
-            'D22E77F2': { 'name': 'f11-test',
+            'D22E77F2': { 'name': 'f11',
                           'description': 'Fedora (11 testing) <fedora@fedoraproject.org>',
                           'size': 4096 },
             '5A27881F': { 'name': 'rhn-feedback',
@@ -424,7 +424,7 @@ class SignUnsigned(CliTool, KojiTool):
     def sig_level(self, sigs, level='rawhide', exact=False):
         """Check if signature(s) satisfy required level"""
 
-        orderings = [['fedora-rawhide', 'rawhide', 'fedora-test', 'fedora-gold', 'f10-test', 'f10'],
+        orderings = [['fedora-rawhide', 'rawhide', 'fedora-test', 'fedora-gold', 'f10-test', 'f10', 'f11'],
              ['beta', 'security', 'gold', 'redhatrelease']]
         if not sigs:
              return False
