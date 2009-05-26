@@ -17,6 +17,7 @@ import datetime
 # Some of these could arguably be passed in as args.
 buildtag = 'dist-f11-rebuild' # tag(s) to check
 target = 'dist-f11'
+updates = 'dist-f11-updates-candidate'
 epoch = '2009-02-23 18:31:07.000000' # rebuild anything not built after this date
 tobuild = {} # dict of owners to lists of packages needing to be built
 unbuilt = [] # raw list of unbuilt packages
@@ -62,7 +63,7 @@ for pkg in pkgs:
     for newbuild in newbuilds[pkg['package_name']]:
         # Scrape the task info out of the tasks dict from the newbuild task ID
         try:
-            if tasks[newbuild['task_id']]['request'][1] in [target, buildtag]:
+            if tasks[newbuild['task_id']]['request'][1] in [target, buildtag, updates, 'dist-f12']:
                 break
         except:
             pass
