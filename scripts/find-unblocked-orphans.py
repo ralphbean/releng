@@ -26,9 +26,8 @@ pkgdb = fedora.client.PackageDB()
 kojisession = koji.ClientSession('https://koji.fedoraproject.org/kojihub')
 
 # Get a list of packages owned by orphan
-pkgs = pkgdb.send_request('/users/packages/orphan',
-                          req_params={'acls': ['owner'],
-                                      'tg_paginate_limit': 0})
+pkgs = pkgdb.send_request('/packages/orphans',
+                          req_params={'tg_paginate_limit': 0})
 
 # Reduce to packages orphaned on devel
 for p in pkgs.pkgs:
