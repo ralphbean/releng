@@ -16,7 +16,7 @@ import fedora.client
 # Some of these could arguably be passed in as args.
 tag = 'dist-rawhide' # tag to check in koji
 develbranch = 8 # pkgdb ID for the devel branch
-orphanuid = 9900 # pkgdb uid for orphan
+orphanuid = 'orphan' # pkgdb uid for orphan
 develorphs = [] # list of orphans on the devel branch from pkgdb
 
 # Create a pkgdb session
