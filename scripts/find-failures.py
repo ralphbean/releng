@@ -15,8 +15,8 @@ import operator
 
 # Set some variables
 # Some of these could arguably be passed in as args.
-buildtag = 'dist-f11-rebuild' # tag to check
-desttag = 'dist-f11' # Tag where fixed builds go
+buildtag = 'dist-f12-rebuild' # tag to check
+desttag = 'dist-f12' # Tag where fixed builds go
 epoch = '2009-02-23 18:31:07.000000' # Date to check for failures from
 failures = {} # dict of owners to lists of packages that failed.
 failed = [] # raw list of failed packages

@@ -16,13 +16,13 @@ import operator
 
 # Set some variables
 # Some of these could arguably be passed in as args.
-buildtag = 'dist-f11' # tag to build from
+buildtag = 'dist-f12' # tag to build from
 epoch = '2009-02-23 18:31:07.000000' # rebuild anything not built after this date
 user = 'Fedora Release Engineering <rel-eng@lists.fedoraproject.org>'
 comment = '- Rebuilt for https://fedoraproject.org/wiki/Fedora_11_Mass_Rebuild'
 workdir = os.path.expanduser('~/massbuild')
 enviro = os.environ
-target = 'dist-f11-rebuild'
+target = 'dist-f12-rebuild'
 enviro['CVS_RSH'] = 'ssh' # use ssh for cvs
 
 # Define functions

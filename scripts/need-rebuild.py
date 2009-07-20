@@ -15,9 +15,9 @@ import datetime
 
 # Set some variables
 # Some of these could arguably be passed in as args.
-buildtag = 'dist-f11-rebuild' # tag(s) to check
-target = 'dist-f11'
-updates = 'dist-f11-updates-candidate'
+buildtag = 'dist-f12-rebuild' # tag(s) to check
+target = 'dist-f12'
+updates = 'dist-f12-updates-candidate'
 epoch = '2009-02-23 18:31:07.000000' # rebuild anything not built after this date
 tobuild = {} # dict of owners to lists of packages needing to be built
 unbuilt = [] # raw list of unbuilt packages
