@@ -163,3 +163,8 @@ for orph in sorted(unblocked.keys()):
 
 # Clean up our tempdir
 shutil.rmtree(tempdir)
+
+# Print a blurb about where the code came from
+print '\nThe script that generated this page can be found at '
+print 'https://fedorahosted.org/rel-eng/browser/scripts/find-unblocked-orphans.py'
+print 'There you can also report bugs and RFEs.'
