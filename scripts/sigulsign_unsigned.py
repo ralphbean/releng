@@ -135,7 +135,7 @@ kojisession.ssl_login(CLIENTCERT, CLIENTCA, SERVERCA)
 if opts.tag is not None:
     logging.info('Getting builds from %s' % tag)
     builds = [build['nvr'] for build in
-              kojisession.listTagged('dist-f11-updates', latest=True,
+              kojisession.listTagged(opts.tag, latest=True,
                                      inherit=opts.inherit)]
 else:
     logging.info('Getting builds from arguments')
