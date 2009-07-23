@@ -56,7 +56,7 @@ def writeRPMs():
     logging.info('Calling koji to write %s rpms' % len(rpmdict))
     kojisession.multicall = True
     for rpm in rpmdict.keys():
-        logging.debug('Signing %s with %s' % (rpm, key))
+        logging.debug('Writing out %s with %s' % (rpm, key))
         kojisession.writeSignedRPM(rpm, KEYS[key])
 
     # Get the results and check for any errors.
