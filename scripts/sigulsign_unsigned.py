@@ -64,6 +64,8 @@ def writeRPMs():
     for rpm, result in zip(rpmdict.keys(), results):
         if isinstance(result, dict):
             logging.error('Error writing out %s' % rpm)
+            if result['traceback']:
+                logging.error('    ' + result['traceback'][-1])
             status = 1
 
     return status
