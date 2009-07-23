@@ -199,14 +199,13 @@ command = ['sigul', '--batch', 'sign-rpm', '--store-in-koji', '--koji-only',
            key]
 logging.info('Signing rpms via sigul')
 for rpm in unsigned:
+    logging.debug('Running %s' % subprocess.list2cmdline(command + [rpm]))
     child = subprocess.Popen(command + [rpm], stdin=subprocess.PIPE)
     child.stdin.write(passphrase + '\0')
     ret = child.wait()
     if ret != 0:
         logging.error('Error signing %s' % rpm)
         status = 1
-    else:
-        logging.debug('%s signed.' % rpm)
 
 # Now that we've signed things, time to write them out, if so desired.
 if not opts.just_sign:
