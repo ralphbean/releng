@@ -189,6 +189,7 @@ for rpm in rpmdict.keys():
 results = kojisession.multiCall()
 for ([result], rpm) in zip(results, rpmdict.keys()):
     if not result:
+        logging.debug('%s is not signed with %s' % (rpm, key))
         unsigned.append(rpm)
 
 logging.debug('Found %s unsigned rpms' % len(unsigned))
