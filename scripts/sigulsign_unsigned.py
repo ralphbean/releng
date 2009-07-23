@@ -106,7 +106,7 @@ if not args:
     sys.exit(1)
 
 # Check to see if we either got a tag or some builds
-if opts.tag and len(foo) > 2:
+if opts.tag and len(args) > 2:
     logging.error('You must provide either a tag or a build.')
     parser.print_help()
     sys.exit(1)
@@ -133,7 +133,7 @@ kojisession.ssl_login(CLIENTCERT, CLIENTCA, SERVERCA)
 # optionally using inheritance.  Otherwise take everything after the
 # key as a build.
 if opts.tag is not None:
-    logging.info('Getting builds from %s' % tag)
+    logging.info('Getting builds from %s' % opts.tag)
     builds = [build['nvr'] for build in
               kojisession.listTagged(opts.tag, latest=True,
                                      inherit=opts.inherit)]
