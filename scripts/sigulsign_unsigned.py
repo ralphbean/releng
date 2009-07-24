@@ -43,8 +43,8 @@ CLIENTCA = os.path.expanduser('~/.fedora-upload-ca.cert')
 CLIENTCERT = os.path.expanduser('~/.fedora.cert')
 # Setup a dict of our key names as sigul knows them to the actual key ID
 # that koji would use.  We should get this from sigul somehow.
-KEYS = {'fedora-12': 'd2933660',
-        '0xf13': 'f13bd4d5'}
+KEYS = {'fedora-12': {'id': 'd2933660', 'v3': True},
+        '0xf13': {'id': 'f13bd4d5', 'v3': False}}
 
 # Throw out some functions
 def writeRPMs():
@@ -57,7 +57,7 @@ def writeRPMs():
     kojisession.multicall = True
     for rpm in rpmdict.keys():
         logging.debug('Writing out %s with %s' % (rpm, key))
-        kojisession.writeSignedRPM(rpm, KEYS[key])
+        kojisession.writeSignedRPM(rpm, KEYS[key]['id'])
 
     # Get the results and check for any errors.
     results = kojisession.multiCall()
@@ -112,7 +112,7 @@ if opts.tag and len(args) > 2:
     sys.exit(1)
 
 key = args[0]
-logging.debug('Using %s for key %s' % (KEYS[key], key))
+logging.debug('Using %s for key %s' % (KEYS[key]['id'], key))
 if not key in KEYS.keys():
     logging.error('Unknown key %s' % key)
     parser.print_help()
@@ -184,7 +184,7 @@ kojisession.multicall = True
 # Query for the specific key we're looking for, no results means
 # that it isn't signed and thus add it to the unsigned list
 for rpm in rpmdict.keys():
-    kojisession.queryRPMSigs(rpm_id=rpmdict[rpm], sigkey=KEYS[key])
+    kojisession.queryRPMSigs(rpm_id=rpmdict[rpm], sigkey=KEYS[key]['id'])
 
 results = kojisession.multiCall()
 for ([result], rpm) in zip(results, rpmdict.keys()):
@@ -195,8 +195,11 @@ for ([result], rpm) in zip(results, rpmdict.keys()):
 logging.debug('Found %s unsigned rpms' % len(unsigned))
 
 # Now run the unsigned stuff through sigul
-command = ['sigul', '--batch', 'sign-rpm', '--store-in-koji', '--koji-only',
-           key]
+command = ['sigul', '--batch', 'sign-rpm', '--store-in-koji', '--koji-only']
+# See if this is a v3 key or not
+if KEYS[key]['v3']:
+    command.append('--v3-signature')
+command.append(key)
 logging.info('Signing rpms via sigul')
 for rpm in unsigned:
     logging.debug('Running %s' % subprocess.list2cmdline(command + [rpm]))
