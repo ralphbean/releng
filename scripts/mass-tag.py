@@ -38,13 +38,24 @@ pkgs = [pkg['package_name'] for pkg in pkgs if not pkg['blocked']]
 
 print 'Checking %s builds...' % len(builds)
 
+# Get the task creation time from our builds
+kojisession.multicall = True
+for build in builds:
+    taskid = build['task_id']
+    kojisession.getTaskInfo(taskid)
+
+results = kojisession.multiCall()
+
+for build, [result] in zip (builds, results):
+    build['task_creation_time'] = result['create_time']
+
 # Use multicall
 kojisession.multicall = True
 
 # Loop over each build
 for build in builds:
     id = build['package_id']
-    builddate = build['creation_time']
+    builddate = build['task_creation_time']
 
     # Query to see if a build has already been attempted
     kojisession.listBuilds(id, createdAfter=builddate)
@@ -57,9 +68,10 @@ kojisession.multicall = True
 for build, [result] in zip(builds, results):
     if not build['package_name'] in pkgs:
         continue
-    newbuilds[build['package_name']] = []
     for newbuild in result:
-        newbuilds[build['package_name']].append(newbuild)
+        if newbuild['build_id'] == build['build_id']:
+            continue
+        newbuilds.setdefault(build['package_name'], []).append(newbuild)
         kojisession.getTaskInfo(newbuild['task_id'],
                                 request=True)
 
@@ -76,15 +88,19 @@ for build in builds:
     if not build['package_name'] in pkgs:
         print 'Skipping %s, blocked in %s' % (build['package_name'], target)
         continue
-    for newbuild in newbuilds[build['package_name']]:
-        # Scrape the task info out of the tasks dict from the newbuild task ID
-        if tasks[newbuild['task_id']]['request'][1] == target:
-            print 'Newer build found for %s.' % build['package_name']
-            break
-    else:
+    newer = False
+    if build['package_name'] in newbuilds.keys():
+        for newbuild in newbuilds[build['package_name']]:
+            # Scrape the task info out of the tasks dict from the newbuild task ID
+            if tasks[newbuild['task_id']]['request'][1] == target \
+            and newbuild['state'] == 1:
+                print 'Newer build found for %s.' % build['package_name']
+                newer = True
+                break
+    if not newer:
         print 'Tagging %s into %s' % (build['nvr'], target)
         taglist.append(build['nvr'])
-        kojisession.tagBuildBypass(target, build)
+    kojisession.tagBuildBypass(target, build)
 
 print 'Tagging %s builds.' % len(taglist)
 results = kojisession.multiCall()
