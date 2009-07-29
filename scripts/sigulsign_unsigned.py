@@ -43,7 +43,7 @@ CLIENTCA = os.path.expanduser('~/.fedora-upload-ca.cert')
 CLIENTCERT = os.path.expanduser('~/.fedora.cert')
 # Setup a dict of our key names as sigul knows them to the actual key ID
 # that koji would use.  We should get this from sigul somehow.
-KEYS = {'fedora-12': {'id': 'd2933660', 'v3': True},
+KEYS = {'fedora-12': {'id': '57bbccba', 'v3': True},
         '0xf13': {'id': 'f13bd4d5', 'v3': False}}
 
 # Throw out some functions
