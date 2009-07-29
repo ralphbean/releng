@@ -6,80 +6,127 @@
 #
 # Authors:
 #     Jesse Keating <jkeating@redhat.com>
+#     Milos Jakubicek <xjakub@fi.muni.cz>
 #
 
 import koji
 import os
 import operator
 import datetime
+import sys
 
 # Set some variables
 # Some of these could arguably be passed in as args.
 buildtag = 'dist-f12-rebuild' # tag(s) to check
 target = 'dist-f12'
 updates = 'dist-f12-updates-candidate'
-epoch = '2009-07-24 08:06:00.000000' # rebuild anything not built after this date
+rawhide = 'dist-f12' # Change to dist-f13 after we branch
+epoch = '2009-07-24 00:00:00.000000' # rebuild anything not built after this date
 tobuild = {} # dict of owners to lists of packages needing to be built
 unbuilt = [] # raw list of unbuilt packages
-built = {} # raw list of built packages
 newbuilds = {}
 tasks = {}
+# List of Kojihubs to be searched
+kojihubs = [
+'http://koji.fedoraproject.org/kojihub',
+'http://alpha.koji.fedoraproject.org/kojihub',
+'http://sparc.koji.fedoraproject.org/kojihub',
+'http://s390.koji.fedoraproject.org/kojihub',
+'http://ia64.koji.fedoraproject.org/kojihub',
+'http://arm.koji.fedoraproject.org/kojihub',
+]
 
-# Create a koji session
-kojisession = koji.ClientSession('https://koji.fedoraproject.org/kojihub')
+def needRebuild(kojihub):
 
-# Generate a list of packages to iterate over
-pkgs = kojisession.listPackages(target, inherited=True)
+    # Create a koji session
+    kojisession = koji.ClientSession(kojihub)
 
-# reduce the list to those that are not blocked and sort by package name
-pkgs = sorted([pkg for pkg in pkgs if not pkg['blocked']],
-              key=operator.itemgetter('package_name'))
+    # Generate a list of packages to iterate over
+    try:
+        pkgs = kojisession.listPackages(target, inherited=True)
+    except:
+        print >> sys.stderr, "Failed to get the packages list from koji: %s (skipping)" % kojihub
+        return -1
+    print "%s<br/>" % kojihub
 
-# Get completed builds since epoch
-kojisession.multicall = True
-for pkg in pkgs:
-    kojisession.listBuilds(pkg['package_id'], state=1, createdAfter=epoch)
+    # reduce the list to those that are not blocked and sort by package name
+    pkgs = sorted([pkg for pkg in pkgs if not pkg['blocked']],
+                  key=operator.itemgetter('package_name'))
 
-results = kojisession.multiCall()
+    # Get completed builds since epoch
+    kojisession.multicall = True
+    for pkg in pkgs:
+        kojisession.listBuilds(pkg['package_id'], state=1, createdAfter=epoch)
 
-# For each build, get it's request info
-kojisession.multicall = True
-for pkg, [result] in zip(pkgs, results):
-    newbuilds[pkg['package_name']] = []
-    for newbuild in result:
-        newbuilds[pkg['package_name']].append(newbuild)
-        kojisession.getTaskInfo(newbuild['task_id'],
-                                request=True)
+    results = kojisession.multiCall()
 
-requests = kojisession.multiCall()
+    # For each build, get it's request info
+    kojisession.multicall = True
+    for pkg, [result] in zip(pkgs, results):
+        newbuilds[pkg['package_name']] = []
+        for newbuild in result:
+            newbuilds[pkg['package_name']].append(newbuild)
+            kojisession.getTaskInfo(newbuild['task_id'],
+                                    request=True)
 
-# Populate the task info dict
-for request in requests:
-    if len(request) > 1:
-        continue
-    tasks[request[0]['id']] = request[0]
+    try:
+        requests = kojisession.multiCall()
+    except:
+        print >> sys.stderr, "Failed to get the build request information: %s (skipping)" % kojihub
+        return -1
 
-for pkg in pkgs:
-    for newbuild in newbuilds[pkg['package_name']]:
-        # Scrape the task info out of the tasks dict from the newbuild task ID
-        try:
-            if tasks[newbuild['task_id']]['request'][1] in [target, buildtag']:
-                break
-        except:
-            pass
-    else:
-        tobuild.setdefault(pkg['owner_name'], []).append(pkg['package_name'])
-        unbuilt.append(pkg)
+
+    # Populate the task info dict
+    for request in requests:
+        if len(request) > 1:
+            continue
+        tasks[request[0]['id']] = request[0]
+
+    unbuiltnew = []
+    for pkg in pkgs:
+        for newbuild in newbuilds[pkg['package_name']]:
+            # Scrape the task info out of the tasks dict from the newbuild task ID
+            try:
+                if tasks[newbuild['task_id']]['request'][1] in [target, buildtag, updates, rawhide]:
+                    break
+            except:
+                pass
+        else:
+            tobuild.setdefault(pkg['owner_name'], set()).add(pkg['package_name'])
+            unbuiltnew.append(pkg['package_name'])
+    return set(unbuiltnew)
 
 now = datetime.datetime.now()
 now_str = "%s UTC" % str(now.utcnow())
-
 print '<html><head>'
 print '<title>Packages that need to be rebuild as of %s</title>' % now_str
 print '<style type="text/css"> dt { margin-top: 1em } </style>'
 print '</head><body>'
-print "<p>%s packages need rebuilding:</p>" % len(unbuilt)
 print "<p>Last run: %s</p>" % now_str
+print "<p>Included build tags: %s</p>" % [target, buildtag, updates, rawhide]
+print "<p>Included Koji instances:<br/>"
+
+# Go through all Kojis to get unbuilt packages
+for kojihub in kojihubs:
+    unbuiltnew = needRebuild(kojihub)
+    if unbuiltnew == -1:
+        continue
+    if len(unbuilt) == 0:
+        unbuilt = unbuiltnew
+    else:
+        unbuilt = unbuilt & unbuiltnew
+print "</p>"
+
+# Update the maintainer-package list
+for owner in tobuild.keys():
+    for pkg in tobuild[owner].copy():
+        if pkg not in unbuilt:
+            tobuild[owner].remove(pkg)
+    if len(tobuild[owner]) == 0:
+        del tobuild[owner]
+
+
+print "<p>%s packages need rebuilding:</p><hr/>" % len(unbuilt)
 
 # Print the results
 print '<dl>'
