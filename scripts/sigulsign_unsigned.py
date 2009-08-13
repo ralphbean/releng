@@ -203,8 +203,10 @@ if KEYS[key]['v3']:
     command.append('--v3-signature')
 command.append(key)
 logging.info('Signing rpms via sigul')
+total = len(unsigned)
 for rpm in unsigned:
     logging.debug('Running %s' % subprocess.list2cmdline(command + [rpm]))
+    logging.info('Signing %s of %s' % (unsigned.index(rpm) + 1, total))
     child = subprocess.Popen(command + [rpm], stdin=subprocess.PIPE)
     child.stdin.write(passphrase + '\0')
     ret = child.wait()
