@@ -38,7 +38,7 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -q --
 
 mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic /mnt/koji/mash/rawhide-$DATE/development >/mnt/koji/mash/rawhide-$DATE/logs/depcheck" &
 
-./scripts/critpath.py --url file:///mnt/koji/mash/rawhide-$DATE/ -o /mnt/koji/mash/rawhide-$DATE/logs/critpath.txt rawhide > /mnt/koji/mash/rawhide-$DATE/logs/critpath.log
+./scripts/critpath.py --url file:///mnt/koji/mash/rawhide-$DATE/ -o /mnt/koji/mash/rawhide-$DATE/logs/critpath.txt rawhide &> /mnt/koji/mash/rawhide-$DATE/logs/critpath.log
 
 for arch in i386 x86_64 ppc ; do
     HOST=$(koji list-hosts --quiet --enabled --ready --arch=$arch | sed 's|/| |g' | sort -gn -k4 -k5r | awk -F '.' '{ print $1 ; exit }')
