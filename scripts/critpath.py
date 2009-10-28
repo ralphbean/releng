@@ -124,6 +124,8 @@ if __name__ == '__main__':
                       help="arches to evaluate (%default)")
     parser.add_option("-o", "--output", default="critpath.txt",
                       help="name of file to write critpath list (%default)")
+    parser.add_option("-u", "--url", default=fedora_baseurl,
+                      help="URL to repos")
     (opt, args) = parser.parse_args()
     if (len(args) != 1) or (args[0] not in releases):
         parser.error("must choose a release from the list: %s" % releases)
@@ -134,7 +136,7 @@ if __name__ == '__main__':
     f = open(opt.output,"w")
     # Sanity checking done, set some variables
     release = args[0]
-    url = fedora_baseurl + releasepath[release]
+    url = opt.url + releasepath[release]
     check_arches = opt.arches.split(',')
 
     print "Using URL %s" % url
