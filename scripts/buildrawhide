@@ -45,7 +45,7 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-
 #    ./scripts/pungify $DATE $arch $HOST > /mnt/koji/mash/rawhide-$DATE/logs/pungify-$arch.log 2>&1 &
 #    done
 #
-#wait
+wait
 mock -r $MOCKCONFIG --uniqueext=$DATE --clean
 
 [ -n "$NOSYNC" ] && exit $rc
