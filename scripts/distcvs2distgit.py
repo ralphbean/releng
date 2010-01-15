@@ -36,7 +36,7 @@ PARSECVS = '/home/fedora/jkeating/mainline/parsecvs'
 WORKDIR = '/home/fedora/jkeating/workdir'
 OUTDIR = '/home/fedora/jkeating/repos'
 BRANCHES = ['F-12', 'F-11', 'F-10', 'F-9', 'F-8', 'F-7', 'devel', 'EL-5',
-            'EL-4']
+            'EL-4', 'OLPC-2']
 
 # Define some useful functions
 # This was stolen from http://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python
