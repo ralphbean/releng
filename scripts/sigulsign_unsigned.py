@@ -44,6 +44,7 @@ CLIENTCERT = os.path.expanduser('~/.fedora.cert')
 # Setup a dict of our key names as sigul knows them to the actual key ID
 # that koji would use.  We should get this from sigul somehow.
 KEYS = {'fedora-12': {'id': '57bbccba', 'v3': True},
+        'fedora-13': {'id': 'e8e40fde', 'v3': True},
         'fedora-11': {'id': 'd22e77f2', 'v3': True},
         'fedora-10': {'id': '4ebfc273', 'v3': False},
         'fedora-10-testing': {'id': '0b86274e', 'v3': False}}
