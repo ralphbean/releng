@@ -61,8 +61,10 @@ def writeRPMs():
     # so that there is some sense of progress
     logging.info('Calling koji to write %s rpms' % len(rpmdict))
     kojisession.multicall = True
-    for rpm in rpmdict.keys():
-        logging.debug('Writing out %s with %s' % (rpm, key))
+    rpms = rpmdict.keys()
+    for rpm in rpms:
+        logging.debug('Writing out %s with %s, %s of %s' % (rpm, key,
+                      rpms.index(rpm)+1, len(rpms)))
         kojisession.writeSignedRPM(rpm, KEYS[key]['id'])
         count += 1
         workset.append(rpm)
@@ -167,6 +169,9 @@ else:
     builds = args[1:]
 
 logging.debug('Got %s builds' % len(builds))
+
+# sort the builds
+builds = sorted(builds)
 
 # Build up a list of rpms to operate on
 # use multicall here to speed things up
