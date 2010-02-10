@@ -59,6 +59,9 @@ cd /tmp
 sudo -u ftpsync /usr/bin/rsync $RSYNC_OPTS --exclude repodata/ /mnt/koji/mash/rawhide-$DATE/development/ $DESTPATH
 # repodata & cleanup
 sudo -u ftpsync /usr/bin/rsync $RSYNC_OPTS --delete --delete-after /mnt/koji/mash/rawhide-$DATE/development/ $DESTPATH
+# update the hardlinks in the new paths for now
+sudo -u ftpsync /usr/bin/rsync -avH --link-dest /pub/fedora/linux/development/ --exclude 13 --exclude rawhide --delete --delete-after /pub/fedora/linux/development/ /pub/fedora/linux/development/13/
+sudo -u ftpsync /usr/bin/rsync -avH --link-dest /pub/fedora/linux/development/ --exclude 13 --exclude rawhide --delete --delete-after /pub/fedora/linux/development/ /pub/fedora/linux/development/rawhide/
 if [ "$?" = "0" ]; then
     cat /mnt/koji/mash/rawhide-$DATE/logs/start /mnt/koji/mash/rawhide-$DATE/logs/depcheck /mnt/koji/mash/rawhide-$DATE/logs/repodiff | mutt -e 'set from="Rawhide Report <rawhide@fedoraproject.org>"' -e 'set envelope_from=yes' -s 'rawhide report: '$DATE' changes' devel@lists.fedoraproject.org,test@lists.fedoraproject.org
 fi
