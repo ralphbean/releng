@@ -112,6 +112,8 @@ parser.add_option('--just-write', action='store_true', default=False,
                   help='Just write out signed copies of the rpms')
 parser.add_option('--just-sign', action='store_true', default=False,
                   help='Just sign and import the rpms')
+parser.add_option('--password',
+                  help='Password for the key')
 
 # Get our options and arguments
 (opts, args) = parser.parse_args()
@@ -148,7 +150,10 @@ if not key in KEYS.keys():
 # Get the passphrase for the user if we're going to sign something
 # (This code stolen from sigul client.py)
 if not opts.just_write:
-    passphrase = getpass.getpass(prompt='Passphrase for %s: ' % key)
+    if opts.password:
+        passphrase = opts.password
+    else:
+        passphrase = getpass.getpass(prompt='Passphrase for %s: ' % key)
 
 # setup the koji session
 logging.info('Setting up koji session')
