@@ -3,7 +3,7 @@
 # runs currently on releng1.fedora.phx.redhat.com
 
 DATE=$1
-RSYNC_OPTS="-rlptDHhv --delay-updates"
+RSYNC_OPTS="-rlptDHhv --delay-updates --exclude rawhide --exclude 13"
 DESTPATH="/pub/fedora/linux/development/"
 MOCKCONFIG=fedora-rawhide-compose-i386
 
