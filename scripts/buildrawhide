@@ -3,8 +3,8 @@
 # runs currently on releng1.fedora.phx.redhat.com
 
 DATE=$1
-RSYNC_OPTS="-rlptDHhv --delay-updates --exclude rawhide --exclude 13"
-DESTPATH="/pub/fedora/linux/development/"
+RSYNC_OPTS="-rlptDHhv --delay-updates"
+DESTPATH="/pub/fedora/linux/development/rawhide/"
 MOCKCONFIG=fedora-rawhide-compose-i386
 
 
@@ -47,6 +47,9 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-
 #
 wait
 mock -r $MOCKCONFIG --uniqueext=$DATE --clean
+
+# Exit now and do the sync/mail by hand the first time
+exit $rc
 
 [ -n "$NOSYNC" ] && exit $rc
 
