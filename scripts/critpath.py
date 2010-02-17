@@ -35,6 +35,10 @@ releasepath = {
 for r in ['12']: # 13, 14, ...
     releasepath[r] = 'releases/%s/Fedora/$basearch/os/' % r
 
+# Branched Fedora goes here
+branched = '13'
+releasepath['branched'] = 'development/%s/$basearch/os' % branched
+
 
 provides_cache = {}
 def resolve_deps(pkg, base):
