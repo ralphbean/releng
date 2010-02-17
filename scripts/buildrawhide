@@ -31,12 +31,12 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --no-clean --install koji yum createrepo c
 # Copy in the hosts file so that we get the right address for koji
 mock -r $MOCKCONFIG --uniqueext=$DATE --copyin /etc/hosts /etc/hosts >/dev/null 2>&1 # this reports to fail, but actually works
 # Drop privs here so that we run as the masher UID
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash -p /pub/fedora/linux/development -o /mnt/koji/mash/rawhide-$DATE --compsfile /mnt/koji/mash/rawhide-$DATE/logs/comps-rawhide.xml development > /mnt/koji/mash/rawhide-$DATE/logs/mash.log 2>&1" || exit 1
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash -p /pub/fedora/linux/development/rawhide -o /mnt/koji/mash/rawhide-$DATE --compsfile /mnt/koji/mash/rawhide-$DATE/logs/comps-rawhide.xml rawhide > /mnt/koji/mash/rawhide-$DATE/logs/mash.log 2>&1" || exit 1
 
 mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "rm -f /var/lib/rpm/__db*"
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -q --new=file:///mnt/koji/mash/rawhide-$DATE/development/source/SRPMS --old=file:///pub/fedora/linux/development/source/SRPMS > /mnt/koji/mash/rawhide-$DATE/logs/repodiff"
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -q --new=file:///mnt/koji/mash/rawhide-$DATE/rawhide/source/SRPMS --old=file:///pub/fedora/linux/development/rawhide/source/SRPMS > /mnt/koji/mash/rawhide-$DATE/logs/repodiff"
 
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic /mnt/koji/mash/rawhide-$DATE/development >/mnt/koji/mash/rawhide-$DATE/logs/depcheck" &
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic /mnt/koji/mash/rawhide-$DATE/rawhide >/mnt/koji/mash/rawhide-$DATE/logs/depcheck" &
 
 ./scripts/critpath.py --url file:///mnt/koji/mash/rawhide-$DATE/ -o /mnt/koji/mash/rawhide-$DATE/logs/critpath.txt rawhide &> /mnt/koji/mash/rawhide-$DATE/logs/critpath.log
 
@@ -48,23 +48,17 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-
 wait
 mock -r $MOCKCONFIG --uniqueext=$DATE --clean
 
-# Exit now and do the sync/mail by hand the first time
-exit $rc
-
 [ -n "$NOSYNC" ] && exit $rc
 
 # Create a rawhide link in /mnt/koji/mash, deltas et al depend on this
 rm /mnt/koji/mash/rawhide
-ln -s /mnt/koji/mash/rawhide-$DATE/development/ /mnt/koji/mash/rawhide
+ln -s /mnt/koji/mash/rawhide-$DATE/rawhide/ /mnt/koji/mash/rawhide
 
 cd /tmp
 # data
-sudo -u ftpsync /usr/bin/rsync $RSYNC_OPTS --exclude repodata/ /mnt/koji/mash/rawhide-$DATE/development/ $DESTPATH
+sudo -u ftpsync /usr/bin/rsync $RSYNC_OPTS --exclude repodata/ /mnt/koji/mash/rawhide-$DATE/rawhide/ $DESTPATH
 # repodata & cleanup
-sudo -u ftpsync /usr/bin/rsync $RSYNC_OPTS --delete --delete-after /mnt/koji/mash/rawhide-$DATE/development/ $DESTPATH
-# update the hardlinks in the new paths for now
-sudo -u ftpsync /usr/bin/rsync -avH --link-dest /pub/fedora/linux/development/ --exclude 13 --exclude rawhide --delete --delete-after /pub/fedora/linux/development/ /pub/fedora/linux/development/13/
-sudo -u ftpsync /usr/bin/rsync -avH --link-dest /pub/fedora/linux/development/ --exclude 13 --exclude rawhide --delete --delete-after /pub/fedora/linux/development/ /pub/fedora/linux/development/rawhide/
+sudo -u ftpsync /usr/bin/rsync $RSYNC_OPTS --delete --delete-after /mnt/koji/mash/rawhide-$DATE/rawhide/ $DESTPATH
 if [ "$?" = "0" ]; then
     cat /mnt/koji/mash/rawhide-$DATE/logs/start /mnt/koji/mash/rawhide-$DATE/logs/depcheck /mnt/koji/mash/rawhide-$DATE/logs/repodiff | mutt -e 'set from="Rawhide Report <rawhide@fedoraproject.org>"' -e 'set envelope_from=yes' -s 'rawhide report: '$DATE' changes' devel@lists.fedoraproject.org,test@lists.fedoraproject.org
 fi
