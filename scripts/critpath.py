@@ -30,7 +30,7 @@ base_arches = ('i386', 'ppc', 'x86_64')
 known_arches = base_arches + ('i586','i686','ppc64')
 fedora_baseurl = 'http://download.fedora.redhat.com/pub/fedora/linux/'
 releasepath = {
-    'rawhide': 'development/$basearch/os/'
+    'rawhide': 'development/rawhide/$basearch/os/'
 }
 for r in ['12']: # 13, 14, ...
     releasepath[r] = 'releases/%s/Fedora/$basearch/os/' % r
