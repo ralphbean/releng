@@ -15,11 +15,11 @@ ARCH=$2
 HOST=$3
 
 usage() {
-	echo "Usage: pungify <tree> <arch> <host>"
+	echo "Usage: pungify <tree> <branch> <arch> <host>"
 	exit 1
 }	
 
-[ -z "$TREE" -o -z "$ARCH" -o -z "$HOST" ] && usage
+[ -z "$TREE" -o -z "$BRANCH" -o -z "$ARCH" -o -z "$HOST" ] && usage
 
 ssh mock@$HOST /bin/bash -- << EOF
 	set -x
@@ -27,22 +27,22 @@ ssh mock@$HOST /bin/bash -- << EOF
 	mock -r fedora-devel-pungi-$ARCH --uniqueext=$TREE --install pungi nfs-utils setarch || exit 1
 	mock -r fedora-devel-pungi-$ARCH --uniqueext=$TREE --arch $ARCH shell -- << EEE
 set -x
-mkdir -p /tmp/treebuild.$TREE/{output,cache,development}
+mkdir -p /tmp/treebuild.$TREE/{output,cache,$BRANCH}
 cd /tmp/treebuild.$TREE
 touch rawhide.ks
-mount -t nfs -o ro,nolock nfs1.fedora.phx.redhat.com:/mnt/koji/mash/rawhide-$TREE/development development
+mount -t nfs -o ro,nolock nfs1.fedora.phx.redhat.com:/mnt/koji/mash/rawhide-$TREE/$BRANCH $BRANCH
 rm -f /var/lib/rpm/__db*
-mkdir -p output/development/$ARCH/os/
-ln -s /tmp/treebuild.$TREE/development/$ARCH/os/Packages output/development/$ARCH/os/Packages
-ln -s /tmp/treebuild.$TREE/development/$ARCH/os/repodata output/development/$ARCH/os/repodata
-pungi -c ./rawhide.ks -B --destdir /tmp/treebuild.$TREE/output --cachedir /tmp/treebuild.$TREE/cache --ver development
-umount development
-rm -rf output/development/$ARCH/os/{Packages,repodata}
+mkdir -p output/$BRANCH/$ARCH/os/
+ln -s /tmp/treebuild.$TREE/$BRANCH/$ARCH/os/Packages output/$BRANCH/$ARCH/os/Packages
+ln -s /tmp/treebuild.$TREE/$BRANCH/$ARCH/os/repodata output/$BRANCH/$ARCH/os/repodata
+pungi -c ./rawhide.ks -B --destdir /tmp/treebuild.$TREE/output --cachedir /tmp/treebuild.$TREE/cache --ver $BRANCH
+umount $BRANCH
+rm -rf output/$BRANCH/$ARCH/os/{Packages,repodata}
 EEE
 EOF
 # so, so wrong
-rsync -vaH mock@$HOST:/var/lib/mock/fedora-development-pungi-$ARCH-$TREE/root/tmp/treebuild.$TREE/output/development/$ARCH/os/ /mnt/koji/mash/rawhide-$TREE/development/$ARCH/os/
-rsync -vaH mock@$HOST:/var/lib/mock/fedora-development-pungi-$ARCH-$TREE/root/tmp/treebuild.$TREE/output/logs/* /mnt/koji/mash/rawhide-$TREE/logs/
+rsync -vaH mock@$HOST:/var/lib/mock/fedora-development-pungi-$ARCH-$TREE/root/tmp/treebuild.$TREE/output/$BRANCH/$ARCH/os/ /mnt/koji/mash/branched-$TREE/$BRANCH/$ARCH/os/
+rsync -vaH mock@$HOST:/var/lib/mock/fedora-development-pungi-$ARCH-$TREE/root/tmp/treebuild.$TREE/output/logs/* /mnt/koji/mash/branched-$TREE/logs/
 ssh mock@$HOST /bin/bash -- << EOF
 	set -x
 	mock -r fedora-devel-pungi-$ARCH --uniqueext=$TREE clean
