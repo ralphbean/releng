@@ -1,0 +1,66 @@
+#!/bin/bash
+
+# runs currently on releng01.phx2.fedoraproject.org
+
+DATE=$1
+RSYNC_OPTS="-rlptDHhv --delay-updates --link-dest=/pub/fedora/linux/development/rawhide/"
+BRANCHED="13"
+DESTPATH="/pub/fedora/linux/development/$BRANCHED/"
+MOCKCONFIG=fedora-branched-compose-i386
+
+
+[ -z "$DATE" ] && {
+	echo "usage: buildbranched <date>"
+	exit 1
+}
+
+TMPDIR=`mktemp -d /tmp/branched.$DATE.XXXX`
+mkdir -p /mnt/koji/mash/branched-$DATE/logs
+echo "Compose started at `date --utc`" > /mnt/koji/mash/branched-$DATE/logs/start
+echo >> /mnt/koji/mash/branched-$DATE/logs/start
+pushd $TMPDIR
+cvs -d :pserver:anonymous@cvs.fedoraproject.org:/cvs/pkgs -z3 -q co comps && {
+	pushd comps
+	make comps-f$BRANCHED
+	cp comps-f$BRANCHED.xml /mnt/koji/mash/branched-$DATE/logs/
+	popd
+}
+popd
+
+mock -r $MOCKCONFIG --uniqueext=$DATE --init
+mock -r $MOCKCONFIG --uniqueext=$DATE --no-clean --install koji yum createrepo cvs make intltool findutils mash yum-utils rsync repoview
+# Copy in the hosts file so that we get the right address for koji
+mock -r $MOCKCONFIG --uniqueext=$DATE --copyin /etc/hosts /etc/hosts >/dev/null 2>&1 # this reports to fail, but actually works
+# Drop privs here so that we run as the masher UID
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash -p $DESTPATH -o /mnt/koji/mash/branched-$DATE --compsfile /mnt/koji/mash/branched-$DATE/logs/comps-f$BRANCHED.xml $BRANCHED > /mnt/koji/mash/branched-$DATE/logs/mash.log 2>&1" || exit 1
+
+mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "rm -f /var/lib/rpm/__db*"
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -q --new=file:///mnt/koji/mash/branched-$DATE/$BRANCHED/source/SRPMS --old=file://$DESTPATH/source/SRPMS > /mnt/koji/mash/branched-$DATE/logs/repodiff"
+
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic --treename F-$BRANCHED /mnt/koji/mash/branched-$DATE/$BRANCHED >/mnt/koji/mash/branched-$DATE/logs/depcheck" &
+
+./scripts/critpath.py --url file:///mnt/koji/mash/branched-$DATE/ -o /mnt/koji/mash/branched-$DATE/logs/critpath.txt branched &> /mnt/koji/mash/branched-$DATE/logs/critpath.log
+
+for arch in i386 x86_64 ppc ; do
+    HOST=$(koji list-hosts --quiet --enabled --ready --arch=$arch | sed 's|/| |g' | sort -gn -k4 -k5r | awk -F '.' '{ print $1 ; exit }')
+    ./scripts/pungify $DATE $arch $HOST > /mnt/koji/mash/branched-$DATE/logs/pungify-$arch.log 2>&1 &
+    done
+
+wait
+mock -r $MOCKCONFIG --uniqueext=$DATE --clean
+
+[ -n "$NOSYNC" ] && exit $rc
+
+# Create a branched link in /mnt/koji/mash, deltas et al depend on this
+rm /mnt/koji/mash/branched
+ln -s /mnt/koji/mash/branched-$DATE/$BRANCHED/ /mnt/koji/mash/branched
+
+cd /tmp
+# data
+sudo -u ftpsync /usr/bin/rsync $RSYNC_OPTS --exclude repodata/ /mnt/koji/mash/branched-$DATE/$BRANCHED/ $DESTPATH
+# repodata & cleanup
+sudo -u ftpsync /usr/bin/rsync $RSYNC_OPTS --delete --delete-after /mnt/koji/mash/branched-$DATE/$BRANCHED/ $DESTPATH
+if [ "$?" = "0" ]; then
+    cat /mnt/koji/mash/branched-$DATE/logs/start /mnt/koji/mash/branched-$DATE/logs/depcheck /mnt/koji/mash/branched-$DATE/logs/repodiff | mutt -e 'set from="Branched Report <rawhide@fedoraproject.org>"' -e 'set envelope_from=yes' -s 'F-'$BRANCHED' Branched report: '$DATE' changes' devel@lists.fedoraproject.org,test@lists.fedoraproject.org
+fi
+exit 0
