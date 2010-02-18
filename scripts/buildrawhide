@@ -51,6 +51,9 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --clean
 
 [ -n "$NOSYNC" ] && exit $rc
 
+# Bail early, still syncing by hand until puppet changes go through
+exit $rc
+
 # Create a rawhide link in /mnt/koji/mash, deltas et al depend on this
 rm /mnt/koji/mash/rawhide
 ln -s /mnt/koji/mash/rawhide-$DATE/rawhide/ /mnt/koji/mash/rawhide
