@@ -21,11 +21,13 @@ echo >> /mnt/koji/mash/branched-$DATE/logs/start
 pushd $TMPDIR
 cvs -d :pserver:anonymous@cvs.fedoraproject.org:/cvs/pkgs -z3 -q co comps && {
 	pushd comps
-	make comps-f$BRANCHED
+	make comps-f$BRANCHED.xml
 	cp comps-f$BRANCHED.xml /mnt/koji/mash/branched-$DATE/logs/
 	popd
 }
 popd
+
+[ -f /mnt/koji/mash/branched-$DATE/logs/comps-f$BRANCHED.xml ] || exit 1
 
 mock -r $MOCKCONFIG --uniqueext=$DATE --init
 mock -r $MOCKCONFIG --uniqueext=$DATE --no-clean --install koji yum createrepo cvs make intltool findutils mash yum-utils rsync repoview
