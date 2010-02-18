@@ -26,6 +26,8 @@ cvs -d :pserver:anonymous@cvs.fedoraproject.org:/cvs/pkgs -z3 -q co comps && {
 }
 popd
 
+[ -f /mnt/koji/mash/rawhide-$DATE/logs/comps-rawhide.xml ] || exit 1
+
 mock -r $MOCKCONFIG --uniqueext=$DATE --init
 mock -r $MOCKCONFIG --uniqueext=$DATE --no-clean --install koji yum createrepo cvs make intltool findutils mash yum-utils rsync repoview
 # Copy in the hosts file so that we get the right address for koji
