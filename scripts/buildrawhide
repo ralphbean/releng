@@ -38,8 +38,7 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash -p /pub/fedora/lin
 mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "rm -f /var/lib/rpm/__db*"
 mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -q --new=file:///mnt/koji/mash/rawhide-$DATE/rawhide/source/SRPMS --old=file:///pub/fedora/linux/development/rawhide/source/SRPMS > /mnt/koji/mash/rawhide-$DATE/logs/repodiff"
 
-# Disabled on 20100217 due to yum issues
-#mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic /mnt/koji/mash/rawhide-$DATE/rawhide >/mnt/koji/mash/rawhide-$DATE/logs/depcheck" &
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic /mnt/koji/mash/rawhide-$DATE/rawhide >/mnt/koji/mash/rawhide-$DATE/logs/depcheck" &
 
 ./scripts/critpath.py --url file:///mnt/koji/mash/rawhide-$DATE/ -o /mnt/koji/mash/rawhide-$DATE/logs/critpath.txt rawhide &> /mnt/koji/mash/rawhide-$DATE/logs/critpath.log
 
@@ -52,9 +51,6 @@ wait
 mock -r $MOCKCONFIG --uniqueext=$DATE --clean
 
 [ -n "$NOSYNC" ] && exit $rc
-
-# Bail early, still syncing by hand until puppet changes go through
-exit $rc
 
 # Create a rawhide link in /mnt/koji/mash, deltas et al depend on this
 rm /mnt/koji/mash/rawhide
