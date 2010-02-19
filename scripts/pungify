@@ -10,9 +10,11 @@
 
 TREE=$1
 
-ARCH=$2
+BRANCH=$2
 
-HOST=$3
+ARCH=$3
+
+HOST=$4
 
 usage() {
 	echo "Usage: pungify <tree> <branch> <arch> <host>"
