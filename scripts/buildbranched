@@ -44,9 +44,9 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -q --
 
 ./scripts/critpath.py --url file:///mnt/koji/mash/branched-$DATE/ -o /mnt/koji/mash/branched-$DATE/logs/critpath.txt branched &> /mnt/koji/mash/branched-$DATE/logs/critpath.log
 
-for arch in i386 x86_64 ppc ; do
+for arch in i386 x86_64; do
     HOST=$(koji list-hosts --quiet --enabled --ready --arch=$arch | sed 's|/| |g' | sort -gn -k4 -k5r | awk -F '.' '{ print $1 ; exit }')
-    ./scripts/pungify $DATE $arch $HOST > /mnt/koji/mash/branched-$DATE/logs/pungify-$arch.log 2>&1 &
+    ./scripts/pungify $DATE $BRANCHED $arch $HOST > /mnt/koji/mash/branched-$DATE/logs/pungify-$arch.log 2>&1 &
     done
 
 wait
