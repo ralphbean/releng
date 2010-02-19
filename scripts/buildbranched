@@ -39,8 +39,7 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash -p $DESTPATH -o /m
 mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "rm -f /var/lib/rpm/__db*"
 mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -q --new=file:///mnt/koji/mash/branched-$DATE/$BRANCHED/source/SRPMS --old=file://$DESTPATH/source/SRPMS > /mnt/koji/mash/branched-$DATE/logs/repodiff"
 
-# Disable this until we're sure it's working
-#mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic --treename F-$BRANCHED /mnt/koji/mash/branched-$DATE/$BRANCHED >/mnt/koji/mash/branched-$DATE/logs/depcheck" &
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic --treename F-$BRANCHED /mnt/koji/mash/branched-$DATE/$BRANCHED >/mnt/koji/mash/branched-$DATE/logs/depcheck" &
 
 ./scripts/critpath.py --url file:///mnt/koji/mash/branched-$DATE/ -o /mnt/koji/mash/branched-$DATE/logs/critpath.txt branched &> /mnt/koji/mash/branched-$DATE/logs/critpath.log
 
@@ -53,8 +52,6 @@ wait
 mock -r $MOCKCONFIG --uniqueext=$DATE --clean
 
 [ -n "$NOSYNC" ] && exit $rc
-# Exit early until we're sure things are doing the right thing
-exit $rc
 
 # Create a branched link in /mnt/koji/mash, deltas et al depend on this
 rm /mnt/koji/mash/branched
