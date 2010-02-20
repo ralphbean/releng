@@ -45,7 +45,8 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-
 
 for arch in i386 x86_64; do
     HOST=$(koji list-hosts --quiet --enabled --ready --arch=$arch | sed 's|/| |g' | sort -gn -k4 -k5r | awk -F '.' '{ print $1 ; exit }')
-    ./scripts/pungify $DATE $BRANCHED $arch $HOST > /mnt/koji/mash/branched-$DATE/logs/pungify-$arch.log 2>&1 &
+    #./scripts/pungify $DATE $BRANCHED $arch $HOST > /mnt/koji/mash/branched-$DATE/logs/pungify-$arch.log 2>&1 &
+    ./scripts/pungify $DATE $BRANCHED $arch x86-05 > /mnt/koji/mash/branched-$DATE/logs/pungify-$arch.log 2>&1 &
     done
 
 wait
