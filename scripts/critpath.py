@@ -37,7 +37,7 @@ for r in ['12']: # 13, 14, ...
 
 # Branched Fedora goes here
 branched = '13'
-releasepath['branched'] = 'development/%s/$basearch/os' % branched
+releasepath['branched'] = '%s/$basearch/os' % branched
 
 
 provides_cache = {}
