@@ -18,7 +18,7 @@ mkdir -p /mnt/koji/mash/rawhide-$DATE/logs
 echo "Compose started at `date --utc`" > /mnt/koji/mash/rawhide-$DATE/logs/start
 echo >> /mnt/koji/mash/rawhide-$DATE/logs/start
 pushd $TMPDIR
-cvs -d :pserver:anonymous@cvs.fedoraproject.org:/cvs/pkgs -z3 -q co comps && {
+git clone git://git.fedorahosted.org/comps.git && {
 	pushd comps
 	make comps-rawhide
 	cp comps-rawhide.xml /mnt/koji/mash/rawhide-$DATE/logs/
