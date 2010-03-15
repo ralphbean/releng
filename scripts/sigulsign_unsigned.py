@@ -43,7 +43,9 @@ CLIENTCA = os.path.expanduser('~/.fedora-upload-ca.cert')
 CLIENTCERT = os.path.expanduser('~/.fedora.cert')
 # Setup a dict of our key names as sigul knows them to the actual key ID
 # that koji would use.  We should get this from sigul somehow.
-KEYS = {'fedora-12': {'id': '57bbccba', 'v3': True},
+KEYS = {'fedora-12-sparc': {'id': 'b3eb779b', 'v3': True},
+        'fedora-13-sparc': {'id': '5bf71b5e', 'v3': True},
+        'fedora-12': {'id': '57bbccba', 'v3': True},
         'fedora-13': {'id': 'e8e40fde', 'v3': True},
         'fedora-11': {'id': 'd22e77f2', 'v3': True},
         'fedora-10': {'id': '4ebfc273', 'v3': False},
@@ -114,7 +116,8 @@ parser.add_option('--just-sign', action='store_true', default=False,
                   help='Just sign and import the rpms')
 parser.add_option('--password',
                   help='Password for the key')
-
+parser.add_option('--arch',
+                  help='Architecture when siging secondary arches')
 # Get our options and arguments
 (opts, args) = parser.parse_args()
 
@@ -155,6 +158,9 @@ if not opts.just_write:
     else:
         passphrase = getpass.getpass(prompt='Passphrase for %s: ' % key)
 
+# Reset the KOJIHUB if the target is a secondary arch
+if opts.arch:
+    KOJIHUB = 'https://%s.koji.fedoraproject.org/kojihub' % opts.arch
 # setup the koji session
 logging.info('Setting up koji session')
 kojisession = koji.ClientSession(KOJIHUB)
