@@ -26,7 +26,7 @@ git clone git://git.fedorahosted.org/comps.git && {
 }
 popd
 
-[ -f /mnt/koji/mash/epel-$DATE/logs/comps-rawhide.xml ] || exit 1
+[ -f /mnt/koji/mash/epel-$DATE/logs/comps-el6.xml ] || exit 1
 
 mock -r $MOCKCONFIG --uniqueext=$DATE --init
 mock -r $MOCKCONFIG --uniqueext=$DATE --no-clean --install koji yum createrepo cvs make intltool findutils mash yum-utils rsync repoview
