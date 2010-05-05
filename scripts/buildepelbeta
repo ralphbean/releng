@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# runs currently on relepel01.phx2.fedoraproject.org
+
+DATE=$1
+RSYNC_OPTS="-rlptDHhv --delay-updates"
+DESTPATH="/pub/epel/beta/6/"
+MOCKCONFIG=rhel-compose-i386
+
+
+[ -z "$DATE" ] && {
+	echo "usage: buildepelbeta <date>"
+	exit 1
+}
+
+TMPDIR=`mktemp -d /tmp/epel.$DATE.XXXX`
+mkdir -p /mnt/koji/mash/epel-$DATE/logs
+echo "Compose started at `date --utc`" > /mnt/koji/mash/epel-$DATE/logs/start
+echo >> /mnt/koji/mash/epel-$DATE/logs/start
+pushd $TMPDIR
+git clone git://git.fedorahosted.org/comps.git && {
+	pushd comps
+	make comps-el6.xml
+	cp comps-el6.xml /mnt/koji/mash/epel-$DATE/logs/
+	popd
+}
+popd
+
+[ -f /mnt/koji/mash/epel-$DATE/logs/comps-rawhide.xml ] || exit 1
+
+mock -r $MOCKCONFIG --uniqueext=$DATE --init
+mock -r $MOCKCONFIG --uniqueext=$DATE --no-clean --install koji yum createrepo cvs make intltool findutils mash yum-utils rsync repoview
+# Copy in the hosts file so that we get the right address for koji
+mock -r $MOCKCONFIG --uniqueext=$DATE --copyin /etc/hosts /etc/hosts >/dev/null 2>&1 # this reports to fail, but actually works
+mock -r $MOCKCONFIG --uniqueext=$DATE --copyin /etc/mash/el6-epel.mash /etc/mash/el6-epel.mash > /dev/null 2>&1 # this reports to fail, but actually works
+# Drop privs here so that we run as the masher UID
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash -o /mnt/koji/mash/epel-$DATE --compsfile /mnt/koji/mash/epel-$DATE/logs/comps-el6.xml el6-epel > /mnt/koji/mash/epel-$DATE/logs/mash.log 2>&1" || exit 1
+
+mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "rm -f /var/lib/rpm/__db*"
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -q --new=file:///mnt/koji/mash/epel-$DATE/el6-epel/source/SRPMS --old=file:///pub/epel/beta/6/source/SRPMS > /mnt/koji/mash/epel-$DATE/logs/repodiff"
+
+#mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic /mnt/koji/mash/epel-$DATE/el6-epel/ >/mnt/koji/mash/epel-$DATE/logs/depcheck" &
+
+
+wait
+mock -r $MOCKCONFIG --uniqueext=$DATE --clean
+
+[ -n "$NOSYNC" ] && exit $rc
+
+
+cd /tmp
+# data
+sudo -u ftpsync /usr/bin/rsync $RSYNC_OPTS --exclude repodata/ /mnt/koji/mash/epel-$DATE/el6-epel/ $DESTPATH
+# repodata & cleanup
+sudo -u ftpsync /usr/bin/rsync $RSYNC_OPTS --delete --delete-after /mnt/koji/mash/epel-$DATE/el6-epel/ $DESTPATH
+if [ "$?" = "0" ]; then
+    cat /mnt/koji/mash/epel-$DATE/logs/start /mnt/koji/mash/epel-$DATE/logs/depcheck /mnt/koji/mash/epel-$DATE/logs/repodiff | mutt -e 'set from="EPEL Beta Report <epel@fedoraproject.org>"' -e 'set envelope_from=yes' -s 'epel beta report: '$DATE' changes' epel-devel@redhat.com
+fi
+exit 0
