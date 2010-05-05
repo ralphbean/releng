@@ -37,7 +37,7 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --copyin /etc/mash/el6-epel.mash /etc/mash
 mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash -o /mnt/koji/mash/epel-$DATE --compsfile /mnt/koji/mash/epel-$DATE/logs/comps-el6.xml el6-epel > /mnt/koji/mash/epel-$DATE/logs/mash.log 2>&1" || exit 1
 
 mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "rm -f /var/lib/rpm/__db*"
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -q --new=file:///mnt/koji/mash/epel-$DATE/el6-epel/source/SRPMS --old=file:///pub/epel/beta/6/source/SRPMS > /mnt/koji/mash/epel-$DATE/logs/repodiff"
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -q --new=file:///mnt/koji/mash/epel-$DATE/el6-epel/SRPMS --old=file:///pub/epel/beta/6/SRPMS > /mnt/koji/mash/epel-$DATE/logs/repodiff"
 
 #mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic /mnt/koji/mash/epel-$DATE/el6-epel/ >/mnt/koji/mash/epel-$DATE/logs/depcheck" &
 
