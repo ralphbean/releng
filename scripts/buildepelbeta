@@ -54,6 +54,6 @@ sudo -u ftpsync /usr/bin/rsync $RSYNC_OPTS --exclude repodata/ /mnt/koji/mash/ep
 # repodata & cleanup
 sudo -u ftpsync /usr/bin/rsync $RSYNC_OPTS --delete --delete-after /mnt/koji/mash/epel-$DATE/el6-epel/ $DESTPATH
 if [ "$?" = "0" ]; then
-    cat /mnt/koji/mash/epel-$DATE/logs/start /mnt/koji/mash/epel-$DATE/logs/depcheck /mnt/koji/mash/epel-$DATE/logs/repodiff | mutt -e 'set from="EPEL Beta Report <epel@fedoraproject.org>"' -e 'set envelope_from=yes' -s 'epel beta report: '$DATE' changes' epel-devel@redhat.com
+    cat /mnt/koji/mash/epel-$DATE/logs/start /mnt/koji/mash/epel-$DATE/logs/depcheck /mnt/koji/mash/epel-$DATE/logs/repodiff | mutt -e 'set from="EPEL Beta Report <epel@fedoraproject.org>"' -e 'set envelope_from=yes' -s 'epel beta report: '$DATE' changes' epel-devel-list@redhat.com
 fi
 exit 0
