@@ -34,6 +34,7 @@ status = 0
 builds = []
 rpmdict = {}
 unsigned = []
+badbuilds = []
 loglevel = ''
 passphrase = ''
 KOJIHUB = 'https://koji.fedoraproject.org/kojihub'
@@ -51,11 +52,11 @@ KEYS = {'fedora-12': {'id': '57bbccba', 'v3': True},
         'epel-6': {'id': '0608b895', 'v3': True}}
 
 # Throw out some functions
-def writeRPMs():
+def writeRPMs(status):
     """Use the global rpmdict to write out rpms within.
-       Returns 0 for success, 1 for failure"""
+       Returns status, increased by one in case of failure"""
 
-    status = 0
+    status = status
     count = 0
     workset = []
     # Use multicall for speed, but break it into chunks of 100
@@ -78,7 +79,7 @@ def writeRPMs():
                     logging.error('Error writing out %s' % rpm)
                     if result['traceback']:
                         logging.error('    ' + result['traceback'][-1])
-                    status = 1
+                    status += 1
 
             # Reset the counter, workset, and multicall
             count = 0
@@ -94,7 +95,7 @@ def writeRPMs():
                 logging.error('Error writing out %s' % rpm)
                 if result['traceback']:
                     logging.error('    ' + result['traceback'][-1])
-                status = 1
+                status += 1
 
     return status
 
@@ -187,7 +188,15 @@ kojisession.multicall = True
 for b in builds:
     # use strict for now to traceback on bad builds
     kojisession.getBuild(b, strict=True)
-binfos = kojisession.multiCall()
+binfos = []
+for build, result in zip(builds, kojisession.multiCall()):
+    if isinstance(result, list):
+        binfos.append(result)
+    else:
+        badbuilds.append(build)
+        status += 1
+        logging.error('Invalid n-v-r: %s' % build)
+
 # now get the rpms from each build
 logging.info('Getting rpms from each build')
 kojisession.multicall = True
@@ -209,7 +218,7 @@ logging.debug('Found %s rpms' % len(rpmdict))
 # mash isn't.
 if opts.just_write:
     logging.info('Just writing rpms')
-    sys.exit(writeRPMs())
+    sys.exit(writeRPMs(status))
 
 # Since we're not just writing things out, we need to figure out what needs
 # to be signed.
@@ -246,11 +255,11 @@ for rpm in unsigned:
     ret = child.wait()
     if ret != 0:
         logging.error('Error signing %s' % rpm)
-        status = 1
+        status += 1
 
 # Now that we've signed things, time to write them out, if so desired.
 if not opts.just_sign:
-    sys.exit(writeRPMs())
+    sys.exit(writeRPMs(status))
 
 logging.info('All done.')
 sys.exit(status)
