@@ -30,11 +30,12 @@ import getpass
 import subprocess
 import logging
 
+errors = {}
+
 status = 0
 builds = []
 rpmdict = {}
 unsigned = []
-badbuilds = []
 loglevel = ''
 passphrase = ''
 KOJIHUB = 'https://koji.fedoraproject.org/kojihub'
@@ -52,6 +53,17 @@ KEYS = {'fedora-12-sparc': {'id': 'b3eb779b', 'v3': True},
         'fedora-10': {'id': '4ebfc273', 'v3': False},
         'fedora-10-testing': {'id': '0b86274e', 'v3': False},
         'epel-6': {'id': '0608b895', 'v3': True}}
+
+def exit(status):
+    """End the program using status, report any errors"""
+
+    if errors:
+        for type in errors.keys():
+            logging.error('Errors during %s:' % type)
+            for fault in errors[type]:
+                logging.error('     ' + fault)
+
+    sys.exit(status)
 
 # Throw out some functions
 def writeRPMs(status):
@@ -79,6 +91,7 @@ def writeRPMs(status):
             for rpm, result in zip(workset, results):
                 if isinstance(result, dict):
                     logging.error('Error writing out %s' % rpm)
+                    errors.setdefault('Writing', []).append(rpm)
                     if result['traceback']:
                         logging.error('    ' + result['traceback'][-1])
                     status += 1
@@ -95,6 +108,7 @@ def writeRPMs(status):
         for rpm, result in zip(workset, results):
             if isinstance(result, dict):
                 logging.error('Error writing out %s' % rpm)
+                errors.setdefault('Writing', []).append(rpm)
                 if result['traceback']:
                     logging.error('    ' + result['traceback'][-1])
                 status += 1
@@ -199,7 +213,7 @@ for build, result in zip(builds, kojisession.multiCall()):
     if isinstance(result, list):
         binfos.append(result)
     else:
-        badbuilds.append(build)
+        errors.setdefault('Builds', []).append(build)
         status += 1
         logging.error('Invalid n-v-r: %s' % build)
 
@@ -224,7 +238,7 @@ logging.debug('Found %s rpms' % len(rpmdict))
 # mash isn't.
 if opts.just_write:
     logging.info('Just writing rpms')
-    sys.exit(writeRPMs(status))
+    exit(writeRPMs(status))
 
 # Since we're not just writing things out, we need to figure out what needs
 # to be signed.
@@ -261,11 +275,12 @@ for rpm in unsigned:
     ret = child.wait()
     if ret != 0:
         logging.error('Error signing %s' % rpm)
+        errors.setdefault('Signing', []).append(rpm)
         status += 1
 
 # Now that we've signed things, time to write them out, if so desired.
 if not opts.just_sign:
-    sys.exit(writeRPMs(status))
+    exit(writeRPMs(status))
 
 logging.info('All done.')
 sys.exit(status)
