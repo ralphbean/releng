@@ -75,9 +75,14 @@ def writeRPMs(status):
     workset = []
     # Use multicall for speed, but break it into chunks of 100
     # so that there is some sense of progress
-    logging.info('Calling koji to write %s rpms' % len(rpmdict))
+
+    # Check to see if we want to write all, or just the unsigned.
+    if not opts.write_all:
+        rpms = [rpm for rpm in rpmdict.keys() if rpm in unsigned]
+    else:
+        rpms = rpmdict.keys()
+    logging.info('Calling koji to write %s rpms' % len(rpms))
     kojisession.multicall = True
-    rpms = rpmdict.keys()
     for rpm in rpms:
         logging.debug('Writing out %s with %s, %s of %s' % (rpm, key,
                       rpms.index(rpm)+1, len(rpms)))
@@ -130,6 +135,8 @@ parser.add_option('--just-write', action='store_true', default=False,
                   help='Just write out signed copies of the rpms')
 parser.add_option('--just-sign', action='store_true', default=False,
                   help='Just sign and import the rpms')
+parser.add_option('--write-all', action='store_true', default=False,
+                  help='Write every rpm, not just unsigned')
 parser.add_option('--password',
                   help='Password for the key')
 parser.add_option('--arch',
