@@ -170,6 +170,16 @@ if not opts.just_write:
         passphrase = opts.password
     else:
         passphrase = getpass.getpass(prompt='Passphrase for %s: ' % key)
+    # now try to check that the key is working
+    command = ['sigul', '--batch', 'get-public-key', key]
+    child = subprocess.Popen(command, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+    child.stdin.write(passphrase + '\0')
+    ret = child.wait()
+    if ret != 0:
+        logging.error('Error validating passphrase for key %s' % key)
+        sys.exit(1)
 
 # setup the koji session
 logging.info('Setting up koji session')
