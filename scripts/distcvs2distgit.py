@@ -37,7 +37,7 @@ PARSECVS = '/home/fedora/jkeating/parsecvs.bak/parsecvs'
 WORKDIR = '/home/fedora/jkeating/workdir'
 OUTDIR = '/home/fedora/jkeating/repos'
 BRANCHES = ['F-13', 'F-12', 'F-11', 'F-10', 'F-9', 'F-8', 'F-7', 'devel',
-            'EL-6', 'EL-5', 'EL-4', 'OLPC-2', 'FC-6']
+            'EL-6', 'EL-5', 'EL-4', 'OLPC-2', 'OLPC-3', 'FC-6']
 AUTHOR = "Fedora Release Engineering <rel-eng@lists.fedoraproject.org>"
 
 # Define some useful functions
