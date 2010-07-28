@@ -28,7 +28,7 @@ import os
 import errno
 import shutil
 import sys
-from kitchen.pycompat27 import subprocess
+import subprocess
 
 status = 0
 modules = []
@@ -52,17 +52,22 @@ def mkdir_p(path):
 
 # Get a list of modules
 modules = sorted(os.listdir(CVSROOT))
+#modules = ['CCfits']
 print "Got %s modules" % len(modules)
 
+curdir = os.getcwd()
 # Cycle through each module and do some work
 for module in modules:
     if not os.path.isdir(os.path.join(CVSROOT, module)):
-        print "Skipping %s, not a module" % module
+        #print "Skipping %s, not a module" % module
         continue
     if os.path.isdir(os.path.join(OUTDIR, "%s.git" % module)):
-        print "Skipping already done module"
+        #print "Skipping already done module"
         continue
+    if module == 'kernel':
+        print "Skipping kernel"
     try:
+        os.chdir(curdir)
         # Find branches for this build
         branches = []
         dirs = os.listdir(os.path.join(CVSROOT, module))
@@ -75,7 +80,8 @@ for module in modules:
             print "Skipping %s, no devel branch" % module
             continue
 
-        curdir = os.getcwd()
+        if os.path.exists(os.path.join(WORKDIR, module)):
+            shutil.rmtree(os.path.join(WORKDIR, module))
 
         # Cycle through the branches to import
         for branch in branches:
@@ -108,18 +114,26 @@ for module in modules:
             clone = ['git', 'clone', '--no-hardlinks', gitdir, clonedir]
             subprocess.check_call(clone, stdout=sys.stdout, stderr=sys.stderr)
             os.chdir(clonedir)
-            cmd = ['git', 'rm', 'Makefile']
-            for rmfile in ('import.log', 'branch'):
+            cmd = ['git', 'rm']
+            run = False
+            commit = False
+            for rmfile in ('import.log', 'branch', 'Makefile'):
                 if os.path.exists(rmfile):
+                    run = True
                     cmd.append(rmfile)
-            subprocess.check_call(cmd, stdout=sys.stdout, stderr=sys.stderr)
-            cmd = ['git', 'mv', '.cvsignore', '.gitignore']
-            subprocess.check_call(cmd, stdout=sys.stdout, stderr=sys.stderr)
-            cmd = ['git', 'commit', '-m', 'dist-git conversion',
-                   '--author', AUTHOR]
-            subprocess.check_call(cmd, stdout=sys.stdout, stderr=sys.stderr)
-            cmd = ['git', 'push']
-            subprocess.check_call(cmd, stdout=sys.stdout, stderr=sys.stderr)
+            if run:
+                subprocess.check_call(cmd, stdout=sys.stdout, stderr=sys.stderr)
+                commit = True
+            if os.path.exists('.cvsignore'):
+                cmd = ['git', 'mv', '.cvsignore', '.gitignore']
+                subprocess.check_call(cmd, stdout=sys.stdout, stderr=sys.stderr)
+                commit = True
+            if commit:
+                cmd = ['git', 'commit', '-m', 'dist-git conversion',
+                       '--author', AUTHOR]
+                subprocess.check_call(cmd, stdout=sys.stdout, stderr=sys.stderr)
+                cmd = ['git', 'push']
+                subprocess.check_call(cmd, stdout=sys.stdout, stderr=sys.stderr)
             os.chdir(curdir)
 
         # Kill GIT_DIR from the environment
@@ -144,6 +158,12 @@ for module in modules:
 
         # Write the module name in the description
         open(os.path.join(develpath, 'description'), 'w').write('%s\n' % module)
+
+        # Set up the mailing list hook
+        gitcmd = ['git', 'config', '--add', 'hooks.mailinglist',
+                  '%s-owner@fedoraproject.org,scm-commits@lists.fedoraproject.org']
+        subprocess.check_call(gitcmd, cwd=develpath, stdout=sys.stdout,
+                               stderr=sys.stderr)
 
         # Now move it into our output dir
         os.rename(develpath, os.path.join(OUTDIR, module + '.git'))
