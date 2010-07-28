@@ -161,7 +161,7 @@ for module in modules:
 
         # Set up the mailing list hook
         gitcmd = ['git', 'config', '--add', 'hooks.mailinglist',
-                  '%s-owner@fedoraproject.org,scm-commits@lists.fedoraproject.org' % pkg]
+                  '%s-owner@fedoraproject.org,scm-commits@lists.fedoraproject.org' % module]
         subprocess.check_call(gitcmd, cwd=develpath, stdout=sys.stdout,
                                stderr=sys.stderr)
 
