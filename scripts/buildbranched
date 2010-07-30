@@ -5,7 +5,7 @@
 DATE=$1
 RSYNC_OPTS="-rlptDHhv --delay-updates --link-dest=/pub/fedora/linux/development/rawhide/"
 BRANCHED="14"
-kESTPATH="/pub/fedora/linux/development/$BRANCHED/"
+DESTPATH="/pub/fedora/linux/development/$BRANCHED/"
 MOCKCONFIG=fedora-branched-compose-i386
 
 
