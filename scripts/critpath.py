@@ -32,11 +32,11 @@ fedora_baseurl = 'http://download.fedora.redhat.com/pub/fedora/linux/'
 releasepath = {
     'rawhide': 'development/rawhide/$basearch/os/'
 }
-for r in ['12']: # 13, 14, ...
+for r in ['12', '13']: # 13, 14, ...
     releasepath[r] = 'releases/%s/Fedora/$basearch/os/' % r
 
 # Branched Fedora goes here
-branched = '13'
+branched = '14'
 releasepath['branched'] = '%s/$basearch/os' % branched
 
 
