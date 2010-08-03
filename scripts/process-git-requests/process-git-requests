@@ -158,7 +158,6 @@ def run_query(bz):
             'alias', 'assigned_to', 'reporter', 'bug_status', 'resolution',
             'component', 'blockedby', 'dependson', 'short_desc',
             'status_whiteboard', 'flag_types']
-    querydata['product'] = ['Fedora']
 
     querydata['field0-0-0'] = 'flagtypes.name'
     querydata['type0-0-0'] = 'equals'
