@@ -216,6 +216,7 @@ def parse_prefixed_lines(s):
     lastitem = ''
     items = {}
     items['Branches'] = ''
+    items['New Branches'] = ''
     lines = s.splitlines()
 
     # Skip until the Request line
@@ -277,16 +278,15 @@ def clean_request(items):
     items['Branches'] = branches
     request['branches'] = branches.split() 
 
-    if 'New Branches' in items:
-        branches = items['New Branches'].strip()
-        branches = re.sub(r',', ' ', branches)
-        branches = re.sub(r'f', 'F', branches)
-        branches = re.sub(r'F([1-9][0-9])', r'F-\1', branches)
-        branches = re.sub(r'F-14', r'f14', branches)
-        branches = re.sub(r' +', ' ', branches)
-        branches = branches.strip()
-        items['New Branches'] = branches
-        request['newbranches'] = branches.split() 
+    branches = items['New Branches'].strip()
+    branches = re.sub(r',', ' ', branches)
+    branches = re.sub(r'f', 'F', branches)
+    branches = re.sub(r'F([1-9][0-9])', r'F-\1', branches)
+    branches = re.sub(r'F-14', r'f14', branches)
+    branches = re.sub(r' +', ' ', branches)
+    branches = branches.strip()
+    items['New Branches'] = branches
+    request['newbranches'] = branches.split() 
 
     owners = items['Owners'].strip()
     owners = re.sub(r',', ' ', owners)
@@ -517,7 +517,7 @@ def process_change_request(bug, comment, allcomments, firstfound, pkgdb, branche
     if not 'Owners' in items:
         warnings.append("WARNING: No owners provided.")
         warned = True
-    if not 'New Branches' in items:
+    if not len(items['New Branches']):
         warnings.append("WARNING: No new branches requested.")
     for i in request['branches']:
         if i not in branches:
