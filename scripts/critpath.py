@@ -26,8 +26,8 @@ from rpmUtils.arch import getBaseArch
 
 # Set some constants
 critpath_groups = ['@core','@critical-path-base','@critical-path-gnome']
-base_arches = ('i386', 'ppc', 'x86_64')
-known_arches = base_arches + ('i586','i686','ppc64')
+base_arches = ('i386', 'x86_64')
+known_arches = base_arches + ('i586','i686')
 fedora_baseurl = 'http://download.fedora.redhat.com/pub/fedora/linux/'
 releasepath = {
     'rawhide': 'development/rawhide/$basearch/os/'
