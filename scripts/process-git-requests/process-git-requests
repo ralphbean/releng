@@ -425,7 +425,7 @@ def process_new_request(bug, comment, allcomments, firstfound, pkgdb, branches):
         warned = True
 
     req_string = new_request_string(items, bug)
-    bug_comment = 'GIT done (by process-git-requests).\n'
+    bug_comment = 'Git done (by process-git-requests).\n'
 
     okprompt = 'Do it (yes=Yes, n=No, e=Edit request, s=Show ticket, c=Comment, q=Quit)?'
     if warned:
@@ -518,7 +518,7 @@ def process_change_request(bug, comment, allcomments, firstfound, pkgdb, branche
         warned = True
 
     if not firstfound:
-        warnings.append("WARNING: GIT request was not the last comment.")
+        warnings.append("WARNING: SCM request was not the last comment.")
         warned = True
     if not 'Package Name' in items:
         warnings.append("WARNING: No package name supplied.")
@@ -535,7 +535,7 @@ def process_change_request(bug, comment, allcomments, firstfound, pkgdb, branche
 
     short_desc = bug.short_desc
     req_string = change_request_string(items, bug)
-    bug_comment = 'GIT done (by process-git-requests).\n'
+    bug_comment = 'Git done (by process-git-requests).\n'
 
     okprompt = 'Do it (yes=Yes, n=No, e=Edit request, s=Show ticket, c=Comment, q=Quit)?'
     if warned:
