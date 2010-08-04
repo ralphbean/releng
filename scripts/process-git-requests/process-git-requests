@@ -221,6 +221,8 @@ def parse_prefixed_lines(s):
     # Skip until the Request line
     while 1:
         if (lines[0].find('New Package CVS Request') == 0
+                or lines[0].find('New Package GIT Request') == 0
+                or lines[0].find('New Package SCM Request') == 0
                 or lines[0].find('Package Change Request') == 0):
             break
         lines.pop(0)
@@ -254,7 +256,7 @@ def parse_prefixed_lines(s):
     return items
 
 def clean_request(items):
-    '''Clean up various bits that can be passed in a CVS request.'''
+    '''Clean up various bits that can be passed in a request.'''
     request = {}
 
     if not 'InitialCC' in items:
@@ -304,7 +306,7 @@ def new_request_string(items, bug):
     r.append("Bug URL: http://bugzilla.redhat.com/%d " % bug.bug_id)
     r.append("Bug summary: " + bug.short_desc)
     r.append('')
-    r.append("New Package CVS Request")
+    r.append("New Package SCM Request")
     r.append("=======================")
     r.append("Package Name: " + items['Package Name'])
     r.append("Short Description: " + items['Short Description'])
@@ -357,7 +359,7 @@ def process_no_request(bug, allcomments):
     '''Deal with a ticket where no request was found.'''
     while 1:
         os.system('clear')
-        print "No CVS request found in bug %d\nhttp://bugzilla.redhat.com/%d." % (bug.bug_id, bug.bug_id)
+        print "No SCM request found in bug %d\nhttp://bugzilla.redhat.com/%d." % (bug.bug_id, bug.bug_id)
         ok = raw_input('\nWhat do?  (n=Next, s=Show ticket, c=Comment, q=Quit):')
         if ok == 'c':
             bug_comment = edit_string('')
@@ -389,7 +391,7 @@ def process_new_request(bug, comment, allcomments, firstfound, pkgdb, branches):
     request = clean_request(items)
 
     if not firstfound:
-        warnings.append("WARNING: CVS request was not the last comment.")
+        warnings.append("WARNING: SCM request was not the last comment.")
         warned = True
     if not 'Package Name' in items:
         warnings.append("WARNING: No package name supplied.")
@@ -622,7 +624,9 @@ if __name__ == '__main__':
         type = ''
         print "Parsing bug %d - https://bugzilla.redhat.com/%d" % (i.bug_id, i.bug_id)
         for j in reversed(comments['bugs'][str(i.bug_id)]['comments']):
-            if 'New Package CVS Request' in j['text']:
+            if ('New Package CVS Request' in j['text']
+                    or 'New Package GIT Request' in j['text']
+                    or 'New Package SCM Request' in j['text']):
                 type = 'new'
                 break
             if 'Package Change Request' in j['text']:
