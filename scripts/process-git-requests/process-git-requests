@@ -255,6 +255,28 @@ def parse_prefixed_lines(s):
 
     return items
 
+def clean_branches(branches):
+    '''Clean up a list of branches and turn them into what pkgdb expects.'''
+    branches = re.sub(r',', ' ', branches)
+    branches = re.sub(r'F', 'f', branches)
+    branches = re.sub(r'EL', 'el', branches)
+    branches = re.sub(r'devel', ' ', branches)
+    branches = re.sub(r'master', ' ', branches)
+    branches = re.sub(r'f-([1-9][0-9])', r'f\1', branches)
+    branches = re.sub(r'el-([1-9])', r'el\1', branches)
+    branches = re.sub(r' +', ' ', branches)
+
+    # Now make things nasty to satisfy history
+    branches = re.sub(r'f12', r'F-12', branches)
+    branches = re.sub(r'f13', r'F-13', branches)
+    branches = re.sub(r'el4', r'EL-4', branches)
+    branches = re.sub(r'el5', r'EL-5', branches)
+    branches = re.sub(r'el6', r'EL-6', branches)
+    branches = branches.strip()
+
+    return branches
+
+
 def clean_request(items):
     '''Clean up various bits that can be passed in a request.'''
     request = {}
@@ -266,26 +288,12 @@ def clean_request(items):
     if not 'Short Description' in items:
         items['Short Description'] = ''
 
-    branches = items['Branches'].strip()
-    branches = re.sub(r',', ' ', branches)
-    branches = re.sub(r'f', 'F', branches)
-    branches = re.sub(r'devel', ' ', branches)
-    branches = re.sub(r'F([1-9][0-9])', r'F-\1', branches)
-    branches = re.sub(r'EL([1-9])', r'EL-\1', branches)
-    branches = re.sub(r'F-14', r'f14', branches)
-    branches = re.sub(r' +', ' ', branches)
-    branches = branches.strip()
+    branches = clean_branches(items['Branches'].strip())
     branches += ' devel'
     items['Branches'] = branches
     request['branches'] = branches.split() 
 
-    branches = items['New Branches'].strip()
-    branches = re.sub(r',', ' ', branches)
-    branches = re.sub(r'f', 'F', branches)
-    branches = re.sub(r'F([1-9][0-9])', r'F-\1', branches)
-    branches = re.sub(r'F-14', r'f14', branches)
-    branches = re.sub(r' +', ' ', branches)
-    branches = branches.strip()
+    branches = clean_branches(items['New Branches'].strip())
     items['New Branches'] = branches
     request['newbranches'] = branches.split() 
 
