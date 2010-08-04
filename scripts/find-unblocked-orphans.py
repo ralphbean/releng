@@ -32,10 +32,10 @@ import shutil
 
 # Set some variables
 # Some of these could arguably be passed in as args.
-repo = 'http://kojipkgs.fedoraproject.org/mash/rawhide/i386/os'
-srepourl = 'http://kojipkgs.fedoraproject.org/mash/rawhide/source/SRPMS'
-tag = 'dist-rawhide' # tag to check in koji
-develbranch = 8 # pkgdb ID for the devel branch
+repo = 'http://kojipkgs.fedoraproject.org/mash/branched/i386/os'
+srepourl = 'http://kojipkgs.fedoraproject.org/mash/branched/source/SRPMS'
+tag = 'dist-f14' # tag to check in koji
+develbranch = 25 # pkgdb ID for the devel branch
 orphanuid = 'orphan' # pkgdb uid for orphan
 develorphs = [] # list of orphans on the devel branch from pkgdb
 unblocked = {} # holding dict for unblocked orphans plus their deps
@@ -46,8 +46,14 @@ pkgdb = fedora.client.PackageDB()
 # Create a koji session
 kojisession = koji.ClientSession('https://koji.fedoraproject.org/kojihub')
 
+# Log into koji
+clientcert = os.path.expanduser('~/.fedora.cert')
+clientca = os.path.expanduser('~/.fedora-upload-ca.cert')
+serverca = os.path.expanduser('~/.fedora-server-ca.cert')
+kojisession.ssl_login(clientcert, clientca, serverca)
+
 # Get a list of packages owned by orphan
-pkgs = pkgdb.send_request('/packages/orphans',
+pkgs = pkgdb.send_request('/acls/orphans',
                           req_params={'tg_paginate_limit': 0})
 
 # Reduce to packages orphaned on devel
