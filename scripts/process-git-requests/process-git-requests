@@ -12,9 +12,10 @@ VERSION = "1.0"
 # Catch common misspellings?
 # Any owner contains '@' or other invalid character
 # Maybe verify owners in pkgdb/FAS.
-# SSH into cvs.fedoraproject.org to run pkg2branch.py directly
+# SSH into pkgs.fedoraproject.org to run pkg2branch.py directly
 #  or just run on cvs.fedoraproject.org
 # Try to do some checking on the ~/.bugzillacookies file and suggest "bugzilla login"
+# Verify that the supplied summary has something in it.
 
 import bugzilla
 import codecs
