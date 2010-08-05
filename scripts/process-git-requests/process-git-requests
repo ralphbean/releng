@@ -1,8 +1,6 @@
 #!/usr/bin/python -t
 VERSION = "1.0"
 
-# $Id: process-cvs-requests.py,v 1.25 2010/07/01 04:51:23 tibbs Exp $
-
 # TODO:
 # Extract fedora-review flag setter if possible.
 # Display last linked spec file.
