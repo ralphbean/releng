@@ -61,12 +61,24 @@ EDITOR = os.environ.get('EDITOR') or '/usr/bin/vim'
 #    return data
 #xmlrpclib._decode = _decode
 
+def clear():
+    #os.system('clearl)
+    print "\n============================================================\n"
+
 def parse_commandline():
     usage = 'usage: %prog [options]'
     parser = OptionParser(usage)
     parser.add_option('--url', dest='url',
             help='bugzilla URL to query',
             default=url)
+    parser.add_option('--pkghost',
+            help='Hostname of the machine where branches must be created',
+            dest='pkghost',
+            default='pkgs.fedoraproject.org')
+    parser.add_option('--pkghostlocal',
+            help='Local hostname of the machine where branches must be created',
+            dest='pkghostlocal',
+            default='pkgs01.phx2.fedoraproject.org')
     parser.add_option('-u', '--user',
             help='Username for PackageDB connection',
             dest='user',
@@ -365,7 +377,7 @@ def get_pkgdb_owners(pkgdb, pkg):
 def process_no_request(bug, allcomments):
     '''Deal with a ticket where no request was found.'''
     while 1:
-        os.system('clear')
+        clear()
         print "No SCM request found in bug %d\nhttp://bugzilla.redhat.com/%d." % (bug.bug_id, bug.bug_id)
         ok = raw_input('\nWhat do?  (n=Next, s=Show ticket, c=Comment, q=Quit):')
         if ok == 'c':
@@ -436,7 +448,7 @@ def process_new_request(bug, comment, allcomments, firstfound, pkgdb, branches):
     while 1:
         # We have to loop until the user enters something that works
         while 1:
-            os.system('clear')
+            clear()
             if len(warnings):
                 print '\n'.join(warnings), "\n"
             print "Currently assigned to: %s" % bug.assigned_to
@@ -546,7 +558,7 @@ def process_change_request(bug, comment, allcomments, firstfound, pkgdb, branche
     while 1:
         # We have to loop until the user enters something that works
         while 1:
-            os.system('clear')
+            clear()
             if len(warnings):
                 print '\n'.join(warnings), "\n"
             print req_string + "\nCurrent branch owners - comaintainers:\n" + owner_string
@@ -602,6 +614,18 @@ def process_change_request(bug, comment, allcomments, firstfound, pkgdb, branche
             else:
                 pass
 
+def create_branches(package, pkghost, pkghostlocal):
+    '''If on pkgs01, run /usr/local/bin/pkgdb2branch.py directly.  Otherwise,
+    call ssh.'''
+    hostname = os.uname()[1]
+    cmd = []
+    if hostname != pkghostlocal:
+        cmd.extend(['ssh', pkghost])
+    cmd.extend(['/usr/local/bin/pkgdb2branch.py', package])
+    print "Calling pkgdb2branch.py...."
+    proc = subprocess.check_call(cmd, stdout=sys.stdout, stderr=sys.stderr)
+    print
+
 if __name__ == '__main__':
     branches = {}
     processed = []
@@ -647,13 +671,19 @@ if __name__ == '__main__':
         if type == 'new':
             (package, more) = process_new_request(i, j, comments['bugs'][str(i.bug_id)]['comments'], firstfound, pkgdb, branches)
             if package:
-                processed.append(package)
+                try:
+                    create_branches(package, options.pkghost, options.pkghostlocal)
+                except:
+                    processed.append(package)
             if not more:
                 break
         elif type == 'change':
             (package, more) = process_change_request(i, j, comments['bugs'][str(i.bug_id)]['comments'], firstfound, pkgdb, branches)
             if package:
-                processed.append(package)
+                try:
+                    create_branches(package, options.pkghost, options.pkghostlocal)
+                except:
+                    processed.append(package)
             if not more:
                 break
 
