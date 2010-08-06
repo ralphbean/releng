@@ -13,7 +13,6 @@ VERSION = "1.0"
 # Any owner contains '@' or other invalid character
 # Maybe verify owners in pkgdb/FAS.
 # Try to do some checking on the ~/.bugzillacookies file and suggest "bugzilla login"
-# Verify that the supplied summary has something in it.
 
 import bugzilla
 import codecs
@@ -413,7 +412,7 @@ def process_new_request(bug, comment, allcomments, firstfound, pkgdb, branches):
     if not 'Owners' in items:
         warnings.append("WARNING: No owners provided.")
         warned = True
-    if not 'Short Description' in items:
+    if not('Short Description' in items) or not(len(items['Short Description'])):
         warnings.append("WARNING: No description provided.")
         warned = True
     for i in request['branches']:
