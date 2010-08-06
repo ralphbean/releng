@@ -190,10 +190,7 @@ def display_bug(bug, comments):
     b.append('Assigned to: %s' % (bug.assigned_to))
     for i in comments:
         b.append('-'*40)
-        #b.append('Comment %d by %s at %s\n' % (comment, i['author'], time.strftime('%F %T',i['time'].timetuple())))
-        #b.append('Comment %d by %s at %04d-%02d-%02d %02d:%02d%02d\n' % (
-        b.append('Comment %d by %s at %s\n' % (
-            comment, i['author'], i['time']))
+        b.append('Comment %d by %s at %s\n' % (comment, i['author'], time.strftime('%F %T',i['time'].timetuple())))
         b.append(i['text'])
         b.append('')
         comment += 1
