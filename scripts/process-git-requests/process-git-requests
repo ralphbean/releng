@@ -413,7 +413,6 @@ def check_owners(fas, owner, comaintainers, cc_list):
                 break
 
         if not 'status' in person:
-            print "FOO!"
             warnings.append('WARNING: "%s" is not a valid FAS account.' % i)
             break
 
