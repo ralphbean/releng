@@ -13,8 +13,6 @@ VERSION = "1.0"
 # Package already exists in pkgdb.
 # fedora-review flag isn't set (especially if it's still set to '?'
 # Catch common misspellings?
-# Any owner contains '@' or other invalid character
-# Maybe verify owners in pkgdb/FAS.
 # Try to do some checking on the ~/.bugzillacookies file and suggest "bugzilla login"
 
 import bugzilla
@@ -32,12 +30,13 @@ import tempfile
 import time
 import xmlrpclib
 from configobj import ConfigObj, flatten_errors
-from fedora.client import AuthError, AppError, PackageDB
+from fedora.client import AccountSystem, AuthError, AppError, PackageDB
 from optparse import OptionParser
 from validate import Validator
 
-# Red Hat's bugzilla
+# Red Hat's bugzilla, Fedora's FAS
 url = 'https://bugzilla.redhat.com/xmlrpc.cgi'
+fasurl = 'https://admin.fedoraproject.org/accounts/'
 
 # Users who indicated that they're OK with EPEL branches.  Some request that
 # they be made comaintainers.
@@ -398,7 +397,41 @@ def process_no_request(bug, allcomments):
             display_bug(bug, allcomments)
     return True
 
-def process_new_request(bug, comment, allcomments, firstfound, pkgdb, branches):
+def check_owners(fas, owner, comaintainers, cc_list):
+    print "Checking owners..."
+    warnings = []
+
+    for i in [owner] + comaintainers:
+        for retry in range(1, config['pkgdb.retries'] + 1):
+            try:
+                person = fas.person_by_username(i)
+            except AuthError, e:
+                if retry >= config['pkgdb.retries']:
+                    break
+                fas.password = getpass.getpass('FAS Password: ')
+            else:
+                break
+
+        if not 'status' in person:
+            print "FOO!"
+            warnings.append('WARNING: "%s" is not a valid FAS account.' % i)
+            break
+
+        groups = [g['name'] for g in person.approved_memberships]
+
+        if not 'packager' in groups:
+            warnings.append('WARNING: "%s" is not in the packager group.' % i)
+
+    for i in cc_list:
+        person = fas.person_by_username(i)
+        if not 'status' in person:
+            warnings.append('WARNING: "%s" is not a valid FAS account.' % i)
+            break
+
+    return warnings
+        
+
+def process_new_request(bug, comment, allcomments, firstfound, pkgdb, fas, branches):
     '''Parse a new package request, try to repair line wrapping, and do some
     basic validity checks.'''
     warned = False
@@ -406,14 +439,16 @@ def process_new_request(bug, comment, allcomments, firstfound, pkgdb, branches):
     items = parse_prefixed_lines(comment['text'])
     request = clean_request(items)
 
+    warnings.extend(check_owners(fas, request['owner'], request['comaintainers'], request['cc_list']))
+
+    if not 'Owners' in items:
+        warnings.append("WARNING: No owners provided.")
+        warned = True
     if not firstfound:
         warnings.append("WARNING: SCM request was not the last comment.")
         warned = True
     if not 'Package Name' in items:
         warnings.append("WARNING: No package name supplied.")
-        warned = True
-    if not 'Owners' in items:
-        warnings.append("WARNING: No owners provided.")
         warned = True
     if not('Short Description' in items) or not(len(items['Short Description'])):
         warnings.append("WARNING: No description provided.")
@@ -643,6 +678,8 @@ if __name__ == '__main__':
     print "Getting valid branches...."
     for i in pkgdb.get_collection_list(eol=False):
         branches[i[0]['branchname']] = 1
+    print "Connecting to FAS..."
+    fas = AccountSystem(username=options.user)
     print "Done."
     print
 
@@ -666,7 +703,7 @@ if __name__ == '__main__':
                 break
 
         if type == 'new':
-            (package, more) = process_new_request(i, j, comments['bugs'][str(i.bug_id)]['comments'], firstfound, pkgdb, branches)
+            (package, more) = process_new_request(i, j, comments['bugs'][str(i.bug_id)]['comments'], firstfound, pkgdb, fas, branches)
             if package:
                 try:
                     create_branches(package, options.pkghost, options.pkghostlocal)
