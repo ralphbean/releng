@@ -570,7 +570,7 @@ def process_change_request(bug, comment, allcomments, firstfound, pkgdb, branche
         warned = True
     if not len(items['New Branches']):
         warnings.append("WARNING: No new branches requested.")
-    for i in request['branches']:
+    for i in request['newbranches']:
         if i not in branches:
             warnings.append("WARNING: Invalid branch %s requested" % i)
             warned = True
