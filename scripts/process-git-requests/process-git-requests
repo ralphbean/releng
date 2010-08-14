@@ -13,7 +13,6 @@ VERSION = "1.0"
 # Package already exists in pkgdb.
 # fedora-review flag isn't set (especially if it's still set to '?'
 # Catch common misspellings?
-# Try to do some checking on the ~/.bugzillacookies file and suggest "bugzilla login"
 
 import bugzilla
 import codecs
@@ -681,6 +680,12 @@ if __name__ == '__main__':
     fas = AccountSystem(username=options.user)
     print "Done."
     print
+
+    # I think this reliably detects whether or not you've logged in
+    if bugs[0].assigned_to.find('@') < 0:
+        print "It looks as if you don't have a valid bugzilla cookie."
+        print "Please run 'bugzilla login' and try again."
+        exit(1)
 
     # Iterate over bugs
     for i in bugs:
