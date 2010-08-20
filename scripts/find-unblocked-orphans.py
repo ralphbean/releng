@@ -36,9 +36,20 @@ repo = 'http://kojipkgs.fedoraproject.org/mash/branched/i386/os'
 srepourl = 'http://kojipkgs.fedoraproject.org/mash/branched/source/SRPMS'
 tag = 'dist-f14' # tag to check in koji
 develbranch = 25 # pkgdb ID for the devel branch
+develbranchname = 'F-14' # pkgdb name for the devel branch
 orphanuid = 'orphan' # pkgdb uid for orphan
-develorphs = [] # list of orphans on the devel branch from pkgdb
+orphans = {} # list of orphans on the devel branch from pkgdb
 unblocked = {} # holding dict for unblocked orphans plus their deps
+
+def _comaintainers(package):
+    comaint = []
+    pkginfo = pkgdb.get_package_info(package, branch = develbranchname)
+    users = pkginfo.packageListings[0]['people']
+    for user in users:
+        acl = user['aclOrder']
+        if acl['commit'] and acl['watchbugzilla'] and acl['approveacls'] and acl['watchcommits']:
+            comaint.append(user['username'])
+    return comaint
 
 # Create a pkgdb session
 pkgdb = fedora.client.PackageDB()
@@ -61,11 +72,14 @@ for p in pkgs.pkgs:
     for listing in p['listings']:
         if listing['collectionid'] == develbranch:
             if listing['owner'] == orphanuid:
-                develorphs.append(p['name'])
+                orphans[p['name']] = { 'name': p['name'], 'comaintainers' : _comaintainers(p['name']) }
 
 # Get koji listings for each orphaned package
 kojisession.multicall = True
-for orph in develorphs:
+
+orphanlist = orphans.keys()
+orphanlist.sort()
+for orph in orphanlist:
     kojisession.listPackages(tagID=tag, pkgID=orph, inherited=True)
 
 listings = kojisession.multiCall()
@@ -74,7 +88,9 @@ listings = kojisession.multiCall()
 for [pkg] in listings:
     if not pkg[0]['blocked']:
         unblocked[pkg[0]['package_name']] = {}
-        print "Unblocked orphan %s" % pkg[0]['package_name']
+        print "Orphan %s" % pkg[0]['package_name']
+        if orphans[pkg[0]['package_name']]['comaintainers']:
+            print "\tcomaintained by: %s" % (' '.join(orphans[pkg[0]['package_name']]['comaintainers']),)
 
 # This code was mostly stolen from
 # http://yum.baseurl.org/wiki/YumCodeSnippet/SetupArbitraryRepo
