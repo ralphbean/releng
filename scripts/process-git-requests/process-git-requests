@@ -308,6 +308,9 @@ def clean_request(items):
     if len(owners):
         request['owner'] = owners.split()[0]
         request['comaintainers'] = owners.split()[1:]
+    else:
+        request['owner'] = ''
+        request['comaintainers'] = []
 
     request['cc_list'] = items['InitialCC'].split()
     request['pkg'] = items['Package Name']
