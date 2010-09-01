@@ -13,13 +13,13 @@ import string
 import rpm 
 import shutil
 
-LOCALKOJIHUB = 'https://arm.koji.fedoraproject.org/kojihub'
-REMOTEKOJIHUB = 'https://koji.fedoraproject.org/kojihub'
+LOCALKOJIHUB = 'http://sparc.koji.fedoraproject.org/kojihub'
+REMOTEKOJIHUB = 'http://koji.fedoraproject.org/kojihub'
 PACKAGEURL = 'http://kojipkgs.fedoraproject.org/'
 
 # Should probably set these from a koji config file
 SERVERCA = os.path.expanduser('~/.fedora-server-ca.cert')
-CLIENTCA = os.path.expanduser('~/.fedora-upload-ca.cert')
+CLIENTCA = os.path.expanduser('~/.fedora-server-ca.cert')
 CLIENTCERT = os.path.expanduser('~/.fedora.cert')
 
 workpath = '/tmp/build-recent'
@@ -163,10 +163,10 @@ for pkg in pkgs:
                 newestRPM = _rpmvercmp( parentevr, latestevr)
                 logging.debug("remote evr: %s  \nlocal evr: %s \nResult: %s" % (parentevr, latestevr, newestRPM))
                 if newestRPM == -1:
-                    logging.info("Newer locally: %s locally is newer than remote" % latestevr)
+                    logging.info("Newer locally: %s locally is newer than remote" % (latestevr,))
                     continue
                 if newestRPM == 0:
-                    logging.info("Already Built: %s " % latestevr)
+                    logging.info("Already Built: %s " % (latestevr,))
                     continue
     rpms = remotekojisession.listRPMs(pkginfo[1]['build_id'])
     if isNoarch(rpms):
