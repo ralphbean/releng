@@ -131,9 +131,9 @@ localkojisession = koji.ClientSession(LOCALKOJIHUB)
 remotekojisession = koji.ClientSession(REMOTEKOJIHUB)
 localkojisession.ssl_login(CLIENTCERT, CLIENTCA, SERVERCA)
 
-tag = 'dist-f13'
+tag = 'dist-f14'
 
-ignorelist="kernel anaconda CodeAnalyst-gui Glide3 Glide3-libGL LabPlot R-bigmemory alex alt-ergo acpid apmd apmud athcool bibtex2html biosdevname bluez-hcidump camstream ccid ccsm cdrdao cduce darcs appliance-tools cmospwd cmucl coccinelle compat-gcc-296 compiz-bcop compiz-fusion-extras compiz-fusion-unsupported compizconfig-backend-gconf compizconfig-backend-kconfig compizconfig-python cabal-install compiz-fusion coq coredumper cpufrequtils cpuid cpuspeed csisat compiz hlint dmidecode dvgrab cpphs dssi-vst librdmacm edac-utils efax efibootmgr eject elilo esc ext3grep fbset fedora-ksplice emerald minicom coolkey firecontrol firmware-addon-dell fpc fprint_demo fprintd freeipmi freetennis ghc ghc-GLUT ghc-HUnit ghc-OpenGL ghc-X11 ghc-X11-xft ghc-editline ghc-fgl ghc-ghc-paths ghc-gtk2hs ghc-haskell-src ghc-html ghc-mmap ghc-mtl ghc-parallel ghc-parsec ghc-regex-base ghc-regex-compat ghc-regex-posix ghc-stm ghc-tar ghc-haskeline ghc-xhtml ghc-xmonad-contrib ghc-zlib k3b gkrellm-wifi grub2 gnome-do-plugins ghc-haskell-src-exts gnome-pilot gnome-pilot-conduits ghc-uniplate gnu-efi gpart gphoto2 gprolog openobex gsynaptics ghc-HTTP gtksourceview-sharp jpilot-backup eclipse-cdt happy haskell-platform hdparm hevea pilot-link i2c-tools i8kutils ibmasm ifd-egate grub inkscape ghc-cgi ioport iprutils ipw2100-firmware ipw2200-firmware irda-utils irqbalance isdn4k-utils joystick jpilot flashrom kpilot ksensors ksplice latrace lazarus libavc1394 libbsr libcompizconfig libcxgb3 libdc1394 libfprint hscolour libibcm libibcommon libibverbs libiec61883 libraw1394 librtas libsmbios libspe2 libunwind libusb1 hplip libx86 lightning lrmi obexd gnome-media maxima mcelog mediawiki memtest86+ nut libbtctl mkbootdisk mldonkey mod_mono mono-basic monotone-viz msr-tools nspluginwrapper seabios obex-data-server ocaml ocaml-SDL ocaml-ancient ocaml-augeas ocaml-bisect ocaml-bitstring ocaml-cairo ocaml-calendar ocaml-camlidl ocaml-camlimages ocaml-camlp5 ocaml-camomile ocaml-cil ocaml-cmigrep ocaml-csv ocaml-cryptokit ocaml-curl ocaml-curses ocaml-dbus ocaml-deriving ocaml-expat ocaml-extlib ocaml-facile ocaml-fileutils ocaml-findlib ocaml-gettext ocaml-gsl ocaml-json-static ocaml-json-wheel ocaml-lablgl ocaml-lablgtk ocaml-lacaml ocaml-libvirt ocaml-lwt ocaml-mikmatch ocaml-mlgmpidl ocaml-mysql ocaml-newt ocaml-ocamlgraph ocaml-ocamlnet ocaml-omake ocaml-openin ocaml-ounit ocaml-p3l ocaml-pa-do ocaml-pa-monad ocaml-pcre ocaml-perl4caml ocaml-pgocaml ocaml-postgresql ocaml-preludeml ocaml-pxp ocaml-reins ocaml-res ocaml-sexplib ocaml-sqlite ocaml-ssl ocaml-type-conv ocaml-ulex ocaml-xml-light ocaml-xmlrpc-light ocaml-zip ocamldsort ohm olpc-kbdshim olpc-powerd setserial ghc-dataenc ghc-hashed-storage libdv libibmad libhid pcc xorg-x11-drv-openchrome ghc-binary system-config-kdump libibumad pidgin libcrystalhd picprog planets pmtools podsleuth powerpc-utils powerpc-utils-papr ppc64-utils microcode_ctl procbench ps3-utils pvs-sbcl numactl python-iwlib python-psyco eclipse-changelog pyxf86config openmpi pcmciautils openscada rp-pppoe rpmdepsize s3switch sbcl eclipse-rpm-editor rhythmbox opensm sound-juicer spicctrl spring-installer stapitrace statserial svgalib syslinux sysprof system-config-boot system-config-display tbb ghc-QuickCheck tpb tuxcmd tvtime unetbootin unison213 unison227 valgrind vbetool ghc-network viaideinfo yaboot virt-mem virt-top vrq wacomexpresskeys xenner why wine wraplinux wxMaxima wyrd x86info xen xfce4-sensors-plugin xmonad xorg-x11-drv-acecad xorg-x11-drv-aiptek xorg-x11-drv-apm xorg-x11-drv-ark xorg-x11-drv-ast xorg-x11-drv-chips xorg-x11-drv-cirrus xorg-x11-drv-dummy xorg-x11-drv-elographics xorg-x11-drv-evdev xorg-x11-drv-fbdev xorg-x11-drv-geode xorg-x11-drv-glint xorg-x11-drv-hyperpen xorg-x11-drv-i128 xorg-x11-drv-i740 xorg-x11-drv-intel xorg-x11-drv-ivtv xorg-x11-drv-keyboard xorg-x11-drv-mach64 xorg-x11-drv-mga xorg-x11-drv-mouse xorg-x11-drv-mutouch xorg-x11-drv-neomagic xorg-x11-drv-nv xorg-x11-drv-penmount xorg-x11-drv-r128 xorg-x11-drv-radeonhd xorg-x11-drv-rendition xorg-x11-drv-s3 xorg-x11-drv-s3virge xorg-x11-drv-savage xorg-x11-drv-siliconmotion xorg-x11-drv-sis xorg-x11-drv-sisusb xorg-x11-drv-tdfx xorg-x11-drv-trident xorg-x11-drv-tseng xorg-x11-drv-v4l xorg-x11-drv-vesa xorg-x11-drv-vmware xorg-x11-drv-void xorg-x11-drv-voodoo xsp zenon zfs-fuse xorg-x11-drv-fpit libmlx4 libmthca rxtx xorg-x11-drv-vmmouse xorg-x11-drv-synaptics xorg-x11-drv-nouveau xorg-x11-drv-ati superiotool xorg-x11-drivers xorg-x11-drv-qxl qpid-cpp xorg-x11-drv-wacom"
+ignorelist="kernel anaconda CodeAnalyst-gui Glide3 Glide3-libGL LabPlot R-bigmemory alex alt-ergo acpid apmd apmud athcool bibtex2html biosdevname bluez-hcidump camstream ccid ccsm cdrdao cduce darcs appliance-tools cmospwd cmucl coccinelle compat-gcc-296 compiz-bcop compiz-fusion-extras compiz-fusion-unsupported compizconfig-backend-gconf compizconfig-backend-kconfig compizconfig-python cabal-install compiz-fusion coq coredumper cpufrequtils cpuid cpuspeed csisat compiz hlint dmidecode dvgrab cpphs dssi-vst librdmacm edac-utils efax efibootmgr eject elilo esc ext3grep fbset fedora-ksplice emerald minicom coolkey firecontrol firmware-addon-dell fpc fprint_demo fprintd freeipmi freetennis ghc ghc-GLUT ghc-HUnit ghc-OpenGL ghc-X11 ghc-X11-xft ghc-editline ghc-fgl ghc-ghc-paths ghc-gtk2hs ghc-haskell-src ghc-html ghc-mmap ghc-mtl ghc-parallel ghc-parsec ghc-regex-base ghc-regex-compat ghc-regex-posix ghc-stm ghc-tar ghc-haskeline ghc-xhtml ghc-xmonad-contrib ghc-zlib k3b gkrellm-wifi grub2 gnome-do-plugins ghc-haskell-src-exts gnome-pilot gnome-pilot-conduits ghc-uniplate gnu-efi gpart gphoto2 gprolog openobex gsynaptics ghc-HTTP gtksourceview-sharp jpilot-backup eclipse-cdt happy haskell-platform hdparm hevea pilot-link i2c-tools i8kutils ibmasm ifd-egate grub inkscape ghc-cgi ioport iprutils ipw2100-firmware ipw2200-firmware irda-utils irqbalance isdn4k-utils joystick jpilot flashrom kpilot ksensors ksplice latrace lazarus libavc1394 libbsr libcompizconfig libcxgb3 libdc1394 libfprint hscolour libibcm libibcommon libibverbs libiec61883 libraw1394 librtas libsmbios libspe2 libunwind libusb1 hplip libx86 lightning lrmi obexd gnome-media maxima mcelog mediawiki memtest86+ nut libbtctl mkbootdisk mldonkey mod_mono mono-basic monotone-viz msr-tools nspluginwrapper seabios obex-data-server ocaml ocaml-SDL ocaml-ancient ocaml-augeas ocaml-bisect ocaml-bitstring ocaml-cairo ocaml-calendar ocaml-camlidl ocaml-camlimages ocaml-camlp5 ocaml-camomile ocaml-cil ocaml-cmigrep ocaml-csv ocaml-cryptokit ocaml-curl ocaml-curses ocaml-dbus ocaml-deriving ocaml-expat ocaml-extlib ocaml-facile ocaml-fileutils ocaml-findlib ocaml-gettext ocaml-gsl ocaml-json-static ocaml-json-wheel ocaml-lablgl ocaml-lablgtk ocaml-lacaml ocaml-libvirt ocaml-lwt ocaml-mikmatch ocaml-mlgmpidl ocaml-mysql ocaml-newt ocaml-ocamlgraph ocaml-ocamlnet ocaml-omake ocaml-openin ocaml-ounit ocaml-p3l ocaml-pa-do ocaml-pa-monad ocaml-pcre ocaml-perl4caml ocaml-pgocaml ocaml-postgresql ocaml-preludeml ocaml-pxp ocaml-reins ocaml-res ocaml-sexplib ocaml-sqlite ocaml-ssl ocaml-type-conv ocaml-ulex ocaml-xml-light ocaml-xmlrpc-light ocaml-zip ocamldsort ohm olpc-kbdshim olpc-powerd setserial ghc-dataenc ghc-hashed-storage libdv libibmad libhid pcc xorg-x11-drv-openchrome ghc-binary system-config-kdump libibumad pidgin libcrystalhd picprog planets pmtools podsleuth powerpc-utils powerpc-utils-papr ppc64-utils microcode_ctl procbench ps3-utils pvs-sbcl numactl python-iwlib python-psyco eclipse-changelog pyxf86config openmpi pcmciautils openscada rp-pppoe rpmdepsize s3switch sbcl eclipse-rpm-editor rhythmbox opensm sound-juicer spicctrl spring-installer stapitrace statserial svgalib syslinux sysprof system-config-boot system-config-display tbb ghc-QuickCheck tpb tuxcmd tvtime unetbootin unison213 unison227 valgrind vbetool ghc-network viaideinfo yaboot virt-mem virt-top vrq wacomexpresskeys xenner why wine wraplinux wxMaxima wyrd x86info xen xfce4-sensors-plugin xmonad xorg-x11-drv-acecad xorg-x11-drv-aiptek xorg-x11-drv-apm xorg-x11-drv-ark xorg-x11-drv-ast xorg-x11-drv-chips xorg-x11-drv-cirrus xorg-x11-drv-dummy xorg-x11-drv-elographics xorg-x11-drv-evdev xorg-x11-drv-fbdev xorg-x11-drv-geode xorg-x11-drv-glint xorg-x11-drv-hyperpen xorg-x11-drv-i128 xorg-x11-drv-i740 xorg-x11-drv-intel xorg-x11-drv-ivtv xorg-x11-drv-keyboard xorg-x11-drv-mach64 xorg-x11-drv-mga xorg-x11-drv-mouse xorg-x11-drv-mutouch xorg-x11-drv-neomagic xorg-x11-drv-nv xorg-x11-drv-penmount xorg-x11-drv-r128 xorg-x11-drv-radeonhd xorg-x11-drv-rendition xorg-x11-drv-s3 xorg-x11-drv-s3virge xorg-x11-drv-savage xorg-x11-drv-siliconmotion xorg-x11-drv-sis xorg-x11-drv-sisusb xorg-x11-drv-tdfx xorg-x11-drv-trident xorg-x11-drv-tseng xorg-x11-drv-v4l xorg-x11-drv-vesa xorg-x11-drv-vmware xorg-x11-drv-void xorg-x11-drv-voodoo xsp zenon zfs-fuse xorg-x11-drv-fpit libmlx4 libmthca rxtx xorg-x11-drv-vmmouse xorg-x11-drv-synaptics xorg-x11-drv-nouveau xorg-x11-drv-ati superiotool xorg-x11-drivers xorg-x11-drv-qxl qpid-cpp xorg-x11-drv-wacom openoffice.org"
 
 pkgs = remotekojisession.listPackages(tagID=tag, inherited=True)
 
@@ -147,18 +147,38 @@ for pkg in pkgs:
         logging.debug("Blocked pkg: %s" % pkg['package_name'])
         continue
     pkginfo = remotekojisession.listTagged(tag, inherit=True, package=pkg['package_name'])
-    logging.info("got build %s" % pkginfo[1]['nvr'])
+    pkgindex = 1
+    if len(pkginfo)>1:
+        logging.info("got build %s" % pkginfo[pkgindex]['nvr'])
+    elif len(pkginfo)==1:
+        pkgindex = 0
+        logging.info("no previous build for %s" % pkg['package_name'])
+        logging.info("reverting to current %s" % pkginfo[pkgindex]['nvr'])
+    else:
+       # We apparently have 0 builds for this package!
+       logging.info("no builds for %s - skipping" % pkg['package_name'])
+       continue
+    nvr = pkginfo[pkgindex]['nvr']
+    name = pkginfo[pkgindex]['package_name']
+    epoch = pkginfo[pkgindex]['epoch']
+    version = pkginfo[pkgindex]['version']
+    release =  pkginfo[pkgindex]['release']
+    build_id = pkginfo[pkgindex]['build_id']
+    task_id = pkginfo[pkgindex]['task_id']
+
+
+    logging.info("got build %s" % nvr)
     # check if we have the nvr built or not
-    localBuild = localkojisession.getBuild(pkginfo[1]['nvr'])
+    localBuild = localkojisession.getBuild(nvr)
     # if we have never built the package on our target hub localBuild is None and we want to build it
     if not localBuild == None:
         if localBuild['state'] == 1:
-            logging.debug("Local Complete Build: %s" % pkginfo[1]['nvr'])
+            logging.debug("Local Complete Build: %s" % nvr)
             continue
         else:
             localLatestBuild = localkojisession.getLatestBuilds(tag, package=str(pkg['package_name']))
             if not localLatestBuild == []: 
-                parentevr = (str(pkginfo[1]['epoch']), pkginfo[1]['version'],  pkginfo[1]['release'])
+                parentevr = (str(epoch), version,  release)
                 latestevr =  (str(localLatestBuild[0]['epoch']), localLatestBuild[0]['version'], localLatestBuild[0]['release'])
                 newestRPM = _rpmvercmp( parentevr, latestevr)
                 logging.debug("remote evr: %s  \nlocal evr: %s \nResult: %s" % (parentevr, latestevr, newestRPM))
@@ -168,16 +188,16 @@ for pkg in pkgs:
                 if newestRPM == 0:
                     logging.info("Already Built: %s " % (latestevr,))
                     continue
-    rpms = remotekojisession.listRPMs(pkginfo[1]['build_id'])
+    rpms = remotekojisession.listRPMs(build_id)
     if isNoarch(rpms):
-        buildinfo = remotekojisession.getBuild(pkginfo[1]['build_id'])
-        importBuild(pkginfo[1]['nvr'], rpms, buildinfo, tag=tag)
+        buildinfo = remotekojisession.getBuild(build_id)
+        importBuild(nvr, rpms, buildinfo, tag=tag)
         continue
-    request = remotekojisession.getTaskRequest(pkginfo[1]['task_id'])
+    request = remotekojisession.getTaskRequest(task_id)
     #localkojisession.build(request[0], request[1], opts=None, priority=2)
         
-    fname = "%s.src.rpm" % pkginfo[1]['nvr']
-    url = "%s/packages/%s/%s/%s/src/%s" % (PACKAGEURL, pkginfo[1]['package_name'], pkginfo[1]['version'], pkginfo[1]['release'], fname)
+    fname = "%s.src.rpm" % nvr
+    url = "%s/packages/%s/%s/%s/src/%s" % (PACKAGEURL, name, version, release, fname)
 
     file = grabber.urlopen(url, progress_obj = pg, text = "%s" % (fname))
 
@@ -195,6 +215,13 @@ for pkg in pkgs:
     serverdir = _unique_path('cli-build')
     localkojisession.uploadWrapper(fname, serverdir, blocksize=65536)
     source = "%s/%s" % (serverdir, fname)
-    localkojisession.build(source, request[1], opts=None, priority=2)
-    logging.info("submitted build: %s" % pkginfo[1]['nvr'])
+    target = request[1]
+    if target == "dist-rawhide":
+        target = "dist-f14"
+    if target.startswith("dist-f11"):
+        logging.debug("Skiping package: %s" % pkg['package_name'])
+        continue
+
+    localkojisession.build(source, target, opts=None, priority=2)
+    logging.info("submitted build: %s" % nvr)
 
