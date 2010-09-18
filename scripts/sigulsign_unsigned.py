@@ -134,6 +134,8 @@ parser.add_option('--just-write', action='store_true', default=False,
                   help='Just write out signed copies of the rpms')
 parser.add_option('--just-sign', action='store_true', default=False,
                   help='Just sign and import the rpms')
+parser.add_option('--just-list', action='store_true', default=False,
+                  help='Just list the unsigned rpms')
 parser.add_option('--write-all', action='store_true', default=False,
                   help='Write every rpm, not just unsigned')
 parser.add_option('--password',
@@ -173,7 +175,7 @@ if not key in KEYS.keys():
 
 # Get the passphrase for the user if we're going to sign something
 # (This code stolen from sigul client.py)
-if not opts.just_write:
+if not (opts.just_list or opts.just_write):
     if opts.password:
         passphrase = opts.password
     else:
@@ -268,6 +270,11 @@ for ([result], rpm) in zip(results, rpmdict.keys()):
     if not result:
         logging.debug('%s is not signed with %s' % (rpm, key))
         unsigned.append(rpm)
+
+if opts.just_list:
+    logging.info('Just listing rpms')
+    print('\n'.join(unsigned))
+    sys.exit(0)
 
 logging.debug('Found %s unsigned rpms' % len(unsigned))
 
