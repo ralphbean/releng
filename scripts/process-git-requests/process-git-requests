@@ -350,7 +350,12 @@ def change_request_string(items, bug):
 def get_pkgdb_owners(pkgdb, pkg):
     owners = {}
     o = ''
-    for i in pkgdb.get_owners(pkg)['packageListings']:
+    try:
+        ownerlist = pkgdb.get_owners(pkg)['packageListings']
+    except AppError, e:
+        return(owners, o)
+
+    for i in ownerlist:
         branch = i['collection']['branchname']
         if branch not in branches:
             continue
@@ -550,6 +555,8 @@ def process_change_request(bug, comment, allcomments, firstfound, pkgdb, branche
     (owners, owner_string) = get_pkgdb_owners(pkgdb, items['Package Name'])
 
     # Try to enforce EPEL branch rules
+    if not len(owners):
+        warnings.append("WARNING: Package does not appear to exist in pkgdb currently.")
     for i in owners.keys():
         if request['owner'] == owners[i]['primary'] or request['owner'] in owners[i]['comaint']:
             owned = True
