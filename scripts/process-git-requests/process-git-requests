@@ -557,6 +557,14 @@ def process_change_request(bug, comment, allcomments, firstfound, pkgdb, branche
     # Try to enforce EPEL branch rules
     if not len(owners):
         warnings.append("WARNING: Package does not appear to exist in pkgdb currently.")
+
+    if not len(items['New Branches']) and len(items['Branches']):
+        warnings.append("NOTE: Misformatted request; using 'Branches' instead.")
+        items['New Branches'] == items['Branches'];
+        request['newbranches'] = request['branches']
+    print items
+    print request
+
     for i in owners.keys():
         if request['owner'] == owners[i]['primary'] or request['owner'] in owners[i]['comaint']:
             owned = True
