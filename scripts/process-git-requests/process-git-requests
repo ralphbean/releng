@@ -47,7 +47,7 @@ epel_ok_comaint = ['alexlan', 'guidograzioli', 'jwrdegoede', 'kkofler',
         'mebourne', 'overholt', 'pgordon', 'rishi', 'snirkel']
 
 PAGER = os.environ.get('PAGER') or '/usr/bin/less'
-EDITOR = os.environ.get('EDITOR') or '/usr/bin/vim'
+EDITOR = os.environ.get('EDITOR') or '/usr/bin/vi'
 
 # Override a method in xmlrpclib so it doesn't blow up when getting crap data
 # from Red Hat's bugzilla.
