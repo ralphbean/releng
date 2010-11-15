@@ -445,7 +445,10 @@ def process_new_request(bug, comment, allcomments, firstfound, pkgdb, fas, branc
     items = parse_prefixed_lines(comment['text'])
     request = clean_request(items)
 
-    warnings.extend(check_owners(fas, request['owner'], request['comaintainers'], request['cc_list']))
+    w = check_owners(fas, request['owner'], request['comaintainers'], request['cc_list'])
+    if len(w):
+        warnings.extend(w)
+        warned = True
 
     if not 'Owners' in items:
         warnings.append("WARNING: No owners provided.")
