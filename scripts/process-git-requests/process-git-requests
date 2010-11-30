@@ -468,7 +468,7 @@ def process_new_request(bug, comment, allcomments, firstfound, pkgdb, fas, branc
             warned = True
 
     short_desc = bug.short_desc
-    m=re.search('Review Request:\s([a-zA-Z0-9_+.-]+)\s+', short_desc, re.I)
+    m=re.search('Review Request:\s+([a-zA-Z0-9_+.-]+)\s+', short_desc, re.I)
     if not m:
         warnings.append("WARNING: Couldn't parse package name out of bug summary.")
         warned = True
