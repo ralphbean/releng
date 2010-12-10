@@ -40,7 +40,7 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash -o /mnt/koji/mash/
 mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "rm -f /var/lib/rpm/__db*"
 mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -q --new=file:///mnt/koji/mash/epel-$DATE/el6-epel/SRPMS --old=file:///pub/epel/beta/6/SRPMS > /mnt/koji/mash/epel-$DATE/logs/repodiff"
 
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic-el6 /mnt/koji/mash/epel-$DATE/el6-epel/ >/mnt/koji/mash/epel-$DATE/logs/depcheck" &
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic-el6 --treename=epel-6 /mnt/koji/mash/epel-$DATE/el6-epel/ >/mnt/koji/mash/epel-$DATE/logs/depcheck" &
 
 
 wait
