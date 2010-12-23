@@ -312,7 +312,9 @@ def clean_request(items):
         request['owner'] = ''
         request['comaintainers'] = []
 
-    request['cc_list'] = items['InitialCC'].split()
+    cclist = items['InitialCC'].strip()
+    cclist = re.sub(r',', ' ', cclist)
+    request['cc_list'] = cclist.split()
     request['pkg'] = items['Package Name']
     request['description'] = items['Short Description']
 
