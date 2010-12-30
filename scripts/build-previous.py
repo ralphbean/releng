@@ -219,7 +219,7 @@ for pkg in pkgs:
     target = request[1]
     if target == "dist-rawhide":
         try:
-            target = "dist-f%s" % nvr.split("fc")[-1]
+            target = "dist-f%s" % nvr.split("fc")[-1].rsplit('.')[0]
             logging.info("switched target to: %s" % (target,))
         except:
             logging.info("unable to switch target: ")
