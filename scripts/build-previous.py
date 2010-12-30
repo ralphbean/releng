@@ -131,7 +131,7 @@ localkojisession = koji.ClientSession(LOCALKOJIHUB)
 remotekojisession = koji.ClientSession(REMOTEKOJIHUB)
 localkojisession.ssl_login(CLIENTCERT, CLIENTCA, SERVERCA)
 
-tag = 'dist-f14'
+tag = 'dist-f15'
 
 ignorelist="kernel anaconda CodeAnalyst-gui Glide3 Glide3-libGL LabPlot R-bigmemory alex alt-ergo acpid apmd apmud athcool bibtex2html biosdevname bluez-hcidump camstream ccid ccsm cdrdao cduce darcs appliance-tools cmospwd cmucl coccinelle compat-gcc-296 compiz-bcop compiz-fusion-extras compiz-fusion-unsupported compizconfig-backend-gconf compizconfig-backend-kconfig compizconfig-python cabal-install compiz-fusion coq coredumper cpufrequtils cpuid cpuspeed csisat compiz hlint dmidecode dvgrab cpphs dssi-vst librdmacm edac-utils efax efibootmgr eject elilo esc ext3grep fbset fedora-ksplice emerald minicom coolkey firecontrol firmware-addon-dell fpc fprint_demo fprintd freeipmi freetennis ghc ghc-GLUT ghc-HUnit ghc-OpenGL ghc-X11 ghc-X11-xft ghc-editline ghc-fgl ghc-ghc-paths ghc-gtk2hs ghc-haskell-src ghc-html ghc-mmap ghc-mtl ghc-parallel ghc-parsec ghc-regex-base ghc-regex-compat ghc-regex-posix ghc-stm ghc-tar ghc-haskeline ghc-xhtml ghc-xmonad-contrib ghc-zlib k3b gkrellm-wifi grub2 gnome-do-plugins ghc-haskell-src-exts gnome-pilot gnome-pilot-conduits ghc-uniplate gnu-efi gpart gphoto2 gprolog openobex gsynaptics ghc-HTTP gtksourceview-sharp jpilot-backup eclipse-cdt happy haskell-platform hdparm hevea pilot-link i2c-tools i8kutils ibmasm ifd-egate grub inkscape ghc-cgi ioport iprutils ipw2100-firmware ipw2200-firmware irda-utils irqbalance isdn4k-utils joystick jpilot flashrom kpilot ksensors ksplice latrace lazarus libavc1394 libbsr libcompizconfig libcxgb3 libdc1394 libfprint hscolour libibcm libibcommon libibverbs libiec61883 libraw1394 librtas libsmbios libspe2 libunwind libusb1 hplip libx86 lightning lrmi obexd gnome-media maxima mcelog mediawiki memtest86+ nut libbtctl mkbootdisk mldonkey mod_mono mono-basic monotone-viz msr-tools nspluginwrapper seabios obex-data-server ocaml ocaml-SDL ocaml-ancient ocaml-augeas ocaml-bisect ocaml-bitstring ocaml-cairo ocaml-calendar ocaml-camlidl ocaml-camlimages ocaml-camlp5 ocaml-camomile ocaml-cil ocaml-cmigrep ocaml-csv ocaml-cryptokit ocaml-curl ocaml-curses ocaml-dbus ocaml-deriving ocaml-expat ocaml-extlib ocaml-facile ocaml-fileutils ocaml-findlib ocaml-gettext ocaml-gsl ocaml-json-static ocaml-json-wheel ocaml-lablgl ocaml-lablgtk ocaml-lacaml ocaml-libvirt ocaml-lwt ocaml-mikmatch ocaml-mlgmpidl ocaml-mysql ocaml-newt ocaml-ocamlgraph ocaml-ocamlnet ocaml-omake ocaml-openin ocaml-ounit ocaml-p3l ocaml-pa-do ocaml-pa-monad ocaml-pcre ocaml-perl4caml ocaml-pgocaml ocaml-postgresql ocaml-preludeml ocaml-pxp ocaml-reins ocaml-res ocaml-sexplib ocaml-sqlite ocaml-ssl ocaml-type-conv ocaml-ulex ocaml-xml-light ocaml-xmlrpc-light ocaml-zip ocamldsort ohm olpc-kbdshim olpc-powerd setserial ghc-dataenc ghc-hashed-storage libdv libibmad libhid pcc xorg-x11-drv-openchrome ghc-binary system-config-kdump libibumad pidgin libcrystalhd picprog planets pmtools podsleuth powerpc-utils powerpc-utils-papr ppc64-utils microcode_ctl procbench ps3-utils pvs-sbcl numactl python-iwlib python-psyco eclipse-changelog pyxf86config openmpi pcmciautils openscada rp-pppoe rpmdepsize s3switch sbcl eclipse-rpm-editor rhythmbox opensm sound-juicer spicctrl spring-installer stapitrace statserial svgalib syslinux sysprof system-config-boot system-config-display tbb ghc-QuickCheck tpb tuxcmd tvtime unetbootin unison213 unison227 valgrind vbetool ghc-network viaideinfo yaboot virt-mem virt-top vrq wacomexpresskeys xenner why wine wraplinux wxMaxima wyrd x86info xen xfce4-sensors-plugin xmonad xorg-x11-drv-acecad xorg-x11-drv-aiptek xorg-x11-drv-apm xorg-x11-drv-ark xorg-x11-drv-ast xorg-x11-drv-chips xorg-x11-drv-cirrus xorg-x11-drv-dummy xorg-x11-drv-elographics xorg-x11-drv-evdev xorg-x11-drv-fbdev xorg-x11-drv-geode xorg-x11-drv-glint xorg-x11-drv-hyperpen xorg-x11-drv-i128 xorg-x11-drv-i740 xorg-x11-drv-intel xorg-x11-drv-ivtv xorg-x11-drv-keyboard xorg-x11-drv-mach64 xorg-x11-drv-mga xorg-x11-drv-mouse xorg-x11-drv-mutouch xorg-x11-drv-neomagic xorg-x11-drv-nv xorg-x11-drv-penmount xorg-x11-drv-r128 xorg-x11-drv-radeonhd xorg-x11-drv-rendition xorg-x11-drv-s3 xorg-x11-drv-s3virge xorg-x11-drv-savage xorg-x11-drv-siliconmotion xorg-x11-drv-sis xorg-x11-drv-sisusb xorg-x11-drv-tdfx xorg-x11-drv-trident xorg-x11-drv-tseng xorg-x11-drv-v4l xorg-x11-drv-vesa xorg-x11-drv-vmware xorg-x11-drv-void xorg-x11-drv-voodoo xsp zenon zfs-fuse xorg-x11-drv-fpit libmlx4 libmthca rxtx xorg-x11-drv-vmmouse xorg-x11-drv-synaptics xorg-x11-drv-nouveau xorg-x11-drv-ati superiotool xorg-x11-drivers xorg-x11-drv-qxl qpid-cpp xorg-x11-drv-wacom openoffice.org"
 
@@ -167,7 +167,6 @@ for pkg in pkgs:
     task_id = pkginfo[pkgindex]['task_id']
 
 
-    logging.info("got build %s" % nvr)
     # check if we have the nvr built or not
     localBuild = localkojisession.getBuild(nvr)
     # if we have never built the package on our target hub localBuild is None and we want to build it
@@ -196,28 +195,34 @@ for pkg in pkgs:
     request = remotekojisession.getTaskRequest(task_id)
     #localkojisession.build(request[0], request[1], opts=None, priority=2)
         
-    fname = "%s.src.rpm" % nvr
+    fname = "%s.src.rpm" %  nvr
+    fpath = "%s/%s.src.rpm" % (workpath, nvr)
     url = "%s/packages/%s/%s/%s/src/%s" % (PACKAGEURL, name, version, release, fname)
 
-    file = grabber.urlopen(url, progress_obj = pg, text = "%s" % (fname))
 
-    out = os.open(os.path.basename("/tmp/%s" %fname), os.O_WRONLY|os.O_CREAT|os.O_TRUNC, 0666)
-    try:
-        while 1:
-            buf = file.read(4096)
-            if not buf:
-                break
-            os.write(out, buf)
-    finally:
-        os.close(out)
-        file.close()
+    if not os.path.isfile(fpath):
+        file = grabber.urlopen(url, progress_obj = pg, text = "%s" % (fname))
+        out = os.open(os.path("%s" % fname), os.O_WRONLY|os.O_CREAT|os.O_TRUNC, 0666)
+        try:
+            while 1:
+                buf = file.read(4096)
+                if not buf:
+                    break
+                os.write(out, buf)
+        finally:
+            os.close(out)
+            file.close()
         
     serverdir = _unique_path('cli-build')
-    localkojisession.uploadWrapper(fname, serverdir, blocksize=65536)
+    localkojisession.uploadWrapper(fpath, serverdir, blocksize=65536)
     source = "%s/%s" % (serverdir, fname)
     target = request[1]
     if target == "dist-rawhide":
-        target = "dist-f14"
+        try:
+            target = "dist-f%s" % nvr.split("fc")[-1]
+            logging.info("switched target to: %s" % (target,))
+        except:
+            logging.info("unable to switch target: ")
     if target.startswith("dist-f11"):
         logging.debug("Skiping package: %s" % pkg['package_name'])
         continue
