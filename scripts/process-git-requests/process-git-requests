@@ -40,7 +40,7 @@ fasurl = 'https://admin.fedoraproject.org/accounts/'
 # Users who indicated that they're OK with EPEL branches.  Some request that
 # they be made comaintainers.
 # Taken from http://fedoraproject.org/wiki/EPEL/ContributorStatusNo
-epel_ok = ['abompart', 'athimm', 'corsepiu', 'ecik', 'faucamp', 'konradm',
+epel_ok = ['abompard', 'athimm', 'corsepiu', 'ecik', 'faucamp', 'konradm',
         'monnerat', 'mtasaka', 'nim', 'rafalzaq', 'rineau', 'rstrode',
         'sgrubb', 'shishz', 'terjeros', 'zkota']
 epel_ok_comaint = ['alexlan', 'guidograzioli', 'jwrdegoede', 'kkofler',
