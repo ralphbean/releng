@@ -46,6 +46,9 @@ epel_ok = ['abompard', 'athimm', 'corsepiu', 'ecik', 'faucamp', 'konradm',
 epel_ok_comaint = ['alexlan', 'guidograzioli', 'jwrdegoede', 'kkofler',
         'mebourne', 'overholt', 'pgordon', 'rishi', 'snirkel']
 
+# A hand-maintained list of reviewers who have done poor reviews in the past
+bad_reviewers = ['rnovacek@redhat.com']
+
 PAGER = os.environ.get('PAGER') or '/usr/bin/less'
 EDITOR = os.environ.get('EDITOR') or '/usr/bin/vi'
 
@@ -468,6 +471,8 @@ def process_new_request(bug, comment, allcomments, firstfound, pkgdb, fas, branc
         if i not in branches:
             warnings.append("WARNING: Invalid branch %s requested" % i)
             warned = True
+    if bug.assigned_to in bad_reviewers:
+        warnings.append("WARNING: Reviewer %s has done poor reviews in the past; please check." % bug.assigned_to)
 
     short_desc = bug.short_desc
     m=re.search('Review Request:\s+([a-zA-Z0-9_+.-]+)\s+', short_desc, re.I)
