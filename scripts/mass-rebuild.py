@@ -16,13 +16,13 @@ import operator
 
 # Set some variables
 # Some of these could arguably be passed in as args.
-buildtag = 'dist-f12' # tag to build from
-epoch = '2009-07-24 08:06:00.000000' # rebuild anything not built after this date
+buildtag = 'dist-f15' # tag to build from
+epoch = '2011-02-05 10:18:38.000000' # rebuild anything not built after this date
 user = 'Fedora Release Engineering <rel-eng@lists.fedoraproject.org>'
-comment = '- Rebuilt for https://fedoraproject.org/wiki/Fedora_12_Mass_Rebuild'
+comment = '- Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild'
 workdir = os.path.expanduser('~/massbuild')
 enviro = os.environ
-target = 'dist-f12-rebuild'
+target = 'dist-f15-rebuild'
 enviro['CVS_RSH'] = 'ssh' # use ssh for cvs
 
 # Define functions
@@ -61,7 +61,7 @@ def runmeoutput(cmd, action, pkg, env, cwd=workdir):
 
 
 # Create a koji session
-kojisession = koji.ClientSession('https://koji.fedoraproject.org/kojihub')
+kojisession = koji.ClientSession('http://koji.fedoraproject.org/kojihub')
 
 # Generate a list of packages to iterate over
 pkgs = kojisession.listPackages(buildtag, inherited=True)
@@ -93,30 +93,29 @@ for pkg in pkgs:
         print 'Skipping %s, already attempted.' % name
         continue
 
-    # Check out cvs
-    cvs = ['cvs', '-d', ':ext:jkeating@cvs.fedoraproject.org:/cvs/pkgs', 'co',
-           name]
+    # Check out git
+    fedpkgcmd = ['fedpkg', 'clone', name]
     print 'Checking out %s' % name
-    if runme(cvs, 'checkout', name, enviro):
+    if runme(fedpkgcmd, 'fedpkg', name, enviro):
         continue
 
-    # Check for a devel branch
-    if not os.path.exists(os.path.join(workdir, name, 'devel')):
-        sys.stderr.write('%s failed devel branch check.\n' % name)
+    # Check for a checkout
+    if not os.path.exists(os.path.join(workdir, name)):
+        sys.stderr.write('%s failed checkout.\n' % name)
         continue
 
     # Check for a noautobuild file
-    if os.path.exists(os.path.join(workdir, name, 'devel', 'noautobuild')):
+    if os.path.exists(os.path.join(workdir, name, 'noautobuild')):
         # Maintainer does not want us to auto build.
         print 'Skipping %s due to opt-out' % name
         continue
 
     # Find the spec file
-    files = os.listdir(os.path.join(workdir, name, 'devel'))
+    files = os.listdir(os.path.join(workdir, name))
     spec = ''
     for file in files:
         if file.endswith('.spec'):
-            spec = os.path.join(workdir, name, 'devel', file)
+            spec = os.path.join(workdir, name, file)
             break
 
     if not spec:
@@ -125,30 +124,30 @@ for pkg in pkgs:
 
     # rpmdev-bumpspec
     bumpspec = ['rpmdev-bumpspec', '-u', user, '-c', comment,
-                os.path.join(workdir, name, 'devel', spec)]
+                os.path.join(workdir, name, spec)]
     print 'Bumping %s' % spec
     if runme(bumpspec, 'bumpspec', name, enviro):
         continue
 
-    # cvs commit
-    commit = ['cvs', 'commit', '-m', comment]
+    # git commit
+    commit = ['fedpkg', 'ci', '-m', comment]
     print 'Committing changes for %s' % name
     if runme(commit, 'commit', name, enviro,
-                 cwd=os.path.join(workdir, name, 'devel')):
+                 cwd=os.path.join(workdir, name)):
         continue
 
-    # cvs tag
-    tag = ['make', 'tag']
-    print 'Tagging %s' % name
-    if runme(tag, 'tag', name, enviro,
-                 cwd=os.path.join(workdir, name, 'devel')):
+    # git push
+    push = ['git', 'push']
+    print 'push changes for %s' % name
+    if runme(push, 'push', name, enviro,
+                 cwd=os.path.join(workdir, name)):
         continue
 
-    # get cvs url
-    urlcmd = ['make', 'cvsurl']
+    # get git url
+    urlcmd = ['fedpkg', 'giturl']
     print 'Getting cvs url for %s' % name
-    url = runmeoutput(urlcmd, 'cvsurl', name, enviro,
-                 cwd=os.path.join(workdir, name, 'devel'))
+    url = runmeoutput(urlcmd, 'giturl', name, enviro,
+                 cwd=os.path.join(workdir, name))
     if not url:
         continue
 
@@ -156,4 +155,4 @@ for pkg in pkgs:
     build = ['koji', 'build', '--nowait', '--background', target, url]
     print 'Building %s' % name
     runme(build, 'build', name, enviro, 
-          cwd=os.path.join(workdir, name, 'devel'))
+          cwd=os.path.join(workdir, name))
