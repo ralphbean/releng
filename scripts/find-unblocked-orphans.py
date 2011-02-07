@@ -32,11 +32,15 @@ import shutil
 
 # Set some variables
 # Some of these could arguably be passed in as args.
-repo = 'http://kojipkgs.fedoraproject.org/mash/branched/i386/os'
-srepourl = 'http://kojipkgs.fedoraproject.org/mash/branched/source/SRPMS'
-tag = 'dist-f14' # tag to check in koji
-develbranch = 25 # pkgdb ID for the devel branch
-develbranchname = 'F-14' # pkgdb name for the devel branch
+# If this is pre-branch, these repos should be rawhide; otherwise,
+# they should be branched.
+repo = 'http://kojipkgs.fedoraproject.org/mash/rawhide/i386/os'
+srepourl = 'http://kojipkgs.fedoraproject.org/mash/rawhide/source/SRPMS'
+tag = 'dist-f15' # tag to check in koji
+# pre-branch, this should be 8 and 'devel). Post-branch, you need
+# to look it up.
+develbranch = 8 # pkgdb ID for the devel branch
+develbranchname = 'devel' # pkgdb name for the devel branch
 orphanuid = 'orphan' # pkgdb uid for orphan
 orphans = {} # list of orphans on the devel branch from pkgdb
 unblocked = {} # holding dict for unblocked orphans plus their deps
