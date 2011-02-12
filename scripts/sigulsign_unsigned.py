@@ -48,6 +48,7 @@ CLIENTCERT = os.path.expanduser('~/.fedora.cert')
 KEYS = {'fedora-12': {'id': '57bbccba', 'v3': True},
         'fedora-13': {'id': 'e8e40fde', 'v3': True},
         'fedora-14': {'id': '97a1071f', 'v3': True},
+        'fedora-15': {'id': '069c8460', 'v3': True},
         'fedora-11': {'id': 'd22e77f2', 'v3': True},
         'fedora-10': {'id': '4ebfc273', 'v3': False},
         'fedora-10-testing': {'id': '0b86274e', 'v3': False},
