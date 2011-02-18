@@ -32,6 +32,7 @@ set -x
 mkdir -p /tmp/treebuild.$TREE/{output,cache,$BRANCH}
 cd /tmp/treebuild.$TREE
 touch rawhide.ks
+echo "repo --name=fedora --baseurl=file:///tmp/treebuild.$TREE/output/$BRANCH/$ARCH/os/" > rawhide.ks
 mount -t nfs -o ro,nolock nfs01.phx2.fedoraproject.org:/mnt/koji/mash/branched-$TREE/$BRANCH $BRANCH
 rm -f /var/lib/rpm/__db*
 mkdir -p output/$BRANCH/$ARCH/os/
