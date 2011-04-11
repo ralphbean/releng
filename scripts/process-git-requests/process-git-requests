@@ -565,8 +565,11 @@ def process_change_request(bug, comment, allcomments, firstfound, pkgdb, branche
     (owners, owner_string) = get_pkgdb_owners(pkgdb, items['Package Name'])
 
     # Try to enforce EPEL branch rules
+    exists = True
     if not len(owners):
         warnings.append("WARNING: Package does not appear to exist in pkgdb currently.")
+        warned = True
+        exists = False
 
     if not len(items['New Branches']) and len(items['Branches']):
         warnings.append("NOTE: Misformatted request; using 'Branches' instead.")
@@ -578,11 +581,11 @@ def process_change_request(bug, comment, allcomments, firstfound, pkgdb, branche
     for i in owners.keys():
         if request['owner'] == owners[i]['primary'] or request['owner'] in owners[i]['comaint']:
             owned = True
-    if not owned and items['New Branches'].find('EL') >= 0 and owners['devel']['primary'] in epel_ok:
+    if exists and not owned and items['New Branches'].find('EL') >= 0 and owners['devel']['primary'] in epel_ok:
         warnings.append("NOTE: new branch owner not owner of other branches,\n  but primary devel owner is OK with EPEL branches.")
-    elif not owned and items['New Branches'].find('EL') >= 0 and owners['devel']['primary'] in epel_ok_comaint:
+    elif exists and not owned and items['New Branches'].find('EL') >= 0 and owners['devel']['primary'] in epel_ok_comaint:
         warnings.append("NOTE: new branch owner not owner of other branches,\n but primary devel owner is OK with EPEL branches\n  as long as they comaintain.")
-    elif not owned:
+    elif exists and not owned:
         warnings.append("WARNING: new branch owner not owner of other branches.")
         warned = True
 
