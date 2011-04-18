@@ -719,17 +719,17 @@ if __name__ == '__main__':
         exit(1)
 
     # Iterate over bugs
+    newre = re.compile('^New Package .* Request', re.MULTILINE)
+    changere = re.compile('^Package Change Request', re.MULTILINE)
     for i in bugs:
         firstfound = True
         type = ''
         print "Parsing bug %d - https://bugzilla.redhat.com/%d" % (i.bug_id, i.bug_id)
         for j in reversed(comments['bugs'][str(i.bug_id)]['comments']):
-            if ('New Package CVS Request' in j['text']
-                    or 'New Package GIT Request' in j['text']
-                    or 'New Package SCM Request' in j['text']):
+            if newre.search(j['text']):
                 type = 'new'
                 break
-            if 'Package Change Request' in j['text']:
+            if changere.search(j['text']):
                 type = 'change'
                 break
             firstfound = False
