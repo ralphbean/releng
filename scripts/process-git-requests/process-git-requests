@@ -132,7 +132,8 @@ def encode_utf8(object, encoding='utf8', errors='replace'):
 def add_package(pkgdb, request):
     for retry in range(1, config['pkgdb.retries'] + 1):
         try:
-            pkgdb.add_package(pkg=request['pkg'],
+            # Note: must stringify the pkg; it blows up with unicode
+            pkgdb.add_package(pkg=str(request['pkg']),
                     owner=request['owner'],
                     description=request['description'],
                     branches=request['branches'],
