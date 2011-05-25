@@ -277,8 +277,6 @@ def clean_branches(branches):
     branches = re.sub(r' +', ' ', branches)
 
     # Now make things nasty to satisfy history
-    branches = re.sub(r'f12', r'F-12', branches)
-    branches = re.sub(r'f13', r'F-13', branches)
     branches = re.sub(r'el4', r'EL-4', branches)
     branches = re.sub(r'el5', r'EL-5', branches)
     branches = re.sub(r'el6', r'EL-6', branches)
