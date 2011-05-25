@@ -574,8 +574,6 @@ def process_change_request(bug, comment, allcomments, firstfound, pkgdb, branche
         warnings.append("NOTE: Misformatted request; using 'Branches' instead.")
         items['New Branches'] == items['Branches'];
         request['newbranches'] = request['branches']
-    print items
-    print request
 
     for i in owners.keys():
         if request['owner'] == owners[i]['primary'] or request['owner'] in owners[i]['comaint']:
