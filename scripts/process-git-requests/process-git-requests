@@ -706,6 +706,13 @@ if __name__ == '__main__':
     print "Getting valid branches...."
     for i in pkgdb.get_collection_list(eol=False):
         branches[i[0]['branchname']] = 1
+
+    # Unfortunately pkgdb can't tell us when branches are no longer accepted
+    print branches
+    if 'F-13' in branches:
+        del branches['F-13']
+    print branches
+
     print "Connecting to FAS..."
     fas = AccountSystem(username=options.user)
     print "Done."
