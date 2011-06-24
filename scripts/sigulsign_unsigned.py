@@ -47,6 +47,7 @@ CLIENTCERT = os.path.expanduser('~/.fedora.cert')
 # that koji would use.  We should get this from sigul somehow.
 KEYS = {'fedora-12-sparc': {'id': 'b3eb779b', 'v3': True},
         'fedora-13-sparc': {'id': '5bf71b5e', 'v3': True},
+        'fedora-15-secondary': {'id': '3ad31d0b', 'v3': True},
         'fedora-12': {'id': '57bbccba', 'v3': True},
         'fedora-13': {'id': 'e8e40fde', 'v3': True},
         'fedora-11': {'id': 'd22e77f2', 'v3': True},
@@ -276,8 +277,12 @@ for ([result], rpm) in zip(results, rpmdict.keys()):
 
 logging.debug('Found %s unsigned rpms' % len(unsigned))
 
-# Now run the unsigned stuff through sigul
-command = ['sigul', '--batch', 'sign-rpm', '--store-in-koji', '--koji-only']
+if opts.arch:
+    # Now run the unsigned stuff through sigul
+    command = ['sigul', '--batch', 'sign-rpm', '-k', opts.arch, '--store-in-koji', '--koji-only']
+else:
+    # Now run the unsigned stuff through sigul
+    command = ['sigul', '--batch', 'sign-rpm', '--store-in-koji', '--koji-only']
 # See if this is a v3 key or not
 if KEYS[key]['v3']:
     command.append('--v3-signature')
