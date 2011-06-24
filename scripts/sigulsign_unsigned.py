@@ -291,7 +291,7 @@ command.append(key)
 # run sigul
 def run_sigul(rpms, batchnr):
     logging.debug('Running %s' % subprocess.list2cmdline(command + rpms))
-    logging.info('Signing batch %s/%s with %s rpms' % (batchnr, (total+99)/100, len(rpms)))
+    logging.info('Signing batch %s/%s with %s rpms' % (batchnr, (total+batchsize-1)/batchsize, len(rpms)))
     child = subprocess.Popen(command + rpms, stdin=subprocess.PIPE)
     child.stdin.write(passphrase + '\0')
     ret = child.wait()
@@ -302,20 +302,17 @@ def run_sigul(rpms, batchnr):
 
 logging.info('Signing rpms via sigul')
 total = len(unsigned)
-cnt = 0
+batchsize = 50
 batchnr = 0
 rpms = []
 for rpm in unsigned:
-    if cnt < 100:
-	rpms += [rpm]
-	cnt += 1
-    else:
+    rpms += [rpm]
+    if len(rpms) == batchsize:
 	batchnr += 1
 	run_sigul(rpms, batchnr)
-	cnt = 0
 	rpms = []
 
-if cnt > 0:
+if len(rpms) > 0:
     batchnr += 1
     run_sigul(rpms, batchnr)
 
