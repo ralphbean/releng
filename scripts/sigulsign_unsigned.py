@@ -279,26 +279,45 @@ logging.debug('Found %s unsigned rpms' % len(unsigned))
 
 if opts.arch:
     # Now run the unsigned stuff through sigul
-    command = ['sigul', '--batch', 'sign-rpm', '-k', opts.arch, '--store-in-koji', '--koji-only']
+    command = ['sigul', '--batch', 'sign-rpms', '-k', opts.arch, '--store-in-koji', '--koji-only']
 else:
     # Now run the unsigned stuff through sigul
-    command = ['sigul', '--batch', 'sign-rpm', '--store-in-koji', '--koji-only']
+    command = ['sigul', '--batch', 'sign-rpms', '--store-in-koji', '--koji-only']
 # See if this is a v3 key or not
 if KEYS[key]['v3']:
     command.append('--v3-signature')
 command.append(key)
-logging.info('Signing rpms via sigul')
-total = len(unsigned)
-for rpm in unsigned:
-    logging.debug('Running %s' % subprocess.list2cmdline(command + [rpm]))
-    logging.info('Signing %s of %s' % (unsigned.index(rpm) + 1, total))
-    child = subprocess.Popen(command + [rpm], stdin=subprocess.PIPE)
+
+# run sigul
+def run_sigul(rpms, batchnr):
+    logging.debug('Running %s' % subprocess.list2cmdline(command + rpms))
+    logging.info('Signing batch %s/%s with %s rpms' % (batchnr, (total+99)/100, len(rpms)))
+    child = subprocess.Popen(command + rpms, stdin=subprocess.PIPE)
     child.stdin.write(passphrase + '\0')
     ret = child.wait()
     if ret != 0:
-        logging.error('Error signing %s' % rpm)
-        errors.setdefault('Signing', []).append(rpm)
-        status += 1
+        logging.error('Error signing %s' % (rpms))
+    	errors.setdefault('Signing', []).append(rpms)
+    	status += 1
+
+logging.info('Signing rpms via sigul')
+total = len(unsigned)
+cnt = 0
+batchnr = 0
+rpms = []
+for rpm in unsigned:
+    if cnt < 100:
+	rpms += [rpm]
+	cnt += 1
+    else:
+	batchnr += 1
+	run_sigul(rpms, batchnr)
+	cnt = 0
+	rpms = []
+
+if cnt > 0:
+    batchnr += 1
+    run_sigul(rpms, batchnr)
 
 # Now that we've signed things, time to write them out, if so desired.
 if not opts.just_sign:
