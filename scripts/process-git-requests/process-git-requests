@@ -170,7 +170,7 @@ def run_query(bz):
     querydata['column_list'] = ['opendate', 'changeddate', 'bug_severity',
             'alias', 'assigned_to', 'reporter', 'bug_status', 'resolution',
             'component', 'blockedby', 'dependson', 'short_desc',
-            'status_whiteboard', 'flag_types']
+            'status_whiteboard', 'flagtypes.name']
 
     querydata['field0-0-0'] = 'flagtypes.name'
     querydata['type0-0-0'] = 'equals'
@@ -470,8 +470,18 @@ def process_new_request(bug, comment, allcomments, firstfound, pkgdb, fas, branc
         if i not in branches:
             warnings.append("WARNING: Invalid branch %s requested" % i)
             warned = True
+    if bug.assigned_to == 'nobody@fedoraproject.org':
+        warnings.append("WARNING: Ticket is not assigned to anyone.")
+        warned = True
     if bug.assigned_to in bad_reviewers:
         warnings.append("WARNING: Reviewer %s has done poor reviews in the past; please check." % bug.assigned_to)
+        warned = True
+
+    # This is an unpleasant hack
+    flags = bug.__getattr__('flagtypes.name')
+    if flags.find('fedora-review+') < 0:
+        warnings.append("WARNING: fedora-review flag not set to '+'")
+        warned = True
 
     short_desc = bug.short_desc
     m=re.search('Review Request:\s+([a-zA-Z0-9_+.-]+)\s+', short_desc, re.I)
