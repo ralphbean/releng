@@ -79,4 +79,4 @@ if older:
     print ""
 
 if equal or older:
-    print "Suggest: koji untag-pkg --force %s %s %s" % (overtag, ' '.join([printBuild(e) for e in equal]), ' '.join([printBuild(o) for o in older]))
+    print "Suggest: koji untag-pkg %s %s %s" % (overtag, ' '.join([printBuild(e) for e in equal]), ' '.join([printBuild(o) for o in older]))
