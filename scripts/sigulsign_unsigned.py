@@ -308,7 +308,7 @@ def run_sigul(rpms, batchnr):
 
 logging.info('Signing rpms via sigul')
 total = len(unsigned)
-batchsize = 50
+batchsize = 20
 batchnr = 0
 rpms = []
 for rpm in unsigned:
