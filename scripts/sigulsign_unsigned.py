@@ -216,7 +216,7 @@ else:
     logging.info('Getting builds from arguments')
     builds = args[1:]
 
-logging.debug('Got %s builds' % len(builds))
+logging.info('Got %s builds' % len(builds))
 
 # sort the builds
 builds = sorted(builds)
@@ -249,7 +249,7 @@ for [rpms] in results:
     for rpm in rpms:
         rpmdict['%s.%s.rpm' % (rpm['nvr'], rpm['arch'])] = rpm['id']
 
-logging.debug('Found %s rpms' % len(rpmdict))
+logging.info('Found %s rpms' % len(rpmdict))
 
 # Now do something with the rpms.
 
@@ -278,7 +278,7 @@ for ([result], rpm) in zip(results, rpmdict.keys()):
         logging.debug('%s is not signed with %s' % (rpm, key))
         unsigned.append(rpm)
 
-logging.debug('Found %s unsigned rpms' % len(unsigned))
+logging.info('Found %s unsigned rpms' % len(unsigned))
 
 if opts.arch:
     # Now run the unsigned stuff through sigul
