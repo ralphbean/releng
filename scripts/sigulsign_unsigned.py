@@ -67,7 +67,7 @@ def exit(status):
     sys.exit(status)
 
 # Throw out some functions
-def writeRPMs(status):
+def writeRPMs(status, batch=None):
     """Use the global rpmdict to write out rpms within.
        Returns status, increased by one in case of failure"""
 
@@ -79,7 +79,10 @@ def writeRPMs(status):
 
     # Check to see if we want to write all, or just the unsigned.
     if not opts.write_all:
-        rpms = [rpm for rpm in rpmdict.keys() if rpm in unsigned]
+        if batch == None:
+            rpms = [rpm for rpm in rpmdict.keys() if rpm in unsigned]
+        else:
+            rpms = batch
     else:
         rpms = rpmdict.keys()
     logging.info('Calling koji to write %s rpms' % len(rpms))
@@ -290,6 +293,7 @@ command.append(key)
 
 # run sigul
 def run_sigul(rpms, batchnr):
+    global status
     logging.debug('Running %s' % subprocess.list2cmdline(command + rpms))
     logging.info('Signing batch %s/%s with %s rpms' % (batchnr, (total+batchsize-1)/batchsize, len(rpms)))
     child = subprocess.Popen(command + rpms, stdin=subprocess.PIPE)
@@ -299,6 +303,8 @@ def run_sigul(rpms, batchnr):
         logging.error('Error signing %s' % (rpms))
     	errors.setdefault('Signing', []).append(rpms)
     	status += 1
+    if not opts.just_sign:
+        writeRPMs(status, rpms)
 
 logging.info('Signing rpms via sigul')
 total = len(unsigned)
@@ -315,10 +321,6 @@ for rpm in unsigned:
 if len(rpms) > 0:
     batchnr += 1
     run_sigul(rpms, batchnr)
-
-# Now that we've signed things, time to write them out, if so desired.
-if not opts.just_sign:
-    exit(writeRPMs(status))
 
 logging.info('All done.')
 sys.exit(status)
