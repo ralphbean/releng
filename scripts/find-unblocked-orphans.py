@@ -51,7 +51,6 @@ orphans = {} # list of orphans on the devel branch from pkgdb
 unblocked = {} # holding dict for unblocked orphans plus their deps
 
 def _comaintainers(package):
-    sys.stderr.write("Getting comaintainers of %s...\n" % (package,))
     comaint = []
     pkginfo = pkgdb.get_package_info(package, branch = develbranchname)
     users = pkginfo.packageListings[0]['people']
@@ -72,6 +71,7 @@ sys.stderr.write('Contacting pkgdb for list of orphans...\n')
 pkgs = pkgdb.send_request('/acls/orphans',
                           req_params={'tg_paginate_limit': 0})
 
+sys.stderr.write('Getting comaintainers...\n')
 # Reduce to packages orphaned on devel
 for p in pkgs.pkgs:
     for listing in p['listings']:
@@ -172,8 +172,12 @@ for po in everything:
 
 allorphaned = []
 for orph in unblocked.keys():
-    for pkg in bin_by_src[orph]:
-        allorphaned.append(pkg.name)
+    try:
+        for pkg in bin_by_src[orph]:
+            allorphaned.append(pkg.name)
+    except:
+        # Package is for another arch
+        pass
 
 # Generate a dict of orphans to things requiring them and why
 # Some of this code was stolen from repoquery
