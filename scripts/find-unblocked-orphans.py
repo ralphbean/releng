@@ -170,6 +170,11 @@ for po in everything:
     else:
         bin_by_src[srpmpo.name] = [po]
 
+allorphaned = []
+for orph in unblocked.keys():
+    for pkg in bin_by_src[orph]:
+        allorphaned.append(pkg.name)
+
 # Generate a dict of orphans to things requiring them and why
 # Some of this code was stolen from repoquery
 for orph in unblocked.keys():
@@ -187,8 +192,17 @@ for orph in unblocked.keys():
         # Zip through the provs and find what's needed
         # We only care about the base provide, not the specific versions
         for prov in provs:
+            skip = 0
+            # Elide other providers
+            for pkg in yb.pkgSack.searchProvides(prov.split()[0]):
+                if pkg.name not in allorphaned:
+                    skip = 1
+            if skip == 1:
+                continue
             for pkg in yb.pkgSack.searchRequires(prov.split()[0]):
                 if pkg in bin_by_src[orph]:
+                    continue
+                if pkg.name in allorphaned:
                     continue
                 # use setdefault to either create an entry for the
                 # required package or append what provides it needs
@@ -197,8 +211,6 @@ for orph in unblocked.keys():
         sys.stderr.write("Orphaned package %s doesn't appear to exist\n" % (orph,))
         pass # If we don't have a package in the repo, there is nothign to do
 
-# This needs fixed so it doesn't print broken deps when something else provides
-# the dep and is still in the repo.
 print "\nList of deps left behind by orphan removal:"
 for orph in sorted(unblocked.keys()):
     if unblocked[orph]:
