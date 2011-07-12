@@ -76,7 +76,7 @@ pkgs = pkgdb.send_request('/acls/orphans',
 for p in pkgs.pkgs:
     for listing in p['listings']:
         if listing['collectionid'] == develbranch:
-            if listing['owner'] == orphanuid:
+            if listing['owner'] == orphanuid and listing['statuscode'] == 14:
                 orphans[p['name']] = { 'name': p['name'], 'comaintainers' : _comaintainers(p['name']) }
 
 for pkg in sys.argv[1:]:
