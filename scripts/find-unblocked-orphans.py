@@ -36,11 +36,16 @@ import shutil
 # they should be branched.
 repo = 'http://kojipkgs.fedoraproject.org/mash/rawhide/i386/os'
 srepourl = 'http://kojipkgs.fedoraproject.org/mash/rawhide/source/SRPMS'
-tag = 'dist-f15' # tag to check in koji
-# pre-branch, this should be 8 and 'devel). Post-branch, you need
-# to look it up.
+tag = 'dist-f16' # tag to check in koji
+
+# pre-branch, this should be 8 and 'devel'. Post-branch, you need
+# to look it up via:
+#  pkgdb = fedora.client.PackageDB()
+#  list = pkgdb.get_collection_list()
+# Will generally be 20-something and 'F-xx'
 develbranch = 8 # pkgdb ID for the devel branch
 develbranchname = 'devel' # pkgdb name for the devel branch
+
 orphanuid = 'orphan' # pkgdb uid for orphan
 orphans = {} # list of orphans on the devel branch from pkgdb
 unblocked = {} # holding dict for unblocked orphans plus their deps
@@ -77,6 +82,9 @@ for p in pkgs.pkgs:
         if listing['collectionid'] == develbranch:
             if listing['owner'] == orphanuid:
                 orphans[p['name']] = { 'name': p['name'], 'comaintainers' : _comaintainers(p['name']) }
+
+for pkg in sys.argv[1:]:
+    orphans[pkg] = { 'name': pkg, 'comaintainers' : _comaintainers(pkg) }
 
 # Get koji listings for each orphaned package
 kojisession.multicall = True
@@ -190,6 +198,8 @@ for orph in unblocked.keys():
     except KeyError:
         pass # If we don't have a package in the repo, there is nothign to do
 
+# This needs fixed so it doesn't print broken deps when something else provides
+# the dep and is still in the repo.
 print "\nList of deps left behind by orphan removal:"
 for orph in sorted(unblocked.keys()):
     if unblocked[orph]:
