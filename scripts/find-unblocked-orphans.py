@@ -4,7 +4,7 @@
 #                             that are unblocked in koji and to show what
 #                             may require those orphans
 #
-# Copyright (c) 2009 Red Hat
+# Copyright (c) 2009-2011 Red Hat
 #
 # Authors:
 #     Jesse Keating <jkeating@redhat.com>
