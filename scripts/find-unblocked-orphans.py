@@ -51,6 +51,7 @@ orphans = {} # list of orphans on the devel branch from pkgdb
 unblocked = {} # holding dict for unblocked orphans plus their deps
 
 def _comaintainers(package):
+    sys.stderr.write("Getting comaintainers of %s...\n" % (package,))
     comaint = []
     pkginfo = pkgdb.get_package_info(package, branch = develbranchname)
     users = pkginfo.packageListings[0]['people']
@@ -66,12 +67,7 @@ pkgdb = fedora.client.PackageDB()
 # Create a koji session
 kojisession = koji.ClientSession('https://koji.fedoraproject.org/kojihub')
 
-# Log into koji
-clientcert = os.path.expanduser('~/.fedora.cert')
-clientca = os.path.expanduser('~/.fedora-upload-ca.cert')
-serverca = os.path.expanduser('~/.fedora-server-ca.cert')
-kojisession.ssl_login(clientcert, clientca, serverca)
-
+sys.stderr.write('Contacting pkgdb for list of orphans...\n')
 # Get a list of packages owned by orphan
 pkgs = pkgdb.send_request('/acls/orphans',
                           req_params={'tg_paginate_limit': 0})
@@ -86,6 +82,7 @@ for p in pkgs.pkgs:
 for pkg in sys.argv[1:]:
     orphans[pkg] = { 'name': pkg, 'comaintainers' : _comaintainers(pkg) }
 
+sys.stderr.write('Getting builds from koji...\n')
 # Get koji listings for each orphaned package
 kojisession.multicall = True
 
@@ -104,6 +101,7 @@ for [pkg] in listings:
         if orphans[pkg[0]['package_name']]['comaintainers']:
             print "\tcomaintained by: %s" % (' '.join(orphans[pkg[0]['package_name']]['comaintainers']),)
 
+sys.stderr.write('Calculating dependencies...\n')
 # This code was mostly stolen from
 # http://yum.baseurl.org/wiki/YumCodeSnippet/SetupArbitraryRepo
 # Create yum object and depsolve out if requested.
@@ -196,6 +194,7 @@ for orph in unblocked.keys():
                 # required package or append what provides it needs
                 unblocked[orph].setdefault(pkg.name, []).append(prov)
     except KeyError:
+        sys.stderr.write("Orphaned package %s doesn't appear to exist\n" % (orph,))
         pass # If we don't have a package in the repo, there is nothign to do
 
 # This needs fixed so it doesn't print broken deps when something else provides
