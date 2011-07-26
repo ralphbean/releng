@@ -215,10 +215,10 @@ for orph in unblocked.keys():
         sys.stderr.write("Orphaned package %s doesn't appear to exist\n" % (orph,))
         pass # If we don't have a package in the repo, there is nothign to do
 
-print "\nList of deps left behind by orphan removal:"
+print "\nList of deps left behind by packages which are orphaned or fail to build:"
 for orph in sorted(unblocked.keys()):
     if unblocked[orph]:
-        print "\nOrphan: %s" % orph
+        print "\nRemoving: %s" % orph
     for dep in sorted(unblocked[orph].keys()):
         # Use a set here to quash duplicate requires
         for req in set(unblocked[orph][dep]):
