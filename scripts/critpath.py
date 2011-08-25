@@ -32,11 +32,11 @@ fedora_baseurl = 'http://download.fedora.redhat.com/pub/fedora/linux/'
 releasepath = {
     'rawhide': 'development/rawhide/$basearch/os/'
 }
-for r in ['12', '13']: # 13, 14, ...
+for r in ['12', '13', '14', '15']: # 13, 14, ...
     releasepath[r] = 'releases/%s/Fedora/$basearch/os/' % r
 
 # Branched Fedora goes here
-branched = '14'
+branched = '16'
 releasepath['branched'] = '%s/$basearch/os' % branched
 
 
@@ -111,6 +111,7 @@ def setup_yum(baseurl, arch=None, cachedir='/tmp/critpath'):
         fakearch = {'i386':'i686',  'x86_64':'x86_64',  'ppc':'ppc64'}
         my.preconf.arch = fakearch[arch]
     my.conf.cachedir = cachedir
+    my.conf.installroot = cachedir
     my.repos.disableRepo('*')
     my.add_enable_repo('critpath-repo-%s' % arch, baseurls=[baseurl])
     return my
