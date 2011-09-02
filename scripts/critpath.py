@@ -135,7 +135,7 @@ if __name__ == '__main__':
     if (len(args) != 1) or (args[0] not in releases):
         parser.error("must choose a release from the list: %s" % releases)
     (maj, min, sub) = yum.__version_info__
-    if (maj < 3 or min < 2 or sub < 24) and opt.arches != getBaseArch():
+    if (maj < 3 or min < 2 or (maj == 3 and min == 2 and sub < 24)) and opt.arches != getBaseArch():
         print "WARNING: yum < 3.2.24 may be unable to depsolve other arches."
         print "Get a newer yum or run this on an actual %s system." % opt.arches
     f = open(opt.output,"w")
