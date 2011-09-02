@@ -17,12 +17,16 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Authors: Bill Nottingham <notting@redhat.com>
+#          Toshio Kuratomi <tkuratom@redhat.com>
 
 import argparse
 import getpass
 import os
 import string
 import sys
+
+from configobj import ConfigObj, flatten_errors
+from validate import Validator
 
 import fedora_cert
 from fedora.client import pkgdb
@@ -58,11 +62,41 @@ def setup_args():
 	parser.add_argument('--password', dest="password", help="FAS password")
 	return parser
 
+def setup_cfg(cfg_file='/etc/update-critpath.cfg'):
+	config_spec = '''
+	[global]
+	pkgdb.url = string(default = 'https://admin.fedoraproject.org/pkgdb')
+	pkgdb.username = string(default = 'critpathbot')
+	pkgdb.password = string(default='')
+	'''.splitlines()
+	cfg = ConfigObj(cfg_file, configspec=config_spec)
+	user_cfg = ConfigObj(os.path.expanduser('~/.fedora/update-critpath.cfg'),
+			configspec=config_spec)
+	cfg.merge(user_cfg)
+	results = cfg.validate(Validator(), preserve_errors=True)
+
+	for entry in flatten_errors(cfg, results):
+		section_list, key, error = entry
+		section_list.append(key)
+		if error == False:
+			error = 'Missing value or section'
+		print '%s: %s' % ('::'.join(section_list), error)
+		sys.exit(1)
+	return cfg['global']
+
+def merge_options(cfg, args):
+	args.username = getattr(args, 'username') or cfg['pkgdb.username']
+	args.password = getattr(args, 'password') or cfg['pkgdb.password']
+	args.pkgdb_url = cfg['pkgdb.url']
+	return args
+
 def main():
+	cfg = setup_cfg()
 	parser = setup_args()
 	args = parser.parse_args()
+	args = merge_options(cfg, args)
 	packages = read_package_file(args.file)
-	p = pkgdb.PackageDB()
+	p = pkgdb.PackageDB(args.pkgdb_url)
 	branches = get_branches(p)
 	if args.branch not in branches:
 		print "%s not a valid branch. Valid branches: %s." % (args.branch, branches)
