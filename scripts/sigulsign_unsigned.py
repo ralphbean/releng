@@ -47,7 +47,9 @@ CLIENTCERT = os.path.expanduser('~/.fedora.cert')
 # that koji would use.  We should get this from sigul somehow.
 KEYS = {'fedora-12-sparc': {'id': 'b3eb779b', 'v3': True},
         'fedora-13-sparc': {'id': '5bf71b5e', 'v3': True},
+        'fedora-14-secondary': {'id': '19be0bf9', 'v3': True},
         'fedora-15-secondary': {'id': '3ad31d0b', 'v3': True},
+        'fedora-16-secondary': {'id': '10d90a9e', 'v3': True},
         'fedora-12': {'id': '57bbccba', 'v3': True},
         'fedora-13': {'id': 'e8e40fde', 'v3': True},
         'fedora-11': {'id': 'd22e77f2', 'v3': True},
@@ -197,7 +199,7 @@ if not opts.just_write:
 
 # Reset the KOJIHUB if the target is a secondary arch
 if opts.arch:
-    KOJIHUB = 'https://%s.koji.fedoraproject.org/kojihub' % opts.arch
+    KOJIHUB = 'http://%s.koji.fedoraproject.org/kojihub' % opts.arch
 # setup the koji session
 logging.info('Setting up koji session')
 kojisession = koji.ClientSession(KOJIHUB)
@@ -308,7 +310,7 @@ def run_sigul(rpms, batchnr):
 
 logging.info('Signing rpms via sigul')
 total = len(unsigned)
-batchsize = 20
+batchsize = 1
 batchnr = 0
 rpms = []
 for rpm in unsigned:
@@ -321,6 +323,10 @@ for rpm in unsigned:
 if len(rpms) > 0:
     batchnr += 1
     run_sigul(rpms, batchnr)
+
+# Now that we've signed things, time to write them out, if so desired.
+if not opts.just_sign:
+    exit(writeRPMs(status))
 
 logging.info('All done.')
 sys.exit(status)
