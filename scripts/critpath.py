@@ -30,15 +30,17 @@ base_arches = ('i386', 'x86_64')
 known_arches = base_arches + ('i586','i686')
 fedora_baseurl = 'http://download.fedora.redhat.com/pub/fedora/linux/'
 releasepath = {
-    'rawhide': 'rawhide/$basearch/os/'
+    'rawhide': 'development/rawhide/$basearch/os/'
 }
 for r in ['12', '13', '14', '15']: # 13, 14, ...
     releasepath[r] = 'releases/%s/Fedora/$basearch/os/' % r
 
 # Branched Fedora goes here
 branched = '16'
-releasepath['branched'] = '%s/$basearch/os' % branched
+releasepath['branched'] = 'development/%s/$basearch/os' % branched
 
+# blacklists
+blacklist = [ 'tzdata' ]
 
 provides_cache = {}
 def resolve_deps(pkg, base):
@@ -162,6 +164,7 @@ if __name__ == '__main__':
         print
     # Write full list 
     for packagename in sorted(critpath):
-        f.write(packagename + "\n")
+        if packagename not in blacklist:
+            f.write(packagename + "\n")
     f.close()
     print "Wrote %u items to %s" % (len(critpath), opt.output)
