@@ -22,9 +22,12 @@
 import sys
 import yum
 import optparse
+import shutil
+import tempfile
 from rpmUtils.arch import getBaseArch
 
 # Set some constants
+#critpath_groups = ['@core', '@critical-path-apps', '@critical-path-base', '@critical-path-gnome', '@critical-path-kde', '@critical-path-lxde', '@critical-path-xfce' ]
 critpath_groups = ['@core','@critical-path-base','@critical-path-gnome']
 base_arches = ('i386', 'x86_64')
 known_arches = base_arches + ('i586','i686')
@@ -32,11 +35,11 @@ fedora_baseurl = 'http://download.fedora.redhat.com/pub/fedora/linux/'
 releasepath = {
     'rawhide': 'development/rawhide/$basearch/os/'
 }
-for r in ['12', '13', '14', '15']: # 13, 14, ...
+for r in ['12', '13', '14', '15', '16']: # 13, 14, ...
     releasepath[r] = 'releases/%s/Fedora/$basearch/os/' % r
 
 # Branched Fedora goes here
-branched = '16'
+branched = '17'
 releasepath['branched'] = 'development/%s/$basearch/os' % branched
 
 # blacklists
@@ -103,9 +106,10 @@ def expand_critpath(my, start_list):
     return pkg_list
 
 
-def setup_yum(baseurl, arch=None, cachedir='/tmp/critpath'):
+def setup_yum(baseurl, arch=None):
     my = yum.YumBase()
     basearch = getBaseArch()
+    cachedir = tempfile.mkdtemp(dir='/tmp', prefix='critpath-')
     if arch is None:
         arch = basearch
     elif arch != basearch:
@@ -116,7 +120,7 @@ def setup_yum(baseurl, arch=None, cachedir='/tmp/critpath'):
     my.conf.installroot = cachedir
     my.repos.disableRepo('*')
     my.add_enable_repo('critpath-repo-%s' % arch, baseurls=[baseurl])
-    return my
+    return (my, cachedir)
 
 def nvr(p):
     return '-'.join([p.name, p.ver, p.rel])
@@ -140,7 +144,6 @@ if __name__ == '__main__':
     if (maj < 3 or min < 2 or (maj == 3 and min == 2 and sub < 24)) and opt.arches != getBaseArch():
         print "WARNING: yum < 3.2.24 may be unable to depsolve other arches."
         print "Get a newer yum or run this on an actual %s system." % opt.arches
-    f = open(opt.output,"w")
     # Sanity checking done, set some variables
     release = args[0]
     url = opt.url + releasepath[release]
@@ -152,7 +155,7 @@ if __name__ == '__main__':
     critpath = set()
     for arch in check_arches:
         print "Expanding critical path for %s" % arch
-        my = setup_yum(baseurl=url, arch=arch)
+        (my, cachedir) = setup_yum(baseurl=url, arch=arch)
         pkgs = expand_critpath(my, critpath_groups)
         print "%u packages for %s" % (len(pkgs), arch)
         if opt.nvr:
@@ -161,8 +164,11 @@ if __name__ == '__main__':
             critpath.update([p.name.encode('utf8') for p in pkgs])
         # XXX TODO cleanup cache
         del my
+        if cachedir.startswith("/tmp/"):
+            shutil.rmtree(cachedir)
         print
     # Write full list 
+    f = open(opt.output,"w")
     for packagename in sorted(critpath):
         if packagename not in blacklist:
             f.write(packagename + "\n")
