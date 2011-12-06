@@ -27,12 +27,14 @@ import tempfile
 from rpmUtils.arch import getBaseArch
 
 # Set some constants
-#critpath_groups = ['@core', '@critical-path-apps', '@critical-path-base', '@critical-path-gnome', '@critical-path-kde', '@critical-path-lxde', '@critical-path-xfce' ]
-critpath_groups = ['@core','@critical-path-base','@critical-path-gnome']
+# Old definition
+#critpath_groups = ['@core','@critical-path-base','@critical-path-gnome']
+critpath_groups = ['@core', '@critical-path-apps', '@critical-path-base', '@critical-path-gnome', '@critical-path-kde', '@critical-path-lxde', '@critical-path-xfce' ]
 base_arches = ('i386', 'x86_64')
 known_arches = base_arches + ('i586','i686')
 fedora_baseurl = 'http://download.fedora.redhat.com/pub/fedora/linux/'
 releasepath = {
+    'devel': 'development/rawhide/$basearch/os/',
     'rawhide': 'development/rawhide/$basearch/os/'
 }
 for r in ['12', '13', '14', '15', '16']: # 13, 14, ...
@@ -44,6 +46,9 @@ releasepath['branched'] = 'development/%s/$basearch/os' % branched
 
 # blacklists
 blacklist = [ 'tzdata' ]
+
+def get_source(pkg):
+    return pkg.rsplit('-',2)[0]
 
 provides_cache = {}
 def resolve_deps(pkg, base):
@@ -82,13 +87,13 @@ def expand_critpath(my, start_list):
     count = 0
     pkg_list = []
     skipped_list = []
+    
     for name in name_list:
         count += 1
         print "depsolving %4u/%4u (%s)" % (count, len(name_list), name)
         p = my.pkgSack.searchNevra(name=name)
         if not p:
             print "WARNING: unresolved package name: %s" % name
-            name_list.remove(name)
             skipped_list.append(name)
             continue
         for pkg in p:
@@ -137,6 +142,8 @@ if __name__ == '__main__':
                       help="name of file to write critpath list (%default)")
     parser.add_option("-u", "--url", default=fedora_baseurl,
                       help="URL to repos")
+    parser.add_option("--srpm", action='store_true', default=True,
+                      help="Output source RPMS instead of binary RPMS (for pkgdb)")
     (opt, args) = parser.parse_args()
     if (len(args) != 1) or (args[0] not in releases):
         parser.error("must choose a release from the list: %s" % releases)
@@ -148,6 +155,9 @@ if __name__ == '__main__':
     release = args[0]
     url = opt.url + releasepath[release]
     check_arches = opt.arches.split(',')
+    if opt.nvr and opt.srpm:
+        print "ERROR: --nvr and --srpm are mutually exclusive"
+        sys.exit(1)
 
     print "Using URL %s" % url
     
@@ -160,9 +170,10 @@ if __name__ == '__main__':
         print "%u packages for %s" % (len(pkgs), arch)
         if opt.nvr:
             critpath.update([nvr(p).encode('utf8') for p in pkgs])
+        elif opt.srpm:
+            critpath.update([get_source(p.sourcerpm) for p in pkgs])
         else:
             critpath.update([p.name.encode('utf8') for p in pkgs])
-        # XXX TODO cleanup cache
         del my
         if cachedir.startswith("/tmp/"):
             shutil.rmtree(cachedir)
