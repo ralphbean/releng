@@ -87,10 +87,13 @@ def expand_critpath(my, start_list):
     count = 0
     pkg_list = []
     skipped_list = []
-    
-    for name in name_list:
+    handled = []
+
+    while 1:
         count += 1
-        print "depsolving %4u/%4u (%s)" % (count, len(name_list), name)
+        name = name_list.pop()
+        handled.append(name)
+        print "depsolving %4u done/%4u remaining (%s)" % (count, len(name_list), name)
         p = my.pkgSack.searchNevra(name=name)
         if not p:
             print "WARNING: unresolved package name: %s" % name
@@ -99,9 +102,11 @@ def expand_critpath(my, start_list):
         for pkg in p:
             pkg_list.append(pkg)
             for dep in resolve_deps(pkg, my):
-                if dep not in name_list:
+                if dep not in handled:
                     print "    added %s" % dep
                     name_list.append(dep)
+        if not name_list:
+            break
     print "depsolving complete."
     # FIXME this isn't coming out right for i386: "-3 multiarch"?
     print "%u packages in critical path (%+i multiarch)" % (len(name_list),
