@@ -53,6 +53,8 @@ def get_source(pkg):
 provides_cache = {}
 def resolve_deps(pkg, base):
     deps = []
+    for prov in pkg.provides:
+        provides_cache[prov] = pkg.name
     for req in pkg.requires:
         if req in provides_cache:
             deps.append(provides_cache[req])
@@ -64,6 +66,8 @@ def resolve_deps(pkg, base):
             raise
         provides_cache[req] = po.name
         deps.append(po.name)
+        for prov in po.provides:
+            provides_cache[prov] = po.name
 
     return deps        
 
