@@ -37,12 +37,19 @@ releasepath = {
     'devel': 'development/rawhide/$basearch/os/',
     'rawhide': 'development/rawhide/$basearch/os/'
 }
+updatepath = {
+    'devel': '',
+    'rawhide': ''
+}
+
 for r in ['12', '13', '14', '15', '16']: # 13, 14, ...
-    releasepath[r] = 'releases/%s/Fedora/$basearch/os/' % r
+    releasepath[r] = 'releases/%s/Everything/$basearch/os/' % r
+    updatepath[r] = 'updates/%s/$basearch/' % r
 
 # Branched Fedora goes here
 branched = '17'
 releasepath['branched'] = 'development/%s/$basearch/os' % branched
+updatepath['branched'] = ''
 
 # blacklists
 blacklist = [ 'tzdata' ]
@@ -112,13 +119,13 @@ def expand_critpath(my, start_list):
                     print "    added %s" % dep
                     name_list.append(dep)
     print "depsolving complete."
-    print "%u packages in critical path" % (len(pkg_list))
+    print "%u packages in critical path" % (count)
     print "%u rejected package names: %s" % (len(skipped_list),
                                              " ".join(skipped_list))
     return pkg_list
 
 
-def setup_yum(baseurl, arch=None):
+def setup_yum(url=None, release=None, arch=None):
     my = yum.YumBase()
     basearch = getBaseArch()
     cachedir = tempfile.mkdtemp(dir='/tmp', prefix='critpath-')
@@ -131,7 +138,9 @@ def setup_yum(baseurl, arch=None):
     my.conf.cachedir = cachedir
     my.conf.installroot = cachedir
     my.repos.disableRepo('*')
-    my.add_enable_repo('critpath-repo-%s' % arch, baseurls=[baseurl])
+    my.add_enable_repo('critpath-repo-%s' % arch, baseurls=[url+releasepath[release]])
+    if updatepath[release]:
+        my.add_enable_repo('critpath-repo-updates-%s' % arch, baseurls=[url+updatepath[release]])
     return (my, cachedir)
 
 def nvr(p):
@@ -149,7 +158,7 @@ if __name__ == '__main__':
                       help="name of file to write critpath list (%default)")
     parser.add_option("-u", "--url", default=fedora_baseurl,
                       help="URL to repos")
-    parser.add_option("--srpm", action='store_true', default=True,
+    parser.add_option("--srpm", action='store_true', default=False,
                       help="Output source RPMS instead of binary RPMS (for pkgdb)")
     (opt, args) = parser.parse_args()
     if (len(args) != 1) or (args[0] not in releases):
@@ -160,19 +169,18 @@ if __name__ == '__main__':
         print "Get a newer yum or run this on an actual %s system." % opt.arches
     # Sanity checking done, set some variables
     release = args[0]
-    url = opt.url + releasepath[release]
     check_arches = opt.arches.split(',')
     if opt.nvr and opt.srpm:
         print "ERROR: --nvr and --srpm are mutually exclusive"
         sys.exit(1)
 
-    print "Using URL %s" % url
+    print "Using URL %s" % (opt.url + releasepath[release])
     
     # Do the critpath expansion for each arch
     critpath = set()
     for arch in check_arches:
         print "Expanding critical path for %s" % arch
-        (my, cachedir) = setup_yum(baseurl=url, arch=arch)
+        (my, cachedir) = setup_yum(url = opt.url, release=release, arch=arch)
         pkgs = expand_critpath(my, critpath_groups)
         print "%u packages for %s" % (len(pkgs), arch)
         if opt.nvr:
