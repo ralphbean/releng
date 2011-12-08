@@ -97,6 +97,8 @@ def expand_critpath(my, start_list):
         count += 1
         name = name_list.pop()
         handled.append(name)
+        if name in blacklist:
+            continue
         print "depsolving %4u done/%4u remaining (%s)" % (count, len(name_list), name)
         p = my.pkgSack.searchNevra(name=name)
         if not p:
@@ -190,7 +192,6 @@ if __name__ == '__main__':
     # Write full list 
     f = open(opt.output,"w")
     for packagename in sorted(critpath):
-        if packagename not in blacklist:
-            f.write(packagename + "\n")
+        f.write(packagename + "\n")
     f.close()
     print "Wrote %u items to %s" % (len(critpath), opt.output)
