@@ -93,9 +93,9 @@ def expand_critpath(my, start_list):
     skipped_list = []
     handled = []
 
-    while 1:
+    while name_list:
         count += 1
-        name = name_list.pop()
+        name = name_list.pop(0)
         handled.append(name)
         if name in blacklist:
             continue
@@ -108,15 +108,11 @@ def expand_critpath(my, start_list):
         for pkg in p:
             pkg_list.append(pkg)
             for dep in resolve_deps(pkg, my):
-                if dep not in handled:
+                if dep not in handled and dep not in skipped_list and dep not in name_list:
                     print "    added %s" % dep
                     name_list.append(dep)
-        if not name_list:
-            break
     print "depsolving complete."
-    # FIXME this isn't coming out right for i386: "-3 multiarch"?
-    print "%u packages in critical path (%+i multiarch)" % (len(name_list),
-                                                            len(pkg_list)-len(name_list))
+    print "%u packages in critical path" % (len(pkg_list))
     print "%u rejected package names: %s" % (len(skipped_list),
                                              " ".join(skipped_list))
     return pkg_list
