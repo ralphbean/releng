@@ -17,6 +17,7 @@ import operator
 # Set some variables
 # Some of these could arguably be passed in as args.
 buildtag = 'f17' # tag to build from
+targets ['f17-candidate', 'rawhide', 'dist-rawhide'] # tag to build from
 epoch = '2012-01-03 17:53:35.000000' # rebuild anything not built after this date
 user = 'Fedora Release Engineering <rel-eng@lists.fedoraproject.org>'
 comment = '- Rebuilt for https://fedoraproject.org/wiki/Fedora_17_Mass_Rebuild'
@@ -85,7 +86,7 @@ for pkg in pkgs:
     for build in builds:
         buildtarget = kojisession.getTaskInfo(build['task_id'],
                                    request=True)['request'][1]
-        if buildtarget == target or buildtarget == buildtag:
+        if buildtarget == target or buildtarget in targets:
             # We've already got an attempt made, skip.
             newbuild = True
             break
