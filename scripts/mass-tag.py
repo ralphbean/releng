@@ -14,8 +14,8 @@ import operator
 
 # Set some variables
 # Some of these could arguably be passed in as args.
-target = 'dist-f14' # tag to tag into
-holdingtag = 'dist-f14-py27-rebuild' # tag holding the rebuilds
+target = 'f17' # tag to tag into
+holdingtag = 'f17-rebuild' # tag holding the rebuilds
 newbuilds = {} # dict of packages that have a newer build attempt
 tasks = {} # dict of new build task info
 
@@ -92,7 +92,7 @@ for build in builds:
     if build['package_name'] in newbuilds.keys():
         for newbuild in newbuilds[build['package_name']]:
             # Scrape the task info out of the tasks dict from the newbuild task ID
-            if tasks[newbuild['task_id']]['request'][1] in (target, 'dist-rawhide') \
+            if tasks[newbuild['task_id']]['request'][1] in (target, '%s-candidate' % target, 'rawhide', 'dist-rawhide') \
             and newbuild['state'] == 1:
                 print 'Newer build found for %s.' % build['package_name']
                 newer = True
@@ -100,8 +100,8 @@ for build in builds:
     if not newer:
         print 'Tagging %s into %s' % (build['nvr'], target)
         taglist.append(build['nvr'])
-    #kojisession.tagBuildBypass(target, build)
+        kojisession.tagBuildBypass(target, build)
 
 print 'Tagging %s builds.' % len(taglist)
-#results = kojisession.multiCall()
+results = kojisession.multiCall()
 

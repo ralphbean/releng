@@ -146,14 +146,14 @@ for pkg in pkgs:
 
     # get git url
     urlcmd = ['fedpkg', 'giturl']
-    print 'Getting cvs url for %s' % name
+    print 'Getting git url for %s' % name
     url = runmeoutput(urlcmd, 'giturl', name, enviro,
                  cwd=os.path.join(workdir, name))
     if not url:
         continue
 
     # build
-    build = ['koji', 'build', '--nowait', '--background', target, url]
+    build = ['fedpkg', 'build', '--nowait', '--background', '--target', target]
     print 'Building %s' % name
     runme(build, 'build', name, enviro, 
           cwd=os.path.join(workdir, name))
