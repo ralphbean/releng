@@ -1,0 +1,120 @@
+#!/usr/bin/python
+#
+# Copyright 2011, Red Hat, Inc.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Authors: Bill Nottingham <notting@redhat.com>
+#          Toshio Kuratomi <tkuratom@redhat.com>
+
+import argparse
+import getpass
+import os
+import string
+import sys
+
+from configobj import ConfigObj, flatten_errors
+from validate import Validator
+
+import fedora_cert
+from fedora.client import pkgdb
+
+def get_branches(p):
+	ret = []
+	try:
+		list = p.get_collection_list(eol = False)
+		for item in list:
+			ret.append(item[0].branchname)
+	except:
+		pass
+	return ret
+
+def read_package_file(filename):
+	ret = []
+	f = open(filename,'r')
+	data = f.readlines()
+	f.close()
+	data = map(string.strip, data)
+	for item in data:
+		if len(item) > 0:
+			ret.append(item)
+	return ret
+
+def setup_args():
+	usage = "\nupdate-critpath <branch> <file>"
+	parser = argparse.ArgumentParser(
+		usage="\nupdate_critpath <branch> <file>")
+	parser.add_argument('branch')
+	parser.add_argument('file')
+	parser.add_argument('--user', dest="username", help="FAS username")
+	parser.add_argument('--password', dest="password", help="FAS password")
+	return parser
+
+def setup_cfg(cfg_file='/etc/update-critpath.cfg'):
+	config_spec = '''
+	[global]
+	pkgdb.url = string(default = 'https://admin.fedoraproject.org/pkgdb')
+	pkgdb.username = string(default = 'critpathbot')
+	pkgdb.password = string(default='')
+	'''.splitlines()
+	cfg = ConfigObj(cfg_file, configspec=config_spec)
+	user_cfg = ConfigObj(os.path.expanduser('~/.fedora/update-critpath.cfg'),
+			configspec=config_spec)
+	cfg.merge(user_cfg)
+	results = cfg.validate(Validator(), preserve_errors=True)
+
+	for entry in flatten_errors(cfg, results):
+		section_list, key, error = entry
+		section_list.append(key)
+		if error == False:
+			error = 'Missing value or section'
+		print '%s: %s' % ('::'.join(section_list), error)
+		sys.exit(1)
+	return cfg['global']
+
+def merge_options(cfg, args):
+	args.username = getattr(args, 'username') or cfg['pkgdb.username']
+	args.password = getattr(args, 'password') or cfg['pkgdb.password']
+	args.pkgdb_url = cfg['pkgdb.url']
+	return args
+
+def main():
+	cfg = setup_cfg()
+	parser = setup_args()
+	args = parser.parse_args()
+	args = merge_options(cfg, args)
+	packages = read_package_file(args.file)
+	p = pkgdb.PackageDB(args.pkgdb_url)
+	branches = get_branches(p)
+	if args.branch not in branches:
+		print "%s not a valid branch. Valid branches: %s." % (args.branch, branches)
+		sys.exit(1)
+	if not packages:
+		sys.exit(0)
+	if args.username:
+		p.username = args.username
+	else:
+		try:
+			p.username = fedora_cert.read_user_cert()
+		except:
+			p.username = raw_input('FAS username: ')
+	if args.password:
+		p.password = args.password
+	else:
+		p.password = getpass.getpass()
+	p.set_critpath(packages, True, [args.branch], True)
+
+if __name__ == '__main__':
+	main()

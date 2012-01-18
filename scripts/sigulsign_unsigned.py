@@ -52,6 +52,10 @@ KEYS = {'fedora-12-sparc': {'id': 'b3eb779b', 'v3': True},
         'fedora-16-secondary': {'id': '10d90a9e', 'v3': True},
         'fedora-12': {'id': '57bbccba', 'v3': True},
         'fedora-13': {'id': 'e8e40fde', 'v3': True},
+        'fedora-14': {'id': '97a1071f', 'v3': True},
+        'fedora-15': {'id': '069c8460', 'v3': True},
+        'fedora-16': {'id': 'a82ba4b7', 'v3': True},
+        'fedora-17': {'id': '1aca3465', 'v3': True},
         'fedora-11': {'id': 'd22e77f2', 'v3': True},
         'fedora-10': {'id': '4ebfc273', 'v3': False},
         'fedora-10-testing': {'id': '0b86274e', 'v3': False},
@@ -141,6 +145,8 @@ parser.add_option('--just-write', action='store_true', default=False,
                   help='Just write out signed copies of the rpms')
 parser.add_option('--just-sign', action='store_true', default=False,
                   help='Just sign and import the rpms')
+parser.add_option('--just-list', action='store_true', default=False,
+                  help='Just list the unsigned rpms')
 parser.add_option('--write-all', action='store_true', default=False,
                   help='Write every rpm, not just unsigned')
 parser.add_option('--password',
@@ -181,7 +187,7 @@ if not key in KEYS.keys():
 
 # Get the passphrase for the user if we're going to sign something
 # (This code stolen from sigul client.py)
-if not opts.just_write:
+if not (opts.just_list or opts.just_write):
     if opts.password:
         passphrase = opts.password
     else:
@@ -280,7 +286,12 @@ for ([result], rpm) in zip(results, rpmdict.keys()):
         logging.debug('%s is not signed with %s' % (rpm, key))
         unsigned.append(rpm)
 
-logging.info('Found %s unsigned rpms' % len(unsigned))
+if opts.just_list:
+    logging.info('Just listing rpms')
+    print('\n'.join(unsigned))
+    sys.exit(0)
+
+logging.debug('Found %s unsigned rpms' % len(unsigned))
 
 if opts.arch:
     # Now run the unsigned stuff through sigul
