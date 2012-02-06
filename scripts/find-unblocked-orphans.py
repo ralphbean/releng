@@ -36,7 +36,7 @@ import shutil
 # they should be branched.
 repo = 'http://kojipkgs.fedoraproject.org/mash/rawhide/i386/os'
 srepourl = 'http://kojipkgs.fedoraproject.org/mash/rawhide/source/SRPMS'
-tag = 'dist-f16' # tag to check in koji
+tag = 'f17' # tag to check in koji
 
 # pre-branch, this should be 8 and 'devel'. Post-branch, you need
 # to look it up via:
@@ -76,6 +76,9 @@ sys.stderr.write('Getting comaintainers...\n')
 for p in pkgs.pkgs:
     for listing in p['listings']:
         if listing['collectionid'] == develbranch:
+            # statuscode cheatsheet:
+            # 14 orphaned
+            # 20 deprecated
             if listing['owner'] == orphanuid and listing['statuscode'] == 14:
                 orphans[p['name']] = { 'name': p['name'], 'comaintainers' : _comaintainers(p['name']) }
 
