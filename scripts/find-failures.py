@@ -17,6 +17,7 @@ import operator
 # Some of these could arguably be passed in as args.
 buildtag = 'f17-rebuild' # tag to check
 desttag = 'f17' # Tag where fixed builds go
+targets = [desttag, buildtag, 'rawhide', 'dist-rawhide']
 epoch = '2012-01-03 17:53:35.000000' # Date to check for failures from
 failures = {} # dict of owners to lists of packages that failed.
 failed = [] # raw list of failed packages
