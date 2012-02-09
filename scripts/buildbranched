@@ -31,6 +31,8 @@ popd
 
 mock -r $MOCKCONFIG --uniqueext=$DATE --init
 mock -r $MOCKCONFIG --uniqueext=$DATE --no-clean --install koji yum createrepo cvs make intltool findutils mash yum-utils rsync repoview
+# until we move to bodhi lets not be strict about the gpg keys
+mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "sed -i -e 's|strict_keys = True|strict_keys = False|g' /etc/mash/branched.mash"
 # Copy in the hosts file so that we get the right address for koji
 mock -r $MOCKCONFIG --uniqueext=$DATE --copyin /etc/hosts /etc/hosts >/dev/null 2>&1 # this reports to fail, but actually works
 # Drop privs here so that we run as the masher UID
