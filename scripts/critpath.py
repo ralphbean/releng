@@ -32,7 +32,7 @@ from rpmUtils.arch import getBaseArch
 critpath_groups = ['@core', '@critical-path-apps', '@critical-path-base', '@critical-path-gnome', '@critical-path-kde', '@critical-path-lxde', '@critical-path-xfce' ]
 base_arches = ('i386', 'x86_64')
 known_arches = base_arches + ('i586','i686')
-fedora_baseurl = 'http://download.fedora.redhat.com/pub/fedora/linux/'
+fedora_baseurl = 'http://download.fedoraproject.org/pub/fedora/linux/'
 releasepath = {
     'devel': 'development/rawhide/$basearch/os/',
     'rawhide': 'development/rawhide/$basearch/os/'
@@ -139,6 +139,7 @@ def setup_yum(url=None, release=None, arch=None):
     my.conf.installroot = cachedir
     my.repos.disableRepo('*')
     my.add_enable_repo('critpath-repo-%s' % arch, baseurls=[url+releasepath[release]])
+    print "adding critpath-repo-%s at %s" % (arch, url+releasepath[release])
     if updatepath[release]:
         my.add_enable_repo('critpath-repo-updates-%s' % arch, baseurls=[url+updatepath[release]])
     return (my, cachedir)
