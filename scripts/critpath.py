@@ -175,6 +175,8 @@ if __name__ == '__main__':
         print "ERROR: --nvr and --srpm are mutually exclusive"
         sys.exit(1)
 
+    if opt.url != fedora_baseurl:
+        releasepath[release] = releasepath[release].replace('development/','')
     print "Using URL %s" % (opt.url + releasepath[release])
     
     # Do the critpath expansion for each arch
