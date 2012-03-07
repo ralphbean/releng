@@ -319,8 +319,6 @@ def run_sigul(rpms, batchnr):
         logging.error('Error signing %s' % (rpms))
     	errors.setdefault('Signing', []).append(rpms)
     	status += 1
-    if not opts.just_sign:
-        writeRPMs(status, rpms)
 
 logging.info('Signing rpms via sigul')
 total = len(unsigned)
