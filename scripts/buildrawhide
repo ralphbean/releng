@@ -1,11 +1,35 @@
 #!/bin/bash
 
-# runs currently on releng1.fedora.phx.redhat.com
+# runs currently on releng03.phx2.fedoraproject.org
 
 DATE=$1
-RSYNC_OPTS="-rlptDHhv --delay-updates"
-DESTPATH="/pub/fedora/linux/development/rawhide/"
+ARCH=$2
+
+TREEPREFIX="/pub/fedora/linux"
+MASHDIR="/mnt/koji/mash/rawhide-$DATE"
+EXPANDARCH=""
+DEPOPTS=""
 MOCKCONFIG=fedora-rawhide-compose-i386
+MAIL="devel@lists.fedoraproject.org,test@lists.fedoraproject.org"
+SUBJECT='rawhide report: '$DATE' changes'
+FROM="Fedora Rawhide Report <rawhide@fedoraproject.org>"
+
+[ -n "$ARCH" ] && {
+TREEPREFIX="/mnt/koji/tree"
+EXPANDARCH="-$ARCH"
+DEPOPTS="--nomail"
+MAIL="secondary@lists.fedoraproject.org,$ARCH@lists.fedoraproject.org"
+SUBJECT='$ARCH rawhide report: '$DATE' changes'
+FROM="$ARCH Fedora Rawhide Report <rawhide@fedoraproject.org>"
+}
+
+[ "$ARCH" == "ppc" ] && {
+MOCKCONFIG=fedora-rawhide-compose-ppc64
+
+}
+ 
+RSYNC_OPTS="-rlptDHhv --delay-updates"
+DESTPATH="$TREEPREFIX/development/rawhide/"
 
 
 [ -z "$DATE" ] && {
@@ -33,18 +57,20 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --no-clean --install koji yum createrepo c
 # Copy in the hosts file so that we get the right address for koji
 mock -r $MOCKCONFIG --uniqueext=$DATE --copyin /etc/hosts /etc/hosts >/dev/null 2>&1 # this reports to fail, but actually works
 # Drop privs here so that we run as the masher UID
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash -p /pub/fedora/linux/development/rawhide -o /mnt/koji/mash/rawhide-$DATE --compsfile /mnt/koji/mash/rawhide-$DATE/logs/comps-rawhide.xml rawhide > /mnt/koji/mash/rawhide-$DATE/logs/mash.log 2>&1" || exit 1
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash -p $TREEPREFIX/development/rawhide -o /mnt/koji/mash/rawhide-$DATE --compsfile /mnt/koji/mash/rawhide-$DATE/logs/comps-rawhide.xml rawhide$EXPANDARCH > /mnt/koji/mash/rawhide-$DATE/logs/mash.log 2>&1" || exit 1
 
 # hardlink the noarch deltarpms between x86_64 and i386 
-mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "hardlink -v -c /mnt/koji/mash/rawhide-$DATE/rawhide"
+mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "hardlink -v -c /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH"
 
 mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "rm -f /var/lib/rpm/__db*"
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -q --new=file:///mnt/koji/mash/rawhide-$DATE/rawhide/source/SRPMS --old=file:///pub/fedora/linux/development/rawhide/source/SRPMS > /mnt/koji/mash/rawhide-$DATE/logs/repodiff"
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -q --new=file:///mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/source/SRPMS --old=file://$TREEPREFIX/development/rawhide/source/SRPMS > /mnt/koji/mash/rawhide-$DATE/logs/repodiff"
 
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic /mnt/koji/mash/rawhide-$DATE/rawhide >/mnt/koji/mash/rawhide-$DATE/logs/depcheck" &
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic $DEPOPTS /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH >/mnt/koji/mash/rawhide-$DATE/logs/depcheck" &
 
+#only run critpath on primary arch
+[ -z "$ARCH" ] && {
 ./scripts/critpath.py --url file:///mnt/koji/mash/rawhide-$DATE/ -o /mnt/koji/mash/rawhide-$DATE/logs/critpath.txt rawhide &> /mnt/koji/mash/rawhide-$DATE/logs/critpath.log
-
+}
 #for arch in i386 x86_64 ppc ; do
 #    HOST=$(koji list-hosts --quiet --enabled --ready --arch=$arch | sed 's|/| |g' | sort -gn -k4 -k5r | awk -F '.' '{ print $1 ; exit }')
 #    ./scripts/pungify $DATE $arch $HOST > /mnt/koji/mash/rawhide-$DATE/logs/pungify-$arch.log 2>&1 &
@@ -57,14 +83,17 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --clean
 
 # Create a rawhide link in /mnt/koji/mash, deltas et al depend on this
 rm /mnt/koji/mash/rawhide
-ln -s /mnt/koji/mash/rawhide-$DATE/rawhide/ /mnt/koji/mash/rawhide
+ln -s /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/ /mnt/koji/mash/rawhide
+
+echo "Compose finisheded at `date --utc`" > /mnt/koji/mash/rawhide-$DATE/logs/finish
+echo >> /mnt/koji/mash/rawhide-$DATE/logs/finish
 
 cd /tmp
 # data
-sudo -u ftpsync /usr/bin/rsync $RSYNC_OPTS --exclude repodata/ /mnt/koji/mash/rawhide-$DATE/rawhide/ $DESTPATH
+sudo -u ftpsync /usr/bin/rsync $RSYNC_OPTS --exclude repodata/ /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/ $DESTPATH
 # repodata & cleanup
-sudo -u ftpsync /usr/bin/rsync $RSYNC_OPTS --delete --delete-after /mnt/koji/mash/rawhide-$DATE/rawhide/ $DESTPATH
+sudo -u ftpsync /usr/bin/rsync $RSYNC_OPTS --delete --delete-after /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/ $DESTPATH
 if [ "$?" = "0" ]; then
-    cat /mnt/koji/mash/rawhide-$DATE/logs/start /mnt/koji/mash/rawhide-$DATE/logs/depcheck /mnt/koji/mash/rawhide-$DATE/logs/repodiff | mutt -e 'set from="Rawhide Report <rawhide@fedoraproject.org>"' -e 'set envelope_from=yes' -s 'rawhide report: '$DATE' changes' devel@lists.fedoraproject.org,test@lists.fedoraproject.org
+    cat /mnt/koji/mash/rawhide-$DATE/logs/start /mnt/koji/mash/rawhide-$DATE/logs/depcheck /mnt/koji/mash/rawhide-$DATE/logs/repodiff /mnt/koji/mash/rawhide-$DATE/logs/finish | mutt -e 'set from="$FROM"' -e 'set envelope_from=yes' -s $SUBJECT $MAIL
 fi
 exit 0
