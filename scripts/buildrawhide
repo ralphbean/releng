@@ -9,6 +9,7 @@ TREEPREFIX="/pub/fedora/linux"
 MASHDIR="/mnt/koji/mash/rawhide-$DATE"
 EXPANDARCH=""
 DEPOPTS=""
+MASHOPTS=""
 MOCKCONFIG=fedora-rawhide-compose-i386
 MAIL="devel@lists.fedoraproject.org,test@lists.fedoraproject.org"
 SUBJECT='rawhide report: '$DATE' changes'
@@ -18,6 +19,7 @@ FROM="Fedora Rawhide Report <rawhide@fedoraproject.org>"
 TREEPREFIX="/mnt/koji/tree"
 EXPANDARCH="-$ARCH"
 DEPOPTS="--nomail"
+MASHOPTS="-c /etc/mash/mash.$ARCH.conf"
 MAIL="secondary@lists.fedoraproject.org,$ARCH@lists.fedoraproject.org"
 SUBJECT='$ARCH rawhide report: '$DATE' changes'
 FROM="$ARCH Fedora Rawhide Report <rawhide@fedoraproject.org>"
@@ -57,7 +59,7 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --no-clean --install koji yum createrepo c
 # Copy in the hosts file so that we get the right address for koji
 mock -r $MOCKCONFIG --uniqueext=$DATE --copyin /etc/hosts /etc/hosts >/dev/null 2>&1 # this reports to fail, but actually works
 # Drop privs here so that we run as the masher UID
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash -p $TREEPREFIX/development/rawhide -o /mnt/koji/mash/rawhide-$DATE --compsfile /mnt/koji/mash/rawhide-$DATE/logs/comps-rawhide.xml rawhide$EXPANDARCH > /mnt/koji/mash/rawhide-$DATE/logs/mash.log 2>&1" || exit 1
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash $MASHOPTS -p $TREEPREFIX/development/rawhide -o /mnt/koji/mash/rawhide-$DATE --compsfile /mnt/koji/mash/rawhide-$DATE/logs/comps-rawhide.xml rawhide$EXPANDARCH > /mnt/koji/mash/rawhide-$DATE/logs/mash.log 2>&1" || exit 1
 
 # hardlink the noarch deltarpms between x86_64 and i386 
 mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "hardlink -v -c /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH"
