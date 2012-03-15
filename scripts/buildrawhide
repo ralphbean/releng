@@ -14,7 +14,7 @@ MOCKCONFIG=fedora-rawhide-compose-i386
 MAIL="devel@lists.fedoraproject.org,test@lists.fedoraproject.org"
 SUBJECT='rawhide report: '$DATE' changes'
 FROM="Fedora Rawhide Report <rawhide@fedoraproject.org>"
-
+RSYNCPREFIX="sudo -u ftpsync"
 [ -n "$ARCH" ] && {
 TREEPREFIX="/mnt/koji/tree"
 EXPANDARCH="-$ARCH"
@@ -23,6 +23,7 @@ MASHOPTS="-c /etc/mash/mash.$ARCH.conf"
 MAIL="secondary@lists.fedoraproject.org,$ARCH@lists.fedoraproject.org"
 SUBJECT='$ARCH rawhide report: '$DATE' changes'
 FROM="$ARCH Fedora Rawhide Report <rawhide@fedoraproject.org>"
+RSYNCPREFIX=""
 }
 
 [ "$ARCH" == "ppc" ] && {
@@ -92,9 +93,9 @@ echo >> /mnt/koji/mash/rawhide-$DATE/logs/finish
 
 cd /tmp
 # data
-sudo -u ftpsync /usr/bin/rsync $RSYNC_OPTS --exclude repodata/ /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/ $DESTPATH
+$RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --exclude repodata/ /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/ $DESTPATH
 # repodata & cleanup
-sudo -u ftpsync /usr/bin/rsync $RSYNC_OPTS --delete --delete-after /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/ $DESTPATH
+$RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --delete --delete-after /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/ $DESTPATH
 if [ "$?" = "0" ]; then
     cat /mnt/koji/mash/rawhide-$DATE/logs/start /mnt/koji/mash/rawhide-$DATE/logs/depcheck /mnt/koji/mash/rawhide-$DATE/logs/repodiff /mnt/koji/mash/rawhide-$DATE/logs/finish | mutt -e 'set from="$FROM"' -e 'set envelope_from=yes' -s $SUBJECT $MAIL
 fi
