@@ -22,7 +22,7 @@ DEPOPTS="--nomail"
 MASHOPTS="-c /etc/mash/mash.$ARCH.conf"
 MAIL="secondary@lists.fedoraproject.org,$ARCH@lists.fedoraproject.org"
 SUBJECT='$ARCH rawhide report: '$DATE' changes'
-FROM="$ARCH Fedora Rawhide Report <rawhide@fedoraproject.org>"
+FROM="$(echo $ARCH) Fedora Rawhide Report <rawhide@fedoraproject.org>"
 RSYNCPREFIX=""
 }
 
@@ -97,6 +97,6 @@ $RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --exclude repodata/ /mnt/koji/mash/rawhi
 # repodata & cleanup
 $RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --delete --delete-after /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/ $DESTPATH
 if [ "$?" = "0" ]; then
-    cat /mnt/koji/mash/rawhide-$DATE/logs/start /mnt/koji/mash/rawhide-$DATE/logs/depcheck /mnt/koji/mash/rawhide-$DATE/logs/repodiff /mnt/koji/mash/rawhide-$DATE/logs/finish | mutt -e 'set from="$FROM"' -e 'set envelope_from=yes' -s $SUBJECT $MAIL
+    cat /mnt/koji/mash/rawhide-$DATE/logs/start /mnt/koji/mash/rawhide-$DATE/logs/depcheck /mnt/koji/mash/rawhide-$DATE/logs/repodiff /mnt/koji/mash/rawhide-$DATE/logs/finish | mutt -e 'set from="$FROM"' -e 'set envelope_from=yes' -s '$SUBJECT' $MAIL
 fi
 exit 0
