@@ -21,7 +21,7 @@ EXPANDARCH="-$ARCH"
 DEPOPTS="--nomail"
 MASHOPTS="-c /etc/mash/mash.$ARCH.conf"
 MAIL="secondary@lists.fedoraproject.org,$ARCH@lists.fedoraproject.org"
-SUBJECT='$ARCH rawhide report: '$DATE' changes'
+SUBJECT=$ARCH' rawhide report: '$DATE' changes'
 FROM="$(echo $ARCH) Fedora Rawhide Report <rawhide@fedoraproject.org>"
 RSYNCPREFIX=""
 }
