@@ -68,15 +68,15 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "sed -i -e 's|strict_keys = True|
 # Copy in the hosts file so that we get the right address for koji
 mock -r $MOCKCONFIG --uniqueext=$DATE --copyin /etc/hosts /etc/hosts >/dev/null 2>&1 # this reports to fail, but actually works
 # Drop privs here so that we run as the masher UID
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash $MASHOPTS -p $TREEPREFIX/development/branched -o /mnt/koji/mash/branched-$DATE --compsfile /mnt/koji/mash/branched-$DATE/logs/comps-branched.xml branched$EXPANDARCH > /mnt/koji/mash/branched-$DATE/logs/mash.log 2>&1" || exit 1
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash $MASHOPTS -p $TREEPREFIX/development/branched -o /mnt/koji/mash/branched-$DATE --compsfile /mnt/koji/mash/branched-$DATE/logs/comps-branched.xml $BRANCHED$EXPANDARCH > /mnt/koji/mash/branched-$DATE/logs/mash.log 2>&1" || exit 1
 
 # hardlink the noarch deltarpms between x86_64 and i386 
-mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "hardlink -v -c /mnt/koji/mash/branched-$DATE/branched$EXPANDARCH"
+mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "hardlink -v -c /mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH"
 
 mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "rm -f /var/lib/rpm/__db*"
 mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -q --new=file:///mnt/koji/mash/branched-$DATE/branched$EXPANDARCH/source/SRPMS --old=file://$TREEPREFIX/development/branched/source/SRPMS > /mnt/koji/mash/branched-$DATE/logs/repodiff"
 
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic $DEPOPTS /mnt/koji/mash/branched-$DATE/branched$EXPANDARCH >/mnt/koji/mash/branched-$DATE/logs/depcheck" &
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic $DEPOPTS /mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH >/mnt/koji/mash/branched-$DATE/logs/depcheck" &
 
 #only run critpath on primary arch
 [ -z "$ARCH" ] && {
@@ -94,16 +94,16 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --clean
 
 # Create a branched link in /mnt/koji/mash, deltas et al depend on this
 rm /mnt/koji/mash/branched
-ln -s /mnt/koji/mash/branched-$DATE/branched$EXPANDARCH/ /mnt/koji/mash/branched
+ln -s /mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH/ /mnt/koji/mash/branched
 
 echo "Compose finished at `date --utc`" > /mnt/koji/mash/branched-$DATE/logs/finish
 echo >> /mnt/koji/mash/branched-$DATE/logs/finish
 
 cd /tmp
 # data
-$RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --exclude repodata/ /mnt/koji/mash/branched-$DATE/branched$EXPANDARCH/ $DESTPATH
+$RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --exclude repodata/ /mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH/ $DESTPATH
 # repodata & cleanup
-$RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --delete --delete-after /mnt/koji/mash/branched-$DATE/branched$EXPANDARCH/ $DESTPATH
+$RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --delete --delete-after /mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH/ $DESTPATH
 if [ "$?" = "0" ]; then
     cat /mnt/koji/mash/branched-$DATE/logs/start /mnt/koji/mash/branched-$DATE/logs/depcheck /mnt/koji/mash/branched-$DATE/logs/repodiff /mnt/koji/mash/branched-$DATE/logs/finish |  mutt -e "set from=\"$FROM\"" -e 'set envelope_from=yes' -s "$SUBJECT" $MAIL
 fi
