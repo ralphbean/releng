@@ -16,8 +16,8 @@ import operator
 # Set some variables
 # Some of these could arguably be passed in as args.
 buildtag = 'f17-rebuild' # tag to check
-desttag = 'f17' # Tag where fixed builds go
-targets = [desttag, buildtag, 'rawhide', 'dist-rawhide']
+desttag = 'f17-updates-candidate' # Tag where fixed builds go
+targets = [desttag, buildtag, 'rawhide', 'dist-rawhide', 'f17-updates-canidate','f17-updates-testing']
 epoch = '2012-01-03 17:53:35.000000' # Date to check for failures from
 failures = {} # dict of owners to lists of packages that failed.
 failed = [] # raw list of failed packages
@@ -34,7 +34,7 @@ failtasks = sorted(kojisession.listBuilds(createdAfter=epoch, state=3),
 goodbuilds = kojisession.listTagged(buildtag, latest=True)
 
 # Get a list of successful builds after the epoch in our dest tag
-destbuilds = kojisession.listTagged(desttag, latest=True)
+destbuilds = kojisession.listTagged(desttag, latest=True, inherit=True)
 for build in destbuilds:
     if build['creation_time'] > epoch:
         goodbuilds.append(build)
