@@ -14,7 +14,7 @@ DEPOPTS=""
 MASHOPTS=""
 MOCKCONFIG=fedora-branched-compose-i386
 MAIL="devel@lists.fedoraproject.org,test@lists.fedoraproject.org"
-SUBJECT='Branched report: '$DATE' changes'
+SUBJECT='F-'$BRANCHED' Branched report: '$DATE' changes'
 FROM="Fedora Branched Report <rawhide@fedoraproject.org>"
 RSYNCPREFIX="sudo -u ftpsync"
 [ -n "$ARCH" ] && {
@@ -23,8 +23,8 @@ EXPANDARCH="-$ARCH"
 DEPOPTS="--nomail"
 MASHOPTS="-c /etc/mash/mash.$ARCH.conf"
 MAIL="secondary@lists.fedoraproject.org,$ARCH@lists.fedoraproject.org"
-SUBJECT=$ARCH' Branched report: '$DATE' changes'
-FROM="$(echo $ARCH) Fedora Branched Report <rawhide@fedoraproject.org>"
+SUBJECT=$ARCH' F-'$BRANCHED' Branched report: '$DATE' changes'
+FROM=$ARCH' Fedora Branched Report <rawhide@fedoraproject.org>'
 RSYNCPREFIX=""
 }
 
@@ -74,7 +74,7 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash $MASHOPTS -p $TREE
 mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "hardlink -v -c /mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH"
 
 mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "rm -f /var/lib/rpm/__db*"
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -q --new=file:///mnt/koji/mash/branched-$DATE/branched$EXPANDARCH/source/SRPMS --old=file://$TREEPREFIX/development/branched/source/SRPMS > /mnt/koji/mash/branched-$DATE/logs/repodiff"
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -q --new=file:///mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH/source/SRPMS --old=file://$TREEPREFIX/development/branched/source/SRPMS > /mnt/koji/mash/branched-$DATE/logs/repodiff"
 
 mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic $DEPOPTS /mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH >/mnt/koji/mash/branched-$DATE/logs/depcheck" &
 
