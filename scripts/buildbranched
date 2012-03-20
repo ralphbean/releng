@@ -34,7 +34,7 @@ MOCKCONFIG=fedora-branched-compose-ppc64
 }
  
 RSYNC_OPTS="-rlptDHhv --delay-updates"
-DESTPATH="$TREEPREFIX/development/branched/"
+DESTPATH="$TREEPREFIX/development/$BRANCHED/"
 
 
 [ -z "$DATE" ] && {
