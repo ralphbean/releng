@@ -10,7 +10,7 @@ BRANCHED="17"
 TREEPREFIX="/pub/fedora/linux"
 MASHDIR="/mnt/koji/mash/branched-$DATE"
 EXPANDARCH=""
-DEPOPTS=""
+DEPOPTS="--treename F-$BRANCHED"
 MASHOPTS=""
 MOCKCONFIG=fedora-branched-compose-i386
 MAIL="devel@lists.fedoraproject.org,test@lists.fedoraproject.org"
@@ -20,7 +20,7 @@ RSYNCPREFIX="sudo -u ftpsync"
 [ -n "$ARCH" ] && {
 TREEPREFIX="/mnt/koji/tree"
 EXPANDARCH="-$ARCH"
-DEPOPTS="--nomail"
+DEPOPTS="--treename F-$BRANCHED --nomail"
 MASHOPTS="-c /etc/mash/mash.$ARCH.conf"
 MAIL="secondary@lists.fedoraproject.org,$ARCH@lists.fedoraproject.org"
 SUBJECT=$ARCH' F-'$BRANCHED' Branched report: '$DATE' changes'
