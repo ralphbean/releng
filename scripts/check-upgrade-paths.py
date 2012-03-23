@@ -27,7 +27,7 @@ import smtplib
 import datetime
 
 fromaddr = 'buildsys@fedoraproject.org'
-toaddr = 'fedora-devel-list@redhat.com'
+toaddr = 'devel@lists.fedoraproject.org'
 domain = '@fedoraproject.org'
 smtpserver = 'localhost'
 
