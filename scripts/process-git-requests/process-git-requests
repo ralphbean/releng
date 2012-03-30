@@ -718,6 +718,8 @@ if __name__ == '__main__':
     # Unfortunately pkgdb can't tell us when branches are no longer accepted
     if 'F-14' in branches:
         del branches['F-14']
+    if 'EL-4' in branches:
+        del branches['EL-4']
 
     print "Connecting to FAS..."
     fas = AccountSystem(username=options.user)
