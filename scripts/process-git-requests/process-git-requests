@@ -10,7 +10,7 @@ VERSION = "1.0"
 # Download (and process?) last linked srpm
 
 # Checks to add:
-# Package already exists in pkgdb.
+# Package and/or branch already exists in pkgdb.
 # fedora-review flag isn't set (especially if it's still set to '?'
 # Catch common misspellings?
 
