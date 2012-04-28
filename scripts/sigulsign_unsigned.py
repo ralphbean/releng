@@ -317,8 +317,9 @@ def run_sigul(rpms, batchnr):
     ret = child.wait()
     if ret != 0:
         logging.error('Error signing %s' % (rpms))
-    	errors.setdefault('Signing', []).append(rpms)
-    	status += 1
+        for rpm in rpms:
+            errors.setdefault('Signing', []).append(rpm)
+    status += 1
 
 logging.info('Signing rpms via sigul')
 total = len(unsigned)
@@ -328,9 +329,9 @@ rpms = []
 for rpm in unsigned:
     rpms += [rpm]
     if len(rpms) == batchsize:
-	batchnr += 1
-	run_sigul(rpms, batchnr)
-	rpms = []
+        batchnr += 1
+        run_sigul(rpms, batchnr)
+        rpms = []
 
 if len(rpms) > 0:
     batchnr += 1
