@@ -29,7 +29,7 @@ import shutil
 
 # Set some variables
 # Some of these could arguably be passed in as args.
-tags = ['f17', 'f18'] # tag to check in koji
+tags = ['dist-f15', 'f16', 'f17', 'f18'] # tag to check in koji
 
 arches = ['arm', 'ppc', 's390', 'sparc']
 
@@ -38,6 +38,8 @@ SERVERCA = os.path.expanduser('~/.fedora-server-ca.cert')
 CLIENTCA = os.path.expanduser('~/.fedora-upload-ca.cert')
 CLIENTCERT = os.path.expanduser('~/.fedora.cert')
 
+kojisession = koji.ClientSession('https://koji.fedoraproject.org/kojihub')
+
 def getBlocked(kojisession, tag):
     blocked = [] # holding for blocked pkgs
     pkgs = kojisession.listPackages(tagID=tag)
@@ -45,16 +47,17 @@ def getBlocked(kojisession, tag):
     for pkg in pkgs:
         if pkg['blocked']:
             blocked.append(pkg['package_name'])
-            print "blocked package %s" % pkg['package_name']
+            #print "blocked package %s" % pkg['package_name']
     return blocked
 
 for arch in arches:
+    print "== Working on Arch: %s" % arch
     # Create a koji session
-    kojisession = koji.ClientSession('https://koji.fedoraproject.org/kojihub')
     seckojisession = koji.ClientSession('https://%s.koji.fedoraproject.org/kojihub' % arch )
     seckojisession.ssl_login(CLIENTCERT, CLIENTCA, SERVERCA)
 
     for tag in tags:
+        print "=== Working on tag: %s" % tag
         secblocked = [] # holding for blocked pkgs
         toblock = []
         unblock = []
