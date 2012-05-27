@@ -48,7 +48,7 @@ else:
 
 kojisession = koji.ClientSession('http://koji.fedoraproject.org/kojihub')
 
-f7overrides = kojisession.listTagged(overtag)
+f7overrides = kojisession.listTagged(overtag, inherit=False)
 f7stables = kojisession.listTagged(updatetag, latest=True)
 
 stabledict = {}
