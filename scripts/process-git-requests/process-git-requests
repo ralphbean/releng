@@ -1,6 +1,10 @@
 #!/usr/bin/python -t
 VERSION = "1.0"
 
+# Unfortunately pkgdb can't tell us when we stop accepting branches for the
+# oldest supported release, so this needs updating manually.
+OBSOLETE_BRANCH='F-15'
+
 # A bug for testing new types of badly formatted requests exists:
 # https://bugzilla.redhat.com/show_bug.cgi?id=622067
 
@@ -722,9 +726,9 @@ if __name__ == '__main__':
     for i in pkgdb.get_collection_list(eol=False):
         branches[i[0]['branchname']] = 1
 
-    # Unfortunately pkgdb can't tell us when branches are no longer accepted
-    if 'F-14' in branches:
-        del branches['F-14']
+    # Prune any obsolete branches
+    if OBSOLETE_BRANCH in branches:
+        del branches[OBSOLETE_BRANCH]
     if 'EL-4' in branches:
         del branches['EL-4']
 
