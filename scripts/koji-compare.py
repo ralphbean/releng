@@ -17,10 +17,13 @@ import string
 import rpm 
 import shutil
 
+inherit = False
 # get architecture and tag from command line
 if len(sys.argv) > 2:
     SECONDARY_ARCH = sys.argv[1]
     tag = sys.argv[2]
+    if len(sys.argv) > 3:
+        inherit = True
 else:
     print("Compare the content of a tag between 2 koji instances")
     print("Usage: %s <arch> <tag>" % sys.argv[0])
@@ -54,7 +57,7 @@ def _rpmvercmp ((e1, v1, r1), (e2, v2, r2)):
 
 def _countMissing (build):
     """find how many builds are missing in local koji"""
-    builds = remotekojisession.listTagged(tag, inherit=True, package=build['package_name'])
+    builds = remotekojisession.listTagged(tag, inherit=inherit, package=build['package_name'])
     cnt = 0
     local_evr = (str(build['epoch']), build['version'], build['release'])
 
@@ -90,8 +93,8 @@ cnt['local_only'] = 0
 cnt['remote_only'] = 0
 cnt['total_missing_builds'] = 0
 
-local_pkgs = sorted(localkojisession.listTagged(tag, inherit=True, latest=True), key = lambda pkg: pkg['package_name'])
-remote_pkgs = sorted(remotekojisession.listTagged(tag, inherit=True, latest=True), key = lambda pkg: pkg['package_name'])
+local_pkgs = sorted(localkojisession.listTagged(tag, inherit=inherit, latest=True), key = lambda pkg: pkg['package_name'])
+remote_pkgs = sorted(remotekojisession.listTagged(tag, inherit=inherit, latest=True), key = lambda pkg: pkg['package_name'])
 
 local_num = len(local_pkgs)
 remote_num = len(remote_pkgs)
