@@ -23,6 +23,7 @@ import codecs
 import datetime
 import getpass
 import glob
+import logging
 import operator
 import os
 import re
@@ -53,6 +54,8 @@ epel_ok_comaint = ['alexlan', 'guidograzioli', 'jwrdegoede', 'kkofler',
 
 PAGER = os.environ.get('PAGER') or '/usr/bin/less'
 EDITOR = os.environ.get('EDITOR') or '/bin/vi'
+
+logging.basicConfig()
 
 # Override a method in xmlrpclib so it doesn't blow up when getting crap data
 # from Red Hat's bugzilla.
@@ -169,19 +172,21 @@ def edit_package(pkgdb, request):
 
 def run_query(bz):
     querydata = {}
-    querydata['column_list'] = ['opendate', 'changeddate', 'bug_severity',
-            'alias', 'assigned_to', 'reporter', 'bug_status', 'resolution',
-            'component', 'blockedby', 'dependson', 'short_desc',
-            'status_whiteboard', 'flagtypes.name']
+    querydata['column_list'] = ['id', 'creation_time', 
+            'assigned_to', 'reporter', 'bug_status', 'resolution',
+            'component', 'blockedby', 'dependson', 'summary',
+            'status_whiteboard', 'flags']
 
-    querydata['field0-0-0'] = 'flagtypes.name'
-    querydata['type0-0-0'] = 'equals'
-    querydata['value0-0-0'] = 'fedora-cvs?'
+    querydata['query_format'] = 'advanced'
+    querydata['product'] = ['Fedora', 'Fedora EPEL']
+    querydata['f1'] = 'flagtypes.name'
+    querydata['o1'] = 'equals'
+    querydata['v1'] = 'fedora-cvs?'
 
     bugs = bz.query(querydata)
-    bugs.sort(key=operator.attrgetter('bug_id'))
+    bugs.sort(key=operator.attrgetter('id'))
 
-    ids = map(lambda x: x.bug_id, bugs)
+    ids = map(lambda x: x.id, bugs)
     comments = bz._proxy.Bug.comments({"ids": ids})
 
     return [bugs, comments]
@@ -190,9 +195,9 @@ def display_bug(bug, comments):
     '''Show the complete ticket in a pager.'''
     comment = 0
     b = []
-    b.append('https://bugzilla.redhat.com/%d' % bug.bug_id)
-    b.append('Bug %d - %s' % (bug.bug_id, bug.short_desc))
-    b.append('Reported by: %s at %s' % (bug.reporter, bug.opendate))
+    b.append('https://bugzilla.redhat.com/%d' % bug.id)
+    b.append('Bug %d - %s' % (bug.id, bug.summary))
+    b.append('Reported by: %s at %s' % (bug.reporter, bug.creation_time))
     b.append('Assigned to: %s' % (bug.assigned_to))
     for i in comments:
         b.append('-'*40)
@@ -326,8 +331,8 @@ def clean_request(items):
 
 def new_request_string(items, bug):
     r = []
-    r.append("Bug URL: http://bugzilla.redhat.com/%d " % bug.bug_id)
-    r.append("Bug summary: " + bug.short_desc)
+    r.append("Bug URL: http://bugzilla.redhat.com/%d " % bug.id)
+    r.append("Bug summary: " + bug.summary)
     r.append('')
     r.append("New Package SCM Request")
     r.append("=======================")
@@ -341,8 +346,8 @@ def new_request_string(items, bug):
 
 def change_request_string(items, bug):
     r = []
-    r.append("Bug URL: http://bugzilla.redhat.com/%d" % bug.bug_id)
-    r.append("Bug summary: " + bug.short_desc)
+    r.append("Bug URL: http://bugzilla.redhat.com/%d" % bug.id)
+    r.append("Bug summary: " + bug.summary)
     r.append('')
     r.append("Package Change Request")
     r.append("======================")
@@ -387,7 +392,7 @@ def process_no_request(bug, allcomments):
     '''Deal with a ticket where no request was found.'''
     while 1:
         clear()
-        print "No SCM request found in bug %d\nhttp://bugzilla.redhat.com/%d." % (bug.bug_id, bug.bug_id)
+        print "No SCM request found in bug %d\nhttp://bugzilla.redhat.com/%d." % (bug.id, bug.id)
         ok = raw_input('\nWhat do?  (n=Next, s=Show ticket, b=Show ticket in browser, c=Comment, q=Quit):')
         if ok == 'c':
             bug_comment = edit_string('')
@@ -409,7 +414,7 @@ def process_no_request(bug, allcomments):
             print
             display_bug(bug, allcomments)
         elif ok == 'b':
-            webbrowser.open("http://bugzilla.redhat.com/" + str(bug.bug_id), new=1)
+            webbrowser.open("http://bugzilla.redhat.com/" + str(bug.id), new=1)
     return True
 
 def check_owners(fas, owner, comaintainers, cc_list):
@@ -478,14 +483,11 @@ def process_new_request(bug, comment, allcomments, firstfound, pkgdb, fas, branc
         warnings.append("WARNING: Ticket is not assigned to anyone.")
         warned = True
 
-    # This is an unpleasant hack
-    flags = bug.__getattr__('flagtypes.name')
-    if flags.find('fedora-review+') < 0:
+    if bug.flags.find('fedora-review+') < 0:
         warnings.append("WARNING: fedora-review flag not set to '+'")
         warned = True
 
-    short_desc = bug.short_desc
-    m=re.search('Review Request:\s+([a-zA-Z0-9_+.-]+)\s+', short_desc, re.I)
+    m=re.search('Review Request:\s+([a-zA-Z0-9_+.-]+)\s+', bug.summary, re.I)
     if not m:
         warnings.append("WARNING: Couldn't parse package name out of bug summary.")
         warned = True
@@ -541,7 +543,7 @@ def process_new_request(bug, comment, allcomments, firstfound, pkgdb, fas, branc
                 print
                 display_bug(bug, allcomments)
             elif ok == 'b':
-                webbrowser.open("http://bugzilla.redhat.com/" + str(bug.bug_id), new=1)
+                webbrowser.open("http://bugzilla.redhat.com/" + str(bug.id), new=1)
             elif ok == 'yes' and not warned:
                 bug_comment = edit_string(bug_comment)
                 print '\n', bug_comment
@@ -615,7 +617,6 @@ def process_change_request(bug, comment, allcomments, firstfound, pkgdb, branche
             warnings.append("WARNING: Invalid branch %s requested" % i)
             warned = True
 
-    short_desc = bug.short_desc
     req_string = change_request_string(items, bug)
     bug_comment = 'Git done (by process-git-requests).\n'
 
@@ -663,7 +664,7 @@ def process_change_request(bug, comment, allcomments, firstfound, pkgdb, branche
                 print
                 display_bug(bug, allcomments)
             elif ok == 'b':
-                webbrowser.open("http://bugzilla.redhat.com/" + str(bug.bug_id), new=1)
+                webbrowser.open("http://bugzilla.redhat.com/" + str(bug.id), new=1)
             elif ok == 'yes' and not warned:
                 bug_comment = edit_string(bug_comment)
                 print '\n', bug_comment
@@ -703,6 +704,7 @@ if __name__ == '__main__':
     branches = {}
     processed = []
     options = parse_commandline()
+
     print "Connecting to bugzilla..."
     bz = bugzilla.Bugzilla(url=options.url)
     print "Querying bugzilla..."
@@ -743,8 +745,8 @@ if __name__ == '__main__':
     for i in bugs:
         firstfound = True
         type = ''
-        print "Parsing bug %d - https://bugzilla.redhat.com/%d" % (i.bug_id, i.bug_id)
-        for j in reversed(comments['bugs'][str(i.bug_id)]['comments']):
+        print "Parsing bug %d - https://bugzilla.redhat.com/%d" % (i.id, i.id)
+        for j in reversed(comments['bugs'][str(i.id)]['comments']):
             if newre.search(j['text']):
                 type = 'new'
                 break
@@ -753,11 +755,11 @@ if __name__ == '__main__':
                 break
             firstfound = False
         else:
-            if not process_no_request(i, comments['bugs'][str(i.bug_id)]['comments']):
+            if not process_no_request(i, comments['bugs'][str(i.id)]['comments']):
                 break
 
         if type == 'new':
-            (package, more) = process_new_request(i, j, comments['bugs'][str(i.bug_id)]['comments'], firstfound, pkgdb, fas, branches)
+            (package, more) = process_new_request(i, j, comments['bugs'][str(i.id)]['comments'], firstfound, pkgdb, fas, branches)
             if package:
                 try:
                     create_branches(package, options.pkghost, options.pkghostlocal)
@@ -766,7 +768,7 @@ if __name__ == '__main__':
             if not more:
                 break
         elif type == 'change':
-            (package, more) = process_change_request(i, j, comments['bugs'][str(i.bug_id)]['comments'], firstfound, pkgdb, branches)
+            (package, more) = process_change_request(i, j, comments['bugs'][str(i.id)]['comments'], firstfound, pkgdb, branches)
             if package:
                 try:
                     create_branches(package, options.pkghost, options.pkghostlocal)
