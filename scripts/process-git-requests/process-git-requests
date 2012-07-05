@@ -8,14 +8,15 @@ OBSOLETE_BRANCH='F-15'
 # A bug for testing new types of badly formatted requests exists:
 # https://bugzilla.redhat.com/show_bug.cgi?id=622067
 
+# A bug for testing flags, primarily by limburgher, also exists:
+# https://bugzilla.redhat.com/show_bug.cgi?id=837840
+
 # TODO:
-# Extract fedora-review flag setter if possible.
 # Display last linked spec file.
 # Download (and process?) last linked srpm
 
 # Checks to add:
 # Package and/or branch already exists in pkgdb.
-# fedora-review flag isn't set (especially if it's still set to '?'
 # Catch common misspellings?
 
 import bugzilla
@@ -485,6 +486,11 @@ def process_new_request(bug, comment, allcomments, firstfound, pkgdb, fas, branc
 
     if bug.flags.find('fedora-review+') < 0:
         warnings.append("WARNING: fedora-review flag not set to '+'")
+        warned = True
+
+    frflag = bug.get_flags('fedora-review')
+    if frflag[0]['setter_email'] == bug.reporter:
+        warnings.append("WARNING: fedora-review flag set by review submitter!  Verify that review was approved by reviewer!")
         warned = True
 
     m=re.search('Review Request:\s+([a-zA-Z0-9_+.-]+)\s+', bug.summary, re.I)
