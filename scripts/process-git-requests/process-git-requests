@@ -484,11 +484,10 @@ def process_new_request(bug, comment, allcomments, firstfound, pkgdb, fas, branc
         warnings.append("WARNING: Ticket is not assigned to anyone.")
         warned = True
 
-    if bug.flags.find('fedora-review+') < 0:
+    frflag = bug.get_flags('fedora-review')
+    if frflag[0]['status'] != '+':
         warnings.append("WARNING: fedora-review flag not set to '+'")
         warned = True
-
-    frflag = bug.get_flags('fedora-review')
     if frflag[0]['setter_email'] == bug.reporter:
         warnings.append("WARNING: fedora-review flag set by review submitter!  Verify that review was approved by reviewer!")
         warned = True
