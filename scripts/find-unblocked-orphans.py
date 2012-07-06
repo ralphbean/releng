@@ -36,7 +36,7 @@ import shutil
 # they should be branched.
 repo = 'http://kojipkgs.fedoraproject.org/mash/rawhide/i386/os'
 srepourl = 'http://kojipkgs.fedoraproject.org/mash/rawhide/source/SRPMS'
-tag = 'f17' # tag to check in koji
+tag = 'f18' # tag to check in koji
 
 # pre-branch, this should be 8 and 'devel'. Post-branch, you need
 # to look it up via:
@@ -69,7 +69,7 @@ kojisession = koji.ClientSession('https://koji.fedoraproject.org/kojihub')
 sys.stderr.write('Contacting pkgdb for list of orphans...\n')
 # Get a list of packages owned by orphan
 pkgs = pkgdb.send_request('/acls/orphans',
-                          req_params={'tg_paginate_limit': 0})
+                          req_params={'pkgs_tgp_limit': 0})
 
 sys.stderr.write('Getting comaintainers...\n')
 # Reduce to packages orphaned on devel
@@ -82,14 +82,15 @@ for p in pkgs.pkgs:
             if listing['owner'] == orphanuid and listing['statuscode'] == 14:
                 orphans[p['name']] = { 'name': p['name'], 'comaintainers' : _comaintainers(p['name']) }
 
+failed = {}
 for pkg in sys.argv[1:]:
-    orphans[pkg] = { 'name': pkg, 'comaintainers' : _comaintainers(pkg) }
+    failed[pkg] = { 'name': pkg, 'comaintainers' : _comaintainers(pkg) }
 
 sys.stderr.write('Getting builds from koji...\n')
 # Get koji listings for each orphaned package
 kojisession.multicall = True
 
-orphanlist = orphans.keys()
+orphanlist = orphans.keys() + failed.keys()
 orphanlist.sort()
 for orph in orphanlist:
     kojisession.listPackages(tagID=tag, pkgID=orph, inherited=True)
@@ -100,9 +101,14 @@ listings = kojisession.multiCall()
 for [pkg] in listings:
     if not pkg[0]['blocked']:
         unblocked[pkg[0]['package_name']] = {}
-        print "Orphan %s" % pkg[0]['package_name']
-        if orphans[pkg[0]['package_name']]['comaintainers']:
-            print "\tcomaintained by: %s" % (' '.join(orphans[pkg[0]['package_name']]['comaintainers']),)
+        if pkg[0]['package_name'] in orphans.keys():
+            print "Package %s (orphan)" % pkg[0]['package_name']
+            if orphans[pkg[0]['package_name']]['comaintainers']:
+                print "\tcomaintained by: %s" % (' '.join(orphans[pkg[0]['package_name']]['comaintainers']),)
+        else:
+            print "Package %s (fails to build)" % pkg[0]['package_name']
+            if failed[pkg[0]['package_name']]['comaintainers']:
+                print "\tcomaintained by: %s" % (' '.join(failed[pkg[0]['package_name']]['comaintainers']),)
 
 sys.stderr.write('Calculating dependencies...\n')
 # This code was mostly stolen from
