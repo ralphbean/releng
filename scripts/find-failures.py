@@ -12,12 +12,13 @@
 import koji
 import os
 import operator
+import datetime
 
 # Set some variables
 # Some of these could arguably be passed in as args.
 buildtag = 'f18-rebuild' # tag to check
 desttag = 'f18' # Tag where fixed builds go
-targets = [desttag, buildtag, 'rawhide',]
+targets = [desttag, buildtag, 'rawhide', 'f18-candidate']
 epoch = '2012-07-17 14:18:03.000000' # Date to check for failures from
 failures = {} # dict of owners to lists of packages that failed.
 failed = [] # raw list of failed packages
@@ -75,9 +76,15 @@ for build in failbuilds:
     if not pkg in failed:
         failed.append(pkg)
     failures.setdefault(owner, {})[pkg] = taskurl
+
+now = datetime.datetime.now()
+now_str = "%s UTC" % str(now.utcnow())
+print '<html><head>'
+print '<title>Packages that failed to build as of %s</title>' % now_str
+print '<style type="text/css"> dt { margin-top: 1em } </style>'
+print '</head><body>'
+print "<p>Last run: %s</p>" % now_str
         
-print '<html>'
-print '<body>'
 print '%s failed builds:<p>' % len(failed)
 
 # Print the results
