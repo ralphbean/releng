@@ -40,9 +40,15 @@ for build in destbuilds:
     if build['creation_time'] > epoch:
         goodbuilds.append(build)
 
+pkgs = kojisession.listPackages(desttag, inherited=True)
+
+# get the list of packages that are blocked
+pkgs = sorted([pkg for pkg in pkgs if pkg['blocked']],
+              key=operator.itemgetter('package_id'))
+
 # Check if newer build exists for package
 for build in failtasks:
-    if not build['package_id'] in [goodbuild['package_id'] for goodbuild in goodbuilds]:
+    if ((not build['package_id'] in [goodbuild['package_id'] for goodbuild in goodbuilds]) and (not build['package_id'] in [pkg['package_id'] for pkg in pkgs])):
         failbuilds.append(build)
         
 # Generate taskinfo for each failed build
