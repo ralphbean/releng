@@ -16,14 +16,14 @@ import operator
 
 # Set some variables
 # Some of these could arguably be passed in as args.
-buildtag = 'f17' # tag to build from
-targets = ['f17-candidate', 'rawhide', 'dist-rawhide'] # tag to build from
-epoch = '2012-01-03 17:53:35.000000' # rebuild anything not built after this date
+buildtag = 'f18' # tag to build from
+targets = ['f18-candidate', 'rawhide', 'dist-rawhide'] # tag to build from
+epoch = '2012-07-17 14:18:03.000000' # rebuild anything not built after this date
 user = 'Fedora Release Engineering <rel-eng@lists.fedoraproject.org>'
-comment = '- Rebuilt for https://fedoraproject.org/wiki/Fedora_17_Mass_Rebuild'
+comment = '- Rebuilt for https://fedoraproject.org/wiki/Fedora_18_Mass_Rebuild'
 workdir = os.path.expanduser('~/massbuild')
 enviro = os.environ
-target = 'f17-rebuild'
+target = 'f18-rebuild'
 enviro['CVS_RSH'] = 'ssh' # use ssh for cvs
 
 # Define functions
@@ -131,16 +131,9 @@ for pkg in pkgs:
         continue
 
     # git commit
-    commit = ['fedpkg', 'ci', '-m', comment]
+    commit = ['fedpkg', 'commit', '-p', '-m', comment]
     print 'Committing changes for %s' % name
     if runme(commit, 'commit', name, enviro,
-                 cwd=os.path.join(workdir, name)):
-        continue
-
-    # git push
-    push = ['git', 'push']
-    print 'push changes for %s' % name
-    if runme(push, 'push', name, enviro,
                  cwd=os.path.join(workdir, name)):
         continue
 

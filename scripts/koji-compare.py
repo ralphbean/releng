@@ -30,8 +30,8 @@ else:
     exit(0)
 
 
-LOCALKOJIHUB = 'https://%s.koji.fedoraproject.org/kojihub' % (SECONDARY_ARCH)
-REMOTEKOJIHUB = 'https://koji.fedoraproject.org/kojihub'
+LOCALKOJIHUB = 'http://%s.koji.fedoraproject.org/kojihub' % (SECONDARY_ARCH)
+REMOTEKOJIHUB = 'http://koji.fedoraproject.org/kojihub'
 
 # Should probably set these from a koji config file
 SERVERCA = os.path.expanduser('~/.fedora-server-ca.cert')
@@ -76,10 +76,8 @@ def _countMissing (build):
     return cnt
 
 localkojisession = koji.ClientSession(LOCALKOJIHUB)
-localkojisession.ssl_login(CLIENTCERT, CLIENTCA, SERVERCA)
 
 remotekojisession = koji.ClientSession(REMOTEKOJIHUB)
-remotekojisession.ssl_login(CLIENTCERT, CLIENTCA, SERVERCA)
 
 # package indexes
 local = 0
