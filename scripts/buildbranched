@@ -60,6 +60,7 @@ popd
 mock -r $MOCKCONFIG --uniqueext=$DATE --init
 mock -r $MOCKCONFIG --uniqueext=$DATE --no-clean --install koji yum createrepo cvs make intltool findutils mash yum-utils rsync repoview hardlink
 # until we move to bodhi lets not be strict about the gpg keys
+mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "sed -i -e 's|strict_keys = True|strict_keys = False|g' /etc/mash/branched.mash"
 # secondary arches are a bit harder to make sure everything is signed lets not be too strict, but actual release compsoes need to be.
 [ -n "$ARCH" ] && {
 mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "sed -i -e 's|strict_keys = True|strict_keys = False|g' /etc/mash/branched.$ARCH.mash"
