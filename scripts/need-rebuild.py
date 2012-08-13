@@ -86,7 +86,7 @@ def needRebuild(kojihub):
         for newbuild in newbuilds[pkg['package_name']]:
             # Scrape the task info out of the tasks dict from the newbuild task ID
             try:
-                if tasks[newbuild['task_id']]['request'][1] in [target, buildtag, updates, rawhide]:
+                if tasks[newbuild['task_id']]['request'][1] in [target, buildtag, updates, rawhide, 'dist-rawhide']:
                     break
             except:
                 pass
