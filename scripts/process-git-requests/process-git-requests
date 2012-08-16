@@ -485,9 +485,13 @@ def process_new_request(bug, comment, allcomments, firstfound, pkgdb, fas, branc
         warned = True
 
     frflag = bug.get_flags('fedora-review')
-    if frflag[0]['status'] != '+':
-        warnings.append("WARNING: fedora-review flag not set to '+'")
+    if not frflag[0]['status']:
+        warnings.append("WARNING: fedora-review flag not set")
         warned = True
+    else:
+        if frflag[0]['status'] != '+':
+            warnings.append("WARNING: fedora-review flag not set to '+'")
+            warned = True
     if frflag[0]['setter_email'] == bug.reporter:
         warnings.append("WARNING: fedora-review flag set by review submitter!  Verify that review was approved by reviewer!")
         warned = True
