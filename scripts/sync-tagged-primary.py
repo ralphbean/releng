@@ -30,7 +30,8 @@ import rpm
 
 # Set some variables
 # Some of these could arguably be passed in as args.
-tags = ['f17-updates', 'f17-updates-testing'] # tag to check in koji
+tags = ['f17-updates', 'f17-updates-testing', 'f18'
+        'f18-updates', 'f18-updates-testing'] # tag to check in koji
 
 arches = ['arm', 'ppc', 's390']
 
@@ -98,10 +99,9 @@ for arch in arches:
             if pkg['nvr'] not in pripkgnvrs:
                 # get the latest build from primary in the tag
                 pripkg = kojisession.listTagged(tag, latest=True, package=pkg['name'])
-                # if there is no package for this name on primary in the tag untag our secondary arch build
                 if pripkg == []:
-                    tountag.append(pkg['nvr'])
-                    print "need to untag %s" % pkg['nvr']
+                    # if the package only exists on secondary let it be
+                    print "Secondary arch only package %s" % pkg['nvr']
                 # secondary arch evr is higher than primary untag ours
                 elif rpmvercmp((str(pkg['epoch']), pkg['version'], pkg['release']),  (str(pripkg[0]['epoch']), pripkg[0]['version'], pripkg[0]['release'])) == 1:
                     tountag.append(pkg['nvr'])
