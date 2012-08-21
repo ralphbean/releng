@@ -298,10 +298,10 @@ logging.debug('Found %s unsigned rpms' % len(unsigned))
 
 if opts.arch:
     # Now run the unsigned stuff through sigul
-    command = ['sigul', '--batch', 'sign-rpm', '-k', opts.arch, '--store-in-koji', '--koji-only']
+    command = ['sigul', '--batch', 'sign-rpms', '-k', opts.arch, '--store-in-koji', '--koji-only']
 else:
     # Now run the unsigned stuff through sigul
-    command = ['sigul', '--batch', 'sign-rpm', '--store-in-koji', '--koji-only']
+    command = ['sigul', '--batch', 'sign-rpms', '--store-in-koji', '--koji-only']
 # See if this is a v3 key or not
 if KEYS[key]['v3']:
     command.append('--v3-signature')
@@ -323,7 +323,7 @@ def run_sigul(rpms, batchnr):
 
 logging.info('Signing rpms via sigul')
 total = len(unsigned)
-batchsize = 1
+batchsize = 50
 batchnr = 0
 rpms = []
 for rpm in unsigned:
