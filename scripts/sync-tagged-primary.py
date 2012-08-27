@@ -89,7 +89,7 @@ for arch in arches:
 
         for pkg in pripkgs:
             if pkg['nvr'] not in secpkgnvrs:
-                secpkg = seckojisession.getBuild(pkg)
+                secpkg = seckojisession.getBuild(pkg['nvr'])
                 # see if we have the build on secondary koji and make sure its complete
                 if not secpkg is None and secpkg['state'] == 1 :
                     totag.append(pkg['nvr'])
@@ -97,15 +97,18 @@ for arch in arches:
         
         for pkg in secpkgs:
             if pkg['nvr'] not in pripkgnvrs:
-                # get the latest build from primary in the tag
-                pripkg = kojisession.listTagged(tag, latest=True, package=pkg['name'])
+                # make sure we have had a build of the package on primary tagged into the tag
+                pripkg = kojisession.tagHistory(tag=tag, package=pkg['name'])
                 if pripkg == []:
                     # if the package only exists on secondary let it be
                     print "Secondary arch only package %s" % pkg['nvr']
                 # secondary arch evr is higher than primary untag ours
-                elif rpmvercmp((str(pkg['epoch']), pkg['version'], pkg['release']),  (str(pripkg[0]['epoch']), pripkg[0]['version'], pripkg[0]['release'])) == 1:
-                    tountag.append(pkg['nvr'])
-                    print "need to untag %s" % pkg['nvr']
+	        elif pripkg[0]['active'] == None:
+                    # get the latest build from primary in the tag
+                    pripkg = kojisession.listTagged(tag, latest=True, package=pkg['name'])
+                    if pripkg == [] or rpmvercmp((str(pkg['epoch']), pkg['version'], pkg['release']),  (str(pripkg[0]['epoch']), pripkg[0]['version'], pripkg[0]['release'])) == 1:
+                        tountag.append(pkg['nvr'])
+                        print "need to untag %s" % pkg['nvr']
                 
         seckojisession.multicall = True
         for pkg in totag:
