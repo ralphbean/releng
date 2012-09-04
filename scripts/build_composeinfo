@@ -1,0 +1,164 @@
+#!/usr/bin/env python
+
+import os, os.path
+import sys
+from optparse import OptionParser
+import logging
+import ConfigParser
+import pprint
+
+#.composeinfo
+#[product]
+#family = Fedora
+#name = Fedora-17-Alpha-RC1
+#version = 17
+#variants = Fedora
+#
+#[variant-Fedora]
+#variants =
+#arches = x86_64,i386
+#id = Fedora
+#name = Fedora
+#type = variant
+#
+#[variant-Fedora.x86_64]
+#arch = x86_64
+#debuginfo = x86_64/debug
+#os_dir = x86_64/os
+#sources = source/SRPMS
+
+def filelists(d, fname=None):
+    files = []
+    
+    for file in os.listdir(d):
+        fulldir = os.path.join(d, file)
+        if os.path.isdir(fulldir):
+            flist = [os.path.join(fulldir, x) for x in os.listdir(fulldir) \
+                     if os.path.isfile(os.path.join(fulldir, x)) and x == fname]
+            files.extend(flist)
+            files.extend(filelists(fulldir, fname=fname))
+    return files
+
+def buildCompose(composePath, treeinfos, name):
+    composeFile = os.path.join(composePath, '.composeinfo')
+    if os.path.exists(composeFile):
+        logging.critical(".composeinfo already exists under %s", composeFile)
+        return 5
+    variants = dict()
+    composeInfoParser = ConfigParser.ConfigParser()
+    treeInfoParser = ConfigParser.ConfigParser()
+    for treeinfo in treeinfos:
+        logging.debug("treeinfo: %s", treeinfo)
+        # treepath is relative from the composepath.
+        treepath = treeinfo.replace('/.treeinfo','').replace(composePath,'./')
+
+        try:
+            treeInfoParser.read(treeinfo)
+        except ConfigParser.MissingSectionHeaderError, e:
+            logging.critical('%s is not parsable: %s', treeinfo, e)
+            return 10
+
+        variant = treeInfoParser.get('general','variant')
+        version = treeInfoParser.get('general','version')
+        family = treeInfoParser.get('general','family')
+        arch = treeInfoParser.get('general','arch')
+        if not name:
+            name = '%s-%s' % (family, version)
+
+        archSection = 'variant-%s.%s' % (variant, arch)
+        composeInfoParser.add_section(archSection)
+        composeInfoParser.set(archSection, 'arch', arch)
+        composeInfoParser.set(archSection, 'os_dir', os.path.normpath(treepath))
+
+        # Check for debuginfo repo
+        debuginfo = os.path.normpath(os.path.join(treepath,'../debug'))
+        if os.path.exists(os.path.join(composePath, debuginfo, 'repodata')):
+            composeInfoParser.set(archSection, 'debuginfo', debuginfo)
+
+        # Check for sources repo
+        sources = os.path.normpath(os.path.join(treepath,'../../source/SRPMS'))
+        if os.path.exists(os.path.join(composePath, sources, 'repodata')):
+            composeInfoParser.set(archSection, 'sources', sources)
+
+        # Fedora only has one variant, but in case that ever changes we build
+        # the dictionary.  Maybe spins would be considered variants?
+        if variant not in variants:
+            variants[variant] = dict(arches = [],
+                                     id     = variant,
+                                     name   = variant,
+                                     type   = 'variant')
+        # We do have mutliple arches in Fedora.
+        variants[variant]['arches'].append(arch)
+
+    logging.debug('\n%s', pprint.pformat(variants))
+
+    # Write out our main product description
+    composeInfoParser.add_section('product')
+    composeInfoParser.set('product', 'family', family)
+    composeInfoParser.set('product', 'name', name)
+    composeInfoParser.set('product', 'version', version)
+    composeInfoParser.set('product', 'variants', ','.join(variants.keys()))
+    # Write out each variant
+    for variant in variants.values():
+        section = 'variant-%s' % variant['id']
+        composeInfoParser.add_section(section)
+        composeInfoParser.set(section, 'arches', ','.join(variant['arches']))
+        composeInfoParser.set(section, 'id', variant['id'])
+        composeInfoParser.set(section, 'name', variant['name'])
+        composeInfoParser.set(section, 'type', variant['type'])
+        # Fedora doesn't have sub-variants.
+        composeInfoParser.set(section, 'variants', '')
+    composeInfoParser.write(open(composeFile,'w'))
+
+def main():
+    parser = OptionParser("usage: %prog [options] Directory")
+    parser.add_option("-n", "--name",
+                      default=None,
+                      help="Alternate name to use, otherwise we use family+version")
+    parser.add_option("-v", "--debug",
+                      action='store_true',
+                      default=False,
+                      help="show debug messages")
+    parser.add_option("-q", "--quiet",
+                      action='store_true',
+                      default=False,
+                      help="less messages")
+    (opts, compose) = parser.parse_args()
+
+    LOG_FORMAT = '%(asctime)s - %(levelname)s - %(filename)s - ' \
+        '%(funcName)s:%(lineno)s - %(message)s'
+    if opts.debug:
+        LOG_LEVEL = logging.DEBUG
+    elif opts.quiet:
+        LOG_LEVEL = logging.CRITICAL
+    else:
+        LOG_LEVEL = logging.INFO
+        LOG_FORMAT = '%(message)s'
+
+    formatter = logging.Formatter(LOG_FORMAT)
+    stdout_handler = logging.StreamHandler(sys.stdout)
+    stdout_handler.setFormatter(formatter)
+    logger = logging.getLogger('')
+    logger.addHandler(stdout_handler)
+    logger.setLevel(LOG_LEVEL)
+
+    if len(compose) == 0:
+        logging.critical("No directory specified")
+        parser.print_help()
+        return 1
+    elif len(compose) > 1:
+        logging.critical("Only specify one directory")
+        parser.print_help()
+        return 2
+    if not os.path.isdir(compose[0]):
+        logging.critical("%s is not a directory", compose[0])
+        parser.print_help()
+        return 3
+    treeinfos = filelists(compose[0], '.treeinfo')
+    if not treeinfos:
+        logging.critical("No .treeinfo(s) found under %s", compose[0])
+        return 4
+    return buildCompose(compose[0], treeinfos, opts.name)
+
+if __name__ == '__main__':
+    sys.exit(main())
