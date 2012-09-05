@@ -569,9 +569,22 @@ def process_new_request(bug, comment, allcomments, firstfound, pkgdb, fas, branc
                     return (False, True)
 
                 print 'Updating bugzilla...'
-                # XXX Need to handle errors here
-                bug.updateflags({'fedora-cvs':'+', 'nomail':1})
-                bug.addcomment(bug_comment)
+                # XXX Need to handle errors here - might be done, limburgher 2012-09-05
+                try:
+                    bug.updateflags({'fedora-cvs':'+', 'nomail':1})
+                except Exception, e:
+                    print "Bugzilla call failed:"
+                    print e
+                    raw_input('\nPress enter to continue to the next ticket.')
+                    return (False, True)
+                try:
+                    bug.addcomment(bug_comment)
+                except Exception, e:
+                    print "Bugzilla call failed:"
+                    print e
+                    raw_input('\nPress enter to continue to the next ticket.')
+                    return (False, True)
+
                 return (request['pkg'], True)
             else:
                 pass
@@ -690,9 +703,22 @@ def process_change_request(bug, comment, allcomments, firstfound, pkgdb, branche
                     return (False, True)
 
                 print 'Updating bugzilla...'
-                # XXX Need to handle errors here
-                bug.updateflags({'fedora-cvs':'+', 'nomail':1})
-                bug.addcomment(bug_comment)
+                # XXX Need to handle errors here - might be done, limburgher 2012-09-05
+                try:
+                    bug.updateflags({'fedora-cvs':'+', 'nomail':1})
+                except Exception, e:
+                    print "Bugzilla call failed:"
+                    print e
+                    raw_input('\nPress enter to continue to the next ticket.')
+                    return (False, True)
+                try:
+                    bug.addcomment(bug_comment)
+                except Exception, e:
+                    print "Bugzilla call failed:"
+                    print e
+                    raw_input('\nPress enter to continue to the next ticket.')
+                    return (False, True)
+
                 return (request['pkg'], True)
             else:
                 pass
