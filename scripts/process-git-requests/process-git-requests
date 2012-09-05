@@ -745,9 +745,21 @@ if __name__ == '__main__':
     options = parse_commandline()
 
     print "Connecting to bugzilla..."
-    bz = bugzilla.Bugzilla(url=options.url)
+    try:
+        bz = bugzilla.Bugzilla(url=options.url)
+    except Exception, e:
+        print "Bugzilla call failed:"
+        print e
+        exit(1)
+
     print "Querying bugzilla..."
-    (bugs, comments) = run_query(bz)
+    try:
+        (bugs, comments) = run_query(bz)
+    except Exception, e:
+        print "Bugzilla call failed:"
+        print e
+        exit(1)
+
     print "Done; got %d." % len(bugs)
     if not len(bugs):
         print "No requests to process!"
