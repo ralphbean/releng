@@ -697,7 +697,7 @@ def process_change_request(bug, comment, allcomments, firstfound, pkgdb, branche
             else:
                 pass
 
-def create_branches(package, pkghost, pkghostlocal):
+def create_branches(package, pkghost, pkghostlocal, processed):
     '''If on pkgs01, run /usr/local/bin/pkgdb2branch.py directly.  Otherwise,
     call ssh.'''
     hostname = os.uname()[1]
@@ -706,8 +706,12 @@ def create_branches(package, pkghost, pkghostlocal):
         cmd.extend(['ssh', pkghost])
     cmd.extend(['/usr/local/bin/pkgdb2branch.py', package])
     print "Calling pkgdb2branch.py...."
-    proc = subprocess.check_call(cmd, stdout=sys.stdout, stderr=sys.stderr)
+    try:
+        proc = subprocess.check_call(cmd, stdout=sys.stdout, stderr=sys.stderr)
+    except:
+        processed.append(package)
     print
+    return processed
 
 if __name__ == '__main__':
     branches = {}
@@ -770,19 +774,13 @@ if __name__ == '__main__':
         if type == 'new':
             (package, more) = process_new_request(i, j, comments['bugs'][str(i.id)]['comments'], firstfound, pkgdb, fas, branches)
             if package:
-                try:
-                    create_branches(package, options.pkghost, options.pkghostlocal)
-                except:
-                    processed.append(package)
+                processed = create_branches(package, options.pkghost, options.pkghostlocal, processed)
             if not more:
                 break
         elif type == 'change':
             (package, more) = process_change_request(i, j, comments['bugs'][str(i.id)]['comments'], firstfound, pkgdb, branches)
             if package:
-                try:
-                    create_branches(package, options.pkghost, options.pkghostlocal)
-                except:
-                    processed.append(package)
+                processed = create_branches(package, options.pkghost, options.pkghostlocal, processed)
             if not more:
                 break
 
