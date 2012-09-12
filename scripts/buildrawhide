@@ -44,6 +44,13 @@ TMPDIR=`mktemp -d /tmp/rawhide.$DATE.XXXX`
 mkdir -p /mnt/koji/mash/rawhide-$DATE/logs
 echo "Compose started at `date --utc`" > /mnt/koji/mash/rawhide-$DATE/logs/start
 echo >> /mnt/koji/mash/rawhide-$DATE/logs/start
+
+# Emit a message using bodhi's cert (since we should be running as "masher").
+echo "start" | fedmsg-logger \
+    --cert-prefix bodhi \
+    --modname compose \
+    --topic rawhide.start
+
 pushd $TMPDIR
 git clone git://git.fedorahosted.org/comps.git && {
 	pushd comps
@@ -90,6 +97,12 @@ ln -s /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/ /mnt/koji/mash/rawhide
 
 echo "Compose finisheded at `date --utc`" > /mnt/koji/mash/rawhide-$DATE/logs/finish
 echo >> /mnt/koji/mash/rawhide-$DATE/logs/finish
+
+# Emit a message using bodhi's cert (since we should be running as "masher").
+echo "done" | fedmsg-logger \
+    --cert-prefix bodhi \
+    --modname compose \
+    --topic rawhide.complete
 
 cd /tmp
 # data

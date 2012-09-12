@@ -17,6 +17,13 @@ TMPDIR=`mktemp -d /tmp/epel.$DATE.XXXX`
 mkdir -p /mnt/koji/mash/epel-$DATE/logs
 echo "Compose started at `date --utc`" > /mnt/koji/mash/epel-$DATE/logs/start
 echo >> /mnt/koji/mash/epel-$DATE/logs/start
+
+# Emit a message using bodhi's cert (since we should be running as "masher").
+echo "start" | fedmsg-logger \
+    --cert-prefix bodhi \
+    --modname compose \
+    --topic epelbeta.start
+
 pushd $TMPDIR
 git clone git://git.fedorahosted.org/comps.git && {
 	pushd comps
@@ -48,6 +55,11 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --clean
 
 [ -n "$NOSYNC" ] && exit $rc
 
+# Emit a message using bodhi's cert (since we should be running as "masher").
+echo "done" | fedmsg-logger \
+    --cert-prefix bodhi \
+    --modname compose \
+    --topic epelbeta.complete
 
 cd /tmp
 # data
