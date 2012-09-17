@@ -79,6 +79,8 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -q --
 
 mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic $DEPOPTS /mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH >/mnt/koji/mash/branched-$DATE/logs/depcheck" &
 
+./scripts/build_composeinfo /mnt/koji/mash/branched-$DATE/$BRANCHED/
+
 #only run critpath on primary arch
 [ -z "$ARCH" ] && {
 ./scripts/critpath.py --url file:///mnt/koji/mash/branched-$DATE/ -o /mnt/koji/mash/branched-$DATE/logs/critpath.txt branched &> /mnt/koji/mash/branched-$DATE/logs/critpath.log
