@@ -92,7 +92,7 @@ for basearch in i386 x86_64 ; do
 wait
 
 echo "Running build_composeinfo"
-./scripts/build_composeinfo /mnt/koji/mash/branched-$DATE/$BRANCHED/
+./scripts/build_composeinfo --name Fedora-${BRANCHED}-${DATE} /mnt/koji/mash/branched-$DATE/$BRANCHED/
 
 mock -r $MOCKCONFIG --uniqueext=$DATE --clean
 
