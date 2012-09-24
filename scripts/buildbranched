@@ -47,11 +47,13 @@ mkdir -p /mnt/koji/mash/branched-$DATE/logs
 echo "Compose started at `date --utc`" > /mnt/koji/mash/branched-$DATE/logs/start
 echo >> /mnt/koji/mash/branched-$DATE/logs/start
 
+[ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
 echo "start" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic branched.start
+}
 
 pushd $TMPDIR
 git clone git://git.fedorahosted.org/comps.git && {
@@ -112,11 +114,13 @@ ln -s /mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH/ /mnt/koji/mash/branche
 echo "Compose finished at `date --utc`" > /mnt/koji/mash/branched-$DATE/logs/finish
 echo >> /mnt/koji/mash/branched-$DATE/logs/finish
 
+[ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
 echo "done" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic branched.complete
+}
 
 cd /tmp
 # data
