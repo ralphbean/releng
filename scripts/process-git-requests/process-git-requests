@@ -35,6 +35,7 @@ import tempfile
 import time
 import xmlrpclib
 import webbrowser
+import socket
 from configobj import ConfigObj, flatten_errors
 from fedora.client import AccountSystem, AuthError, AppError, PackageDB
 from optparse import OptionParser
@@ -749,6 +750,14 @@ if __name__ == '__main__':
         bz = bugzilla.Bugzilla(url=options.url)
     except Exception, e:
         print "Bugzilla call failed:"
+        print e
+        exit(1)
+    print "Making sure " + options.pkghost + " is available..."
+    try:
+        sshsock = socket.create_connection((options.pkghost, 22))
+        sshsock.close()
+    except Exception, e:
+        print options.pkghost + " unavailable."
         print e
         exit(1)
 
