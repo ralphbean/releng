@@ -68,8 +68,25 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --init
 mock -r $MOCKCONFIG --uniqueext=$DATE --no-clean --install koji yum createrepo cvs make intltool findutils mash yum-utils rsync repoview hardlink
 # Copy in the hosts file so that we get the right address for koji
 mock -r $MOCKCONFIG --uniqueext=$DATE --copyin /etc/hosts /etc/hosts >/dev/null 2>&1 # this reports to fail, but actually works
+
+[ -z "$ARCH" ] && {
+# Emit a message using bodhi's cert (since we should be running as "masher").
+echo "start" | fedmsg-logger \
+    --cert-prefix bodhi \
+    --modname compose \
+    --topic rawhide.mash.start
+}
+
 # Drop privs here so that we run as the masher UID
 mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash $MASHOPTS -p $TREEPREFIX/development/rawhide -o /mnt/koji/mash/rawhide-$DATE --compsfile /mnt/koji/mash/rawhide-$DATE/logs/comps-rawhide.xml rawhide$EXPANDARCH > /mnt/koji/mash/rawhide-$DATE/logs/mash.log 2>&1" || exit 1
+
+[ -z "$ARCH" ] && {
+# Emit a message using bodhi's cert (since we should be running as "masher").
+echo "done" | fedmsg-logger \
+    --cert-prefix bodhi \
+    --modname compose \
+    --topic rawhide.mash.complete
+}
 
 # hardlink the noarch deltarpms between x86_64 and i386 
 mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "hardlink -v -c /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH"
@@ -102,10 +119,10 @@ echo >> /mnt/koji/mash/rawhide-$DATE/logs/finish
 
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "done" | fedmsg-logger \
+echo "start" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
-    --topic rawhide.complete
+    --topic rawhide.rsync.start
 }
 
 cd /tmp
@@ -113,7 +130,23 @@ cd /tmp
 $RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --exclude repodata/ /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/ $DESTPATH
 # repodata & cleanup
 $RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --delete --delete-after /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/ $DESTPATH
+[ -z "$ARCH" ] && {
+# Emit a message using bodhi's cert (since we should be running as "masher").
+echo "done" | fedmsg-logger \
+    --cert-prefix bodhi \
+    --modname compose \
+    --topic rawhide.rsync.complete
+}
+
 if [ "$?" = "0" ]; then
     cat /mnt/koji/mash/rawhide-$DATE/logs/start /mnt/koji/mash/rawhide-$DATE/logs/depcheck /mnt/koji/mash/rawhide-$DATE/logs/repodiff /mnt/koji/mash/rawhide-$DATE/logs/finish |  mutt -e "set from=\"$FROM\"" -e 'set envelope_from=yes' -s "$SUBJECT" $MAIL
 fi
+[ -z "$ARCH" ] && {
+# Emit a message using bodhi's cert (since we should be running as "masher").
+echo "done" | fedmsg-logger \
+    --cert-prefix bodhi \
+    --modname compose \
+    --topic rawhide.complete
+}
+
 exit 0
