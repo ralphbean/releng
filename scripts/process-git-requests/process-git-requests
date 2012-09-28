@@ -768,7 +768,7 @@ if __name__ == '__main__':
 
     print "Making sure " + options.pkghost + " is available..."
     try:
-        sshsock = socket.create_connection((options.pkghost, 22))
+        sshsock = socket.create_connection((options.pkghost, 80))
         sshsock.close()
     except Exception, e:
         print options.pkghost + " unavailable."
