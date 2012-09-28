@@ -752,14 +752,6 @@ if __name__ == '__main__':
         print "Bugzilla call failed:"
         print e
         exit(1)
-    print "Making sure " + options.pkghost + " is available..."
-    try:
-        sshsock = socket.create_connection((options.pkghost, 22))
-        sshsock.close()
-    except Exception, e:
-        print options.pkghost + " unavailable."
-        print e
-        exit(1)
 
     print "Querying bugzilla..."
     try:
@@ -773,6 +765,15 @@ if __name__ == '__main__':
     if not len(bugs):
         print "No requests to process!"
         exit(0)
+
+    print "Making sure " + options.pkghost + " is available..."
+    try:
+        sshsock = socket.create_connection((options.pkghost, 22))
+        sshsock.close()
+    except Exception, e:
+        print options.pkghost + " unavailable."
+        print e
+        exit(1)
 
     print "Connecting to pkgdb..."
     config = parse_pkgdb_config()
