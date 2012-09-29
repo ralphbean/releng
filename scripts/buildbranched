@@ -161,6 +161,10 @@ $RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --link-dest=$TREEPREFIX/development/rawh
 # repodata & cleanup
 $RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --link-dest=$TREEPREFIX/development/rawhide/ --delete --delete-after /mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH/ $DESTPATH
 
+if [ "$?" = "0" ]; then
+   export mail=0
+fi
+
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
 echo "done" | fedmsg-logger \
@@ -169,7 +173,7 @@ echo "done" | fedmsg-logger \
     --topic branched.rsync.complete
 }
 
-if [ "$?" = "0" ]; then
+if [ "$mail" = "0" ]; then
     cat /mnt/koji/mash/branched-$DATE/logs/start /mnt/koji/mash/branched-$DATE/logs/depcheck /mnt/koji/mash/branched-$DATE/logs/repodiff /mnt/koji/mash/branched-$DATE/logs/finish |  mutt -e "set from=\"$FROM\"" -e 'set envelope_from=yes' -s "$SUBJECT" $MAIL
 fi
 

@@ -130,6 +130,11 @@ cd /tmp
 $RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --exclude repodata/ /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/ $DESTPATH
 # repodata & cleanup
 $RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --delete --delete-after /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/ $DESTPATH
+
+if [ "$?" = "0" ]; then
+   export mail=0
+fi
+
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
 echo "done" | fedmsg-logger \
@@ -138,9 +143,10 @@ echo "done" | fedmsg-logger \
     --topic rawhide.rsync.complete
 }
 
-if [ "$?" = "0" ]; then
+if [ "$mail" = "0" ]; then
     cat /mnt/koji/mash/rawhide-$DATE/logs/start /mnt/koji/mash/rawhide-$DATE/logs/depcheck /mnt/koji/mash/rawhide-$DATE/logs/repodiff /mnt/koji/mash/rawhide-$DATE/logs/finish |  mutt -e "set from=\"$FROM\"" -e 'set envelope_from=yes' -s "$SUBJECT" $MAIL
 fi
+
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
 echo "done" | fedmsg-logger \
