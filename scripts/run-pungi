@@ -1,0 +1,16 @@
+#!/bin/bash
+
+VERSION=18-Beta-TC1
+COMPOSE=
+DESTDIR=/srv/pungi/$VERSION$COMPOSE
+
+KICKSTART=/srv/pungi/spin-kickstarts.ausil/fedora-install-fedora.ks
+
+for arch in i386 x86_64
+do
+ mock -r fedora-branched-compose-$arch --init
+ mock -r fedora-branched-compose-$arch --shell "pungi -c $KICKSTART --destdir $DESTDIR --cachedir /srv/pungi/cache/ --ver $VERSION --flavor Fedora"
+ mock -r fedora-branched-compose-$arch --clean
+done
+
+
