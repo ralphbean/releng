@@ -47,10 +47,11 @@ echo >> /mnt/koji/mash/rawhide-$DATE/logs/start
 
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "start" | fedmsg-logger \
+echo "{'log': 'start', 'branch': 'rawhide'}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
-    --topic rawhide.start
+    --topic rawhide.start \
+    --json-input
 }
 
 pushd $TMPDIR
@@ -71,10 +72,11 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --copyin /etc/hosts /etc/hosts >/dev/null 
 
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "start" | fedmsg-logger \
+echo "{'log': 'start', 'branch': 'rawhide'}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
-    --topic rawhide.mash.start
+    --topic rawhide.mash.start \
+    --json-input
 }
 
 # Drop privs here so that we run as the masher UID
@@ -82,10 +84,11 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash $MASHOPTS -p $TREE
 
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "done" | fedmsg-logger \
+echo "{'log': 'done', 'branch': 'rawhide'}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
-    --topic rawhide.mash.complete
+    --topic rawhide.mash.complete \
+    --json-input
 }
 
 # hardlink the noarch deltarpms between x86_64 and i386 
@@ -119,10 +122,11 @@ echo >> /mnt/koji/mash/rawhide-$DATE/logs/finish
 
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "start" | fedmsg-logger \
+echo "{'log': 'start', 'branch': 'rawhide'}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
-    --topic rawhide.rsync.start
+    --topic rawhide.rsync.start \
+    --json-input
 }
 
 cd /tmp
@@ -137,10 +141,11 @@ fi
 
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "done" | fedmsg-logger \
+echo "{'log': 'done', 'branch': 'rawhide'}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
-    --topic rawhide.rsync.complete
+    --topic rawhide.rsync.complete \
+    --json-input
 }
 
 if [ "$mail" = "0" ]; then
@@ -149,10 +154,11 @@ fi
 
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "done" | fedmsg-logger \
+echo "{'log': 'done', 'branch': 'rawhide'}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
-    --topic rawhide.complete
+    --topic rawhide.complete \
+    --json-input
 }
 
 exit 0
