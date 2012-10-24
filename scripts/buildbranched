@@ -123,7 +123,7 @@ echo "{'log': 'start', 'branch': $BRANCHED}" | fedmsg-logger \
 ./scripts/critpath.py --url file:///mnt/koji/mash/branched-$DATE/ -o /mnt/koji/mash/branched-$DATE/logs/critpath.txt branched &> /mnt/koji/mash/branched-$DATE/logs/critpath.log
 
 for basearch in i386 x86_64 ; do
-    HOST=$(koji list-hosts --quiet --enabled --ready --arch=$basearch | sed 's|/| |g' | sort -g -k4 -k5r | awk -F '.' '{ print $1 ; exit }')
+    HOST=$(koji list-hosts --quiet --enabled --ready --arch=$basearch  --channel createrepo | sed 's|/| |g' | sort -g -k4 -k5r | awk -F '.' '{ print $1 ; exit }')
     ./scripts/pungify $DATE $BRANCHED $basearch $HOST > /mnt/koji/mash/branched-$DATE/logs/pungify-$basearch.log 2>&1 &
     done
 }
