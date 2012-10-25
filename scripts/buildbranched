@@ -49,7 +49,7 @@ echo >> /mnt/koji/mash/branched-$DATE/logs/start
 
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{'log': 'start', 'branch': $BRANCHED}" | fedmsg-logger \
+echo "\"{'log': 'start', 'branch': '$BRANCHED'}\"" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic branched.start \
@@ -81,7 +81,7 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --copyin /etc/hosts /etc/hosts >/dev/null 
 
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{'log': 'start', 'branch': $BRANCHED}" | fedmsg-logger \
+echo "\"{'log': 'start', 'branch': '$BRANCHED'}\"" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic branched.mash.start \
@@ -93,7 +93,7 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash $MASHOPTS -p $TREE
 
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{'log': 'done', 'branch': $BRANCHED}" | fedmsg-logger \
+echo "\"{'log': 'done', 'branch': '$BRANCHED'}\"" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic branched.mash.complete \
@@ -111,7 +111,7 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-
 
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{'log': 'start', 'branch': $BRANCHED}" | fedmsg-logger \
+echo "\"{'log': 'start', 'branch': '$BRANCHED'}\"" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic branched.pungify.start \
@@ -131,7 +131,7 @@ wait
 
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{'log': 'done', 'branch': $BRANCHED}" | fedmsg-logger \
+echo "\"{'log': 'done', 'branch': '$BRANCHED'}\"" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic branched.pungify.complete \
@@ -154,7 +154,7 @@ echo >> /mnt/koji/mash/branched-$DATE/logs/finish
 
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{'log': 'start', 'branch': $BRANCHED}" | fedmsg-logger \
+echo "\"{'log': 'start', 'branch': '$BRANCHED'}\"" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic branched.rsync.start \
@@ -173,7 +173,7 @@ fi
 
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{'log': 'done', 'branch': $BRANCHED}" | fedmsg-logger \
+echo "\"{'log': 'done', 'branch': '$BRANCHED'}\"" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic branched.rsync.complete \
@@ -186,7 +186,7 @@ fi
 
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{'log': 'done', 'branch': $BRANCHED}" | fedmsg-logger \
+echo "\"{'log': 'done', 'branch': '$BRANCHED'}\"" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic branched.complete \
