@@ -47,7 +47,7 @@ echo >> /mnt/koji/mash/rawhide-$DATE/logs/start
 
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "\"{'log': 'start', 'branch': 'rawhide'}\"" | fedmsg-logger \
+echo "{\"log\": \"start\", \"branch\": \"rawhide\"}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic rawhide.start \
@@ -72,7 +72,7 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --copyin /etc/hosts /etc/hosts >/dev/null 
 
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "\"{'log': 'start', 'branch': 'rawhide'}\"" | fedmsg-logger \
+echo "{\"log\": \"start\", \"branch\": \"rawhide\"}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic rawhide.mash.start \
@@ -84,7 +84,7 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash $MASHOPTS -p $TREE
 
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "\"{'log': 'done', 'branch': 'rawhide'}\"" | fedmsg-logger \
+echo "{\"log\": \"done\", \"branch\": \"rawhide\"}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic rawhide.mash.complete \
@@ -122,7 +122,7 @@ echo >> /mnt/koji/mash/rawhide-$DATE/logs/finish
 
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "\"{'log': 'start', 'branch': 'rawhide'}\"" | fedmsg-logger \
+echo "{\"log\": \"start\", \"branch\": \"rawhide\"}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic rawhide.rsync.start \
@@ -141,7 +141,7 @@ fi
 
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "\"{'log': 'done', 'branch': 'rawhide'}\"" | fedmsg-logger \
+echo "{\"log\": \"done\", \"branch\": \"rawhide\"}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic rawhide.rsync.complete \
@@ -154,7 +154,7 @@ fi
 
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "\"{'log': 'done', 'branch': 'rawhide'}\"" | fedmsg-logger \
+echo "{\"log\": \"done\", \"branch\": \"rawhide\"}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic rawhide.complete \
