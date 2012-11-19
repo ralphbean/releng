@@ -11,7 +11,11 @@ do
  mock -r fedora-branched-compose-$arch --init
  mock -r fedora-branched-compose-$arch --shell "pungi -c $KICKSTART --destdir $DESTDIR --cachedir /srv/pungi/cache/ --ver $VERSION --flavor Fedora"
  mock -r fedora-branched-compose-$arch --clean
+ if [[ $arch == i386 ]]
+    then basearch=i686
+    else basearch=$arch
+ fi
+ repoclosure -a $basearch --repofrompath=$arch,$DESTDIR/$VERSION/Fedora/$arch/os --repoid=$arch > $DESTDIR/logs/Fedora.$arch.repoclosure.log
 done
 
-~/build_composeinfo $DESTDIR/Fedora
-
+./build_composeinfo $DESTDIR/$VERSION/Fedora
