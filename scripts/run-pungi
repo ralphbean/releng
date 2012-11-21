@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#lets make sure we run everything as the releng group
+newgrp releng
+
 VERSION=$1
 COMPOSE=$2
 DESTDIR=/srv/pungi/$VERSION$COMPOSE
