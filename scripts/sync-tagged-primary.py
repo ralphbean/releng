@@ -30,7 +30,7 @@ import rpm
 
 # Set some variables
 # Some of these could arguably be passed in as args.
-tags = ['f17-updates', 'f17-updates-testing', 'f18',
+tags = ['f17-updates', 'f17-updates-testing',
         'f18-updates', 'f18-updates-testing'] # tag to check in koji
 
 arches = ['arm', 'ppc', 's390']
