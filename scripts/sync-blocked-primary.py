@@ -31,7 +31,7 @@ import shutil
 # Some of these could arguably be passed in as args.
 tags = ['f19', 'f18', 'f17', 'f16'] # tag to check in koji
 
-arches = ['arm', 'ppc', 's390', 'sparc']
+arches = ['arm', 'ppc', 's390']
 
 # Should probably set these from a koji config file
 SERVERCA = os.path.expanduser('~/.fedora-server-ca.cert')
