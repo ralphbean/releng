@@ -18,9 +18,9 @@ import operator
 # Some of these could arguably be passed in as args.
 buildtag = 'f19' # tag to build from
 targets = ['f19-candidate', 'rawhide', 'dist-rawhide'] # tag to build from
-epoch = '2012-07-17 14:18:03.000000' # rebuild anything not built after this date
+epoch = '2013-01-24 12:37:15.000000' # rebuild anything not built after this date
 user = 'Fedora Release Engineering <rel-eng@lists.fedoraproject.org>'
-comment = '- Rebuilt for https://fedoraproject.org/wiki/Fedora_18_Mass_Rebuild'
+comment = '- Rebuilt for https://fedoraproject.org/wiki/Fedora_19_Mass_Rebuild'
 workdir = os.path.expanduser('~/massbuild')
 enviro = os.environ
 target = 'f19-rebuild'
