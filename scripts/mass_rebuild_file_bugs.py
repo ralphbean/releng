@@ -25,6 +25,7 @@ failed = [] # raw list of failed packages
 
 product = "Fedora" # for BZ product field
 version = "rawhide" # for BZ version field
+tracking_bug = None # Tracking bug for mass build failures
 
 def report_failure(product, component, version, summary, comment):
     """This function files a new bugzilla bug for component with given arguments
@@ -41,6 +42,7 @@ def report_failure(product, component, version, summary, comment):
         'version': version,
         'short_desc': summary,
         'comment': comment,
+        'blocks': tracking_bug,
         'rep_platform': 'Unspecified',
         'bug_severity': 'unspecified',
         'op_sys': 'Unspecified',
@@ -60,7 +62,7 @@ def report_failure(product, component, version, summary, comment):
                        password=getpass.getpass())
         report_failure(component, summary, comment)
 
-def bug_exists(product, component, version, summary):
+def get_filed_bugs(tracking_bug):
     """Query bugzilla if given bug has already been filed
 
     Keyword arguments:
@@ -69,12 +71,7 @@ def bug_exists(product, component, version, summary):
     version -- component version to file bug for (usually rawhide for Fedora)
     summary -- short bug summary
     """
-    query_data = {
-        'product': product,
-        'component': component,
-        'version': version,
-        'short_desc': summary,
-        }
+    query_data = {'blocks': tracking_bug}
     bzurl = 'https://bugzilla.redhat.com'
     bzclient = RHBugzilla(url="%s/xmlrpc.cgi" % bzurl)
 
@@ -84,7 +81,8 @@ def bug_exists(product, component, version, summary):
 if __name__ == '__main__':
     kojisession = koji.ClientSession('http://koji.fedoraproject.org/kojihub')
     failbuilds = get_failed_builds(kojisession, epoch, buildtag, desttag)
-
+    filed_bugs = get_filed_bugs(tracking_bug)
+    filed_bugs_components = [bug.component for bug in filed_bugs]
     for build in failbuilds:
         task_id = build['task_id']
         component = build['package_name']
@@ -104,7 +102,7 @@ state.log: %s
 
 """ % (component, root_log, build_log, state_log)
 
-        if not bug_exists(product, component, version, summary):
+        if component not in filed_bugs_components:
             print "Filing bug for %s" % component
             report_failure(product, component, version, summary, comment)
         else:
