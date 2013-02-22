@@ -3,7 +3,7 @@
 # mass_rebuild_file_bugs.py - A utility to discover failed builds in a given tag
 #                    and file bugs in bugzilla for these failed builds
 #
-# Copyright (c) 2009 Red Hat
+# Copyright (c) 2013 Red Hat
 #
 # Authors:
 #     Stanislav Ochotnicky <sochotnicky@redhat.com>
@@ -17,9 +17,9 @@ from find_failures import get_failed_builds
 
 # Set some variables
 # Some of these could arguably be passed in as args.
-buildtag = 'f18-rebuild' # tag to check
-desttag = 'f18' # Tag where fixed builds go
-epoch = '2012-07-17 14:18:03.000000' # Date to check for failures from
+buildtag = 'f19-rebuild' # tag to check
+desttag = 'f19' # Tag where fixed builds go
+epoch = '2013-02-10 14:18:03.000000' # Date to check for failures from
 failures = {} # dict of owners to lists of packages that failed.
 failed = [] # raw list of failed packages
 
@@ -102,10 +102,10 @@ root.log: %s
 build.log: %s
 state.log: %s
 
-
 """ % (component, root_log, build_log, state_log)
 
         if not bug_exists(product, component, version, summary):
+            print "Filing bug for %s" % component
             report_failure(product, component, version, summary, comment)
         else:
             print "Skipping %s, bug already filed" % component
