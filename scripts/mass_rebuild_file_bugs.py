@@ -60,6 +60,27 @@ def report_failure(product, component, version, summary, comment):
                        password=getpass.getpass())
         report_failure(component, summary, comment)
 
+def bug_exists(product, component, version, summary):
+    """Query bugzilla if given bug has already been filed
+
+    Keyword arguments:
+    product -- bugzilla product (usually Fedora)
+    component -- component (package) to file bug against
+    version -- component version to file bug for (usually rawhide for Fedora)
+    summary -- short bug summary
+    """
+    query_data = {
+        'product': product,
+        'component': component,
+        'version': version,
+        'short_desc': summary,
+        }
+    bzurl = 'https://bugzilla.redhat.com'
+    bzclient = RHBugzilla(url="%s/xmlrpc.cgi" % bzurl)
+
+    return bzclient.query(query_data)
+
+
 if __name__ == '__main__':
     kojisession = koji.ClientSession('http://koji.fedoraproject.org/kojihub')
     failbuilds = get_failed_builds(kojisession, epoch, buildtag, desttag)
@@ -67,7 +88,7 @@ if __name__ == '__main__':
     for build in failbuilds:
         task_id = build['task_id']
         component = build['package_name']
-        summary = "FTBFS: %s in %s" % (component, 'rawhide')
+        summary = "%s: FTBFS in %s" % (component, 'rawhide')
         work_url = 'http://kojipkgs.fedoraproject.org/work'
         base_path = koji.pathinfo.taskrelpath(task_id)
         log_url = "%s/%s/" % (work_url, base_path)
@@ -84,4 +105,7 @@ state.log: %s
 
 """ % (component, root_log, build_log, state_log)
 
-        report_failure(product, component, version, summary, comment)
+        if not bug_exists(product, component, version, summary):
+            report_failure(product, component, version, summary, comment)
+        else:
+            print "Skipping %s, bug already filed" % component
