@@ -95,13 +95,16 @@ if __name__ == '__main__':
         state_log = log_url + "state.log"
         comment = """Your package %s failed to build from source in current rawhide.
 
+http://koji.fedoraproject.org/koji/taskinfo?taskID=%s
+
 Build logs:
 root.log: %s
 build.log: %s
 state.log: %s
+NOTE: build logs are cleaned up after 1 week
 
 For details on mass rebuild see https://fedoraproject.org/wiki/Fedora_19_Mass_Rebuild
-""" % (component, root_log, build_log, state_log)
+""" % (component, task_id, root_log, build_log, state_log)
 
         if component not in filed_bugs_components:
             print "Filing bug for %s" % component
