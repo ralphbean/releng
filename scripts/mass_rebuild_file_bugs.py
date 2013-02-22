@@ -109,5 +109,6 @@ For details on mass rebuild see https://fedoraproject.org/wiki/Fedora_19_Mass_Re
         if component not in filed_bugs_components:
             print "Filing bug for %s" % component
             report_failure(product, component, version, summary, comment)
+            filed_bugs_components.append(component)
         else:
             print "Skipping %s, bug already filed" % component
