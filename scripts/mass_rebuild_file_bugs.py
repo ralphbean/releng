@@ -25,7 +25,7 @@ failed = [] # raw list of failed packages
 
 product = "Fedora" # for BZ product field
 version = "rawhide" # for BZ version field
-tracking_bug = None # Tracking bug for mass build failures
+tracking_bug = 913825 # Tracking bug for mass build failures
 
 def report_failure(product, component, version, summary, comment):
     """This function files a new bugzilla bug for component with given arguments
@@ -100,6 +100,7 @@ root.log: %s
 build.log: %s
 state.log: %s
 
+For details on mass rebuild see https://fedoraproject.org/wiki/Fedora_19_Mass_Rebuild
 """ % (component, root_log, build_log, state_log)
 
         if component not in filed_bugs_components:
