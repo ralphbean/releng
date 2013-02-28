@@ -29,16 +29,13 @@ import sys
 import tempfile
 import shutil
 import rpm
+import argparse
 
 # get architecture and tags from command line
-if len(sys.argv) > 2:
-    arch = sys.argv[1]
-    tags = sys.argv[2:]
-else:
-    print("Synchronize tagged packages between primary and secondary koji")
-    print("Usage: %s <arch> <tag> ...<tag-N>" % sys.argv[0])
-    exit(0)
-
+parser = argparse.ArgumentParser()
+parser.add_argument("arch", help="secondary arch to sync")
+parser.add_argument("tag", nargs="+", help="tag to sync")
+args = parser.parse_args()
 
 # Should probably set these from a koji config file
 SERVERCA = os.path.expanduser('~/.fedora-server-ca.cert')
@@ -69,13 +66,13 @@ def rpmvercmp ((e1, v1, r1), (e2, v2, r2)):
         return -1
 
 
-print "=== Working on arch: %s ====" % arch
+print "=== Working on arch: %s ====" % args.arch
 # Create a koji session
 kojisession = koji.ClientSession('https://koji.fedoraproject.org/kojihub')
-seckojisession = koji.ClientSession('https://%s.koji.fedoraproject.org/kojihub' % arch )
+seckojisession = koji.ClientSession('https://%s.koji.fedoraproject.org/kojihub' % args.arch)
 seckojisession.ssl_login(CLIENTCERT, CLIENTCA, SERVERCA)
 
-for tag in tags:
+for tag in args.tag:
     print "=== Working on tag: %s ====" % tag
     secblocked = [] # holding for blocked pkgs
     totag = []
@@ -116,11 +113,11 @@ for tag in tags:
 
     seckojisession.multicall = True
     for pkg in totag:
-        print "Tagging: Arch: %s Tag: %s Package: %s" % (arch, tag, pkg)
+        print "Tagging: Arch: %s Tag: %s Package: %s" % (args.arch, tag, pkg)
         seckojisession.tagBuildBypass(tag, pkg)
 
     for pkg in tountag:
-        print "Untagging: Arch: %s Tag: %s Package: %s" % (arch, tag, pkg)
+        print "Untagging: Arch: %s Tag: %s Package: %s" % (args.arch, tag, pkg)
         seckojisession.untagBuildBypass(tag, pkg)
 
     listings = seckojisession.multiCall()
