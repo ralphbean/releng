@@ -33,6 +33,7 @@ import argparse
 
 # get architecture and tags from command line
 parser = argparse.ArgumentParser()
+parser.add_argument("--dry-run", help="no changes will be made", action="store_true")
 parser.add_argument("arch", help="secondary arch to sync")
 parser.add_argument("tag", nargs="+", help="tag to sync")
 args = parser.parse_args()
@@ -110,6 +111,9 @@ for tag in args.tag:
                 if pripkg == [] or rpmvercmp((str(pkg['epoch']), pkg['version'], pkg['release']),  (str(pripkg[0]['epoch']), pripkg[0]['version'], pripkg[0]['release'])) == 1:
                     tountag.append(pkg['nvr'])
                     print "need to untag %s" % pkg['nvr']
+
+    if args.dry_run:
+        continue
 
     seckojisession.multicall = True
     for pkg in totag:
