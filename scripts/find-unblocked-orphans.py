@@ -36,7 +36,7 @@ import shutil
 # they should be branched.
 repo = 'http://kojipkgs.fedoraproject.org/mash/rawhide/i386/os'
 srepourl = 'http://kojipkgs.fedoraproject.org/mash/rawhide/source/SRPMS'
-tag = 'f18' # tag to check in koji
+tag = 'f19' # tag to check in koji
 
 # pre-branch, this should be 8 and 'devel'. Post-branch, you need
 # to look it up via:
@@ -238,5 +238,5 @@ shutil.rmtree(tempdir)
 
 # Print a blurb about where the code came from
 print '\nThe script that generated this page can be found at '
-print 'https://fedorahosted.org/rel-eng/browser/scripts/find-unblocked-orphans.py'
+print 'http://git.fedorahosted.org/cgit/releng/tree/scripts/find-unblocked-orphans.py'
 print 'There you can also report bugs and RFEs.'
