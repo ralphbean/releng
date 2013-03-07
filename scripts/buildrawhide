@@ -45,14 +45,12 @@ mkdir -p /mnt/koji/mash/rawhide-$DATE/logs
 echo "Compose started at `date --utc`" > /mnt/koji/mash/rawhide-$DATE/logs/start
 echo >> /mnt/koji/mash/rawhide-$DATE/logs/start
 
-[ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{\"log\": \"start\", \"branch\": \"rawhide\"}" | fedmsg-logger \
+echo "{\"log\": \"start\", \"branch\": \"rawhide\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic rawhide.start \
     --json-input
-}
 
 pushd $TMPDIR
 git clone git://git.fedorahosted.org/comps.git && {
@@ -70,26 +68,22 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --no-clean --install koji yum createrepo c
 # Copy in the hosts file so that we get the right address for koji
 mock -r $MOCKCONFIG --uniqueext=$DATE --copyin /etc/hosts /etc/hosts >/dev/null 2>&1 # this reports to fail, but actually works
 
-[ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{\"log\": \"start\", \"branch\": \"rawhide\"}" | fedmsg-logger \
+echo "{\"log\": \"start\", \"branch\": \"rawhide\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic rawhide.mash.start \
     --json-input
-}
 
 # Drop privs here so that we run as the masher UID
 mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash $MASHOPTS -p $TREEPREFIX/development/rawhide -o /mnt/koji/mash/rawhide-$DATE --compsfile /mnt/koji/mash/rawhide-$DATE/logs/comps-rawhide.xml rawhide$EXPANDARCH > /mnt/koji/mash/rawhide-$DATE/logs/mash.log 2>&1" || exit 1
 
-[ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{\"log\": \"done\", \"branch\": \"rawhide\"}" | fedmsg-logger \
+echo "{\"log\": \"done\", \"branch\": \"rawhide\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic rawhide.mash.complete \
     --json-input
-}
 
 # hardlink the noarch deltarpms between x86_64 and i386 
 mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "hardlink -v -c /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH"
@@ -120,14 +114,12 @@ ln -s /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/ /mnt/koji/mash/rawhide
 echo "Compose finisheded at `date --utc`" > /mnt/koji/mash/rawhide-$DATE/logs/finish
 echo >> /mnt/koji/mash/rawhide-$DATE/logs/finish
 
-[ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{\"log\": \"start\", \"branch\": \"rawhide\"}" | fedmsg-logger \
+echo "{\"log\": \"start\", \"branch\": \"rawhide\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic rawhide.rsync.start \
     --json-input
-}
 
 cd /tmp
 # data
@@ -139,26 +131,22 @@ if [ "$?" = "0" ]; then
    export mail=0
 fi
 
-[ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{\"log\": \"done\", \"branch\": \"rawhide\"}" | fedmsg-logger \
+echo "{\"log\": \"done\", \"branch\": \"rawhide\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic rawhide.rsync.complete \
     --json-input
-}
 
 if [ "$mail" = "0" ]; then
     cat /mnt/koji/mash/rawhide-$DATE/logs/start /mnt/koji/mash/rawhide-$DATE/logs/depcheck /mnt/koji/mash/rawhide-$DATE/logs/repodiff /mnt/koji/mash/rawhide-$DATE/logs/finish |  mutt -e "set from=\"$FROM\"" -e 'set envelope_from=yes' -s "$SUBJECT" $MAIL
 fi
 
-[ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{\"log\": \"done\", \"branch\": \"rawhide\"}" | fedmsg-logger \
+echo "{\"log\": \"done\", \"branch\": \"rawhide\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic rawhide.complete \
     --json-input
-}
 
 exit 0
