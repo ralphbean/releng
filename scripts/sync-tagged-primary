@@ -1,6 +1,6 @@
 #!/bin/sh
 
-tags_updates="f17-updates f18-updates"
+tags_updates="f20 f19 f17-updates f18-updates"
 tags_testing="f17-updates-testing f18-updates-testing"
 
 for arch in arm ppc s390
