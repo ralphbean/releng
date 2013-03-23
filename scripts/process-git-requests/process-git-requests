@@ -406,7 +406,7 @@ def process_no_request(bug, allcomments):
                 ok = raw_input("\nClear the fedora-cvs flag (y/n)?")
                 if ok == 'y':
                     print "Clearing the flag..."
-                    bug.updateflags({'fedora-cvs':'X', 'nomail':1})
+                    bug.updateflags({'fedora-cvs':'X'})
             break
         elif ok == 'n':
             return True
@@ -493,7 +493,7 @@ def process_new_request(bug, comment, allcomments, firstfound, pkgdb, fas, branc
         if frflag[0]['status'] != '+':
             warnings.append("WARNING: fedora-review flag not set to '+'")
             warned = True
-        if frflag[0]['setter_email'] == bug.reporter:
+        if frflag[0]['setter'] == bug.reporter:
             warnings.append("WARNING: fedora-review flag set by review submitter!  Verify that review was approved by reviewer!")
             warned = True
 
@@ -537,7 +537,7 @@ def process_new_request(bug, comment, allcomments, firstfound, pkgdb, fas, branc
                 ok = raw_input("\nClear the fedora-cvs flag (y/n)?")
                 if ok == 'y':
                     print "Clearing the flag..."
-                    bug.updateflags({'fedora-cvs':'X', 'nomail':1})
+                    bug.updateflags({'fedora-cvs':'X'})
                 return (False, True)
             elif ok == 'e':
                 req_string = edit_string(req_string)
@@ -572,7 +572,7 @@ def process_new_request(bug, comment, allcomments, firstfound, pkgdb, fas, branc
                 print 'Updating bugzilla...'
                 # XXX Need to handle errors here - might be done, limburgher 2012-09-05
                 try:
-                    bug.updateflags({'fedora-cvs':'+', 'nomail':1})
+                    bug.updateflags({'fedora-cvs':'+'})
                 except Exception, e:
                     print "Bugzilla call failed:"
                     print e
@@ -671,7 +671,7 @@ def process_change_request(bug, comment, allcomments, firstfound, pkgdb, branche
                 ok = raw_input("\nClear the fedora-cvs flag (y/n)?")
                 if ok == 'y':
                     print "Clearing the flag..."
-                    bug.updateflags({'fedora-cvs':'X', 'nomail':1})
+                    bug.updateflags({'fedora-cvs':'X'})
                 return (False, True)
             elif ok == 'e':
                 req_string = edit_string(req_string)
@@ -706,7 +706,7 @@ def process_change_request(bug, comment, allcomments, firstfound, pkgdb, branche
                 print 'Updating bugzilla...'
                 # XXX Need to handle errors here - might be done, limburgher 2012-09-05
                 try:
-                    bug.updateflags({'fedora-cvs':'+', 'nomail':1})
+                    bug.updateflags({'fedora-cvs':'+'})
                 except Exception, e:
                     print "Bugzilla call failed:"
                     print e
