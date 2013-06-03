@@ -766,6 +766,8 @@ if __name__ == '__main__':
         print "No requests to process!"
         exit(0)
 
+    bugcount = len(bugs)
+
     print "Making sure " + options.pkghost + " is available..."
     try:
         sshsock = socket.create_connection((options.pkghost, 80))
@@ -803,10 +805,11 @@ if __name__ == '__main__':
     # Iterate over bugs
     newre = re.compile('^New Package .* Request', re.MULTILINE)
     changere = re.compile('^Package Change Request', re.MULTILINE)
+    bugcounter=1
     for i in bugs:
         firstfound = True
         type = ''
-        print "Parsing bug %d - https://bugzilla.redhat.com/%d" % (i.id, i.id)
+        print "Parsing bug %d - https://bugzilla.redhat.com/%d - processing %s of %s" % (i.id, i.id, str(bugcounter), str(bugcount))
         for j in reversed(comments['bugs'][str(i.id)]['comments']):
             if newre.search(j['text']):
                 type = 'new'
@@ -831,6 +834,7 @@ if __name__ == '__main__':
                 processed = create_branches(package, options.pkghost, options.pkghostlocal, processed)
             if not more:
                 break
+        bugcounter = bugcounter + 1
 
     if len(processed):
         print '\nYou must now run this on the git server\nto set up the git repository:'
