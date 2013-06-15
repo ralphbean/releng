@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# runs currently on releng03.phx2.fedoraproject.org
+
+COMPOSE=$1
+ARCH=$2
+
+BRANCHED="19"
+
+TREEPREFIX="/pub/fedora/linux"
+MASHDIR="/srv/pungi/$COMPOSE/"
+DEPOPTS="--treename F-$BRANCHED"
+MASHOPTS=""
+MOCKCONFIG=fedora-branched-compose-i386
+[ -n "$ARCH" ] && {
+MASHOPTS="-c /etc/mash/mash.$ARCH.conf"
+}
+
+[ "$ARCH" == "ppc" ] && {
+MOCKCONFIG=fedora-branched-compose-ppc64
+
+}
+ 
+
+[ -z "$COMPOSE" ] && {
+	echo "usage: buildbranched <date>"
+	exit 1
+}
+
+TMPDIR=`mktemp -d /tmp/branched.$COMPOSE.XXXX`
+mkdir -p $MASHDIR/logs
+echo "Compose started at `date --utc`" > $MASHDIR/logs/start
+echo >> $MASHDIR/logs/start
+
+pushd $TMPDIR
+git clone git://git.fedorahosted.org/comps.git && {
+	pushd comps
+	make comps-f$BRANCHED.xml
+	cp comps-f$BRANCHED.xml $MASHDIR/logs/
+	popd
+}
+popd
+
+[ -f $MASHDIR/comps-f$BRANCHED.xml ] || exit 1
+
+mock -r $MOCKCONFIG --uniqueext=$COMPOSE --init
+mock -r $MOCKCONFIG --uniqueext=$COMPOSE --no-clean --install koji yum createrepo cvs make intltool findutils mash yum-utils rsync repoview hardlink
+# disable deltas
+mock -r $MOCKCONFIG --uniqueext=$COMPOSE --chroot "sed -i -e 's|delta = True|delta = False|g' /etc/mash/branched.mash"
+mock -r $MOCKCONFIG --uniqueext=$COMPOSE --chroot "sed -i -e 's|[$BRANCHED]|[Everything]|g' /etc/mash/branched.mash"
+# disable deltas
+[ -n "$ARCH" ] && {
+mock -r $MOCKCONFIG --uniqueext=$COMPOSE --chroot "sed -i -e 's|delta = True|delta = False|g' /etc/mash/branched.$ARCH.mash"
+mock -r $MOCKCONFIG --uniqueext=$COMPOSE --chroot "sed -i -e 's|[$BRANCHED$EXPANDARCH]|[Everything]|g' /etc/mash/branched.$ARCH.mash"
+}
+
+# Copy in the hosts file so that we get the right address for koji
+mock -r $MOCKCONFIG --uniqueext=$COMPOSE --copyin /etc/hosts /etc/hosts >/dev/null 2>&1 # this reports to fail, but actually works
+
+# Drop privs here so that we run as the masher UID
+mock -r $MOCKCONFIG --uniqueext=$COMPOSE --unpriv --chroot "mash $MASHOPTS -o $MASHDIR --compsfile $MASHDIR/logs/comps-f$BRANCHED.xml Everything > $MASHDIR/logs/mash.log 2>&1" || exit 1
+
+mock -r $MOCKCONFIG --uniqueext=$COMPOSE --clean
+
+echo "Compose finished at `date --utc`" > $MASHDIR/logs/finish
+echo >> $MASHDIR/logs/finish
+
+exit 0
