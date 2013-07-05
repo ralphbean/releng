@@ -26,7 +26,7 @@ if arches == None:
    print "You must pass arches to check for in."
    sys.exit()
 else:
-   arches = arches.split()
+   arches = arches.split(',')
 
 srpm_path = options.path
 srpms = glob.glob('%s/*.rpm' % srpm_path)
