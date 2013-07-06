@@ -3,7 +3,7 @@ VERSION = "1.0"
 
 # Unfortunately pkgdb can't tell us when we stop accepting branches for the
 # oldest supported release, so this needs updating manually.
-OBSOLETE_BRANCH='F-17'
+OBSOLETE_BRANCH='f17'
 
 # A bug for testing new types of badly formatted requests exists:
 # https://bugzilla.redhat.com/show_bug.cgi?id=622067
