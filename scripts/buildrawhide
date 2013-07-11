@@ -5,6 +5,9 @@
 DATE=$1
 ARCH=$2
 
+BRANCHED=rawhide
+DIST=rawhide
+
 TREEPREFIX="/pub/fedora/linux"
 MASHDIR="/mnt/koji/mash/rawhide-$DATE"
 EXPANDARCH=""
@@ -93,23 +96,42 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -s -q
 
 mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic $DEPOPTS /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH >/mnt/koji/mash/rawhide-$DATE/logs/depcheck" &
 
+# Emit a message using bodhi's cert (since we should be running as "masher").
+echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
+    --cert-prefix bodhi \
+    --modname compose \
+    --topic branched.pungify.start \
+    --json-input
+
 #only run critpath on primary arch
 [ -z "$ARCH" ] && {
-./scripts/critpath.py --url file:///mnt/koji/mash/rawhide-$DATE/ -o /mnt/koji/mash/rawhide-$DATE/logs/critpath.txt rawhide &> /mnt/koji/mash/rawhide-$DATE/logs/critpath.log
+./scripts/critpath.py --url file:///mnt/koji/mash/$DIST-$DATE/ -o /mnt/koji/mash/$DIST-$DATE/logs/critpath.txt branched &> /mnt/koji/mash/$DIST-$DATE/logs/critpath.log
+
+for basearch in i386 x86_64 ; do
+    HOST=$(koji list-hosts --quiet --enabled --ready --arch=$basearch  --channel createrepo | sed 's|/| |g' | sort -g -k4 -k5r | awk -F '.' '{ print $1 ; exit }')
+    ./scripts/pungify $DATE $BRANCHED $basearch $HOST $DIST > /mnt/koji/mash/$DIST-$DATE/logs/pungify-$basearch.log 2>&1 &
+    done
 }
-#for arch in i386 x86_64 ppc ; do
-#    HOST=$(koji list-hosts --quiet --enabled --ready --arch=$arch | sed 's|/| |g' | sort -gn -k4 -k5r | awk -F '.' '{ print $1 ; exit }')
-#    ./scripts/pungify $DATE $arch $HOST > /mnt/koji/mash/rawhide-$DATE/logs/pungify-$arch.log 2>&1 &
-#    done
-#
+wait
+
+# Emit a message using bodhi's cert (since we should be running as "masher").
+echo "{\"log\": \"done\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
+    --cert-prefix bodhi \
+    --modname compose \
+    --topic branched.pungify.complete \
+    --json-input
+
+echo "Running build_composeinfo"
+./scripts/build_composeinfo --name Fedora-${BRANCHED}-${DATE} /mnt/koji/mash/$DIST-$DATE/$BRANCHED/
+
 wait
 mock -r $MOCKCONFIG --uniqueext=$DATE --clean
 
 [ -n "$NOSYNC" ] && exit $rc
 
 # Create a rawhide link in /mnt/koji/mash, deltas et al depend on this
-rm /mnt/koji/mash/rawhide
-ln -s /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/ /mnt/koji/mash/rawhide
+rm /mnt/koji/mash/$DIST
+ln -s /mnt/koji/mash/$DIST-$DATE/$BRANCHED$EXPANDARCH/ /mnt/koji/mash/$DIST
 
 echo "Compose finisheded at `date --utc`" > /mnt/koji/mash/rawhide-$DATE/logs/finish
 echo >> /mnt/koji/mash/rawhide-$DATE/logs/finish

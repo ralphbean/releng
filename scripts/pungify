@@ -16,6 +16,8 @@ ARCH=$3
 
 HOST=$4
 
+DIST=$5
+
 usage() {
 	echo "Usage: pungify <tree> <branch> <arch> <host>"
 	exit 1
@@ -25,9 +27,9 @@ usage() {
 
 ssh mock@$HOST /bin/bash -- << EOF
 	set -x
-	mock -r fedora-devel-pungi-$ARCH --uniqueext=$TREE --init || exit 1
-	mock -r fedora-devel-pungi-$ARCH --uniqueext=$TREE --install pungi nfs-utils setarch || exit 1
-	mock -r fedora-devel-pungi-$ARCH --uniqueext=$TREE --arch $ARCH shell -- << EEE
+	mock -r fedora-$DIST-pungi-$ARCH --uniqueext=$TREE --init || exit 1
+	mock -r fedora-$DIST-pungi-$ARCH --uniqueext=$TREE --install pungi nfs-utils setarch || exit 1
+	mock -r fedora-$DIST-pungi-$ARCH --uniqueext=$TREE --arch $ARCH shell -- << EEE
 set -x
 mkdir -p /tmp/treebuild.$TREE/{output,cache,$BRANCH}
 cd /tmp/treebuild.$TREE
@@ -44,9 +46,9 @@ rm -rf output/$BRANCH/$ARCH/os/{Packages,repodata}
 EEE
 EOF
 # so, so wrong
-rsync -vaH mock@$HOST:/var/lib/mock/fedora-development-pungi-$ARCH-$TREE/root/tmp/treebuild.$TREE/output/$BRANCH/$ARCH/os/ /mnt/koji/mash/branched-$TREE/$BRANCH/$ARCH/os/
-rsync -vaH mock@$HOST:/var/lib/mock/fedora-development-pungi-$ARCH-$TREE/root/tmp/treebuild.$TREE/output/logs/* /mnt/koji/mash/branched-$TREE/logs/
+rsync -vaH mock@$HOST:/var/lib/mock/fedora-$DIST-pungi-$ARCH-$TREE/root/tmp/treebuild.$TREE/output/$BRANCH/$ARCH/os/ /mnt/koji/mash/$DIST-$TREE/$BRANCH/$ARCH/os/
+rsync -vaH mock@$HOST:/var/lib/mock/fedora-$DIST-pungi-$ARCH-$TREE/root/tmp/treebuild.$TREE/output/logs/* /mnt/koji/mash/$DIST-$TREE/logs/
 ssh mock@$HOST /bin/bash -- << EOF
 	set -x
-	mock -r fedora-devel-pungi-$ARCH --uniqueext=$TREE clean
+	mock -r fedora-$DIST-pungi-$ARCH --uniqueext=$TREE clean
 EOF
