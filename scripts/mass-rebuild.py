@@ -26,7 +26,7 @@ enviro = os.environ
 target = 'f20-rebuild'
 enviro['CVS_RSH'] = 'ssh' # use ssh for cvs
 
-pkg_skip_list = ['shim', 'shim-unsigned', 'kernel']
+pkg_skip_list = ['shim', 'shim-signed', 'kernel']
 
 # Define functions
 
