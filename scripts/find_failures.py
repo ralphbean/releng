@@ -15,9 +15,9 @@ import datetime
 
 # Set some variables
 # Some of these could arguably be passed in as args.
-buildtag = 'f18-rebuild' # tag to check
-desttag = 'f18' # Tag where fixed builds go
-epoch = '2012-07-17 14:18:03.000000' # Date to check for failures from
+buildtag = 'f20-rebuild' # tag to check
+desttag = 'f20' # Tag where fixed builds go
+epoch = '2013-07-25 00:00:00.000000' # Date to check for failures from
 failures = {} # dict of owners to lists of packages that failed.
 failed = [] # raw list of failed packages
 

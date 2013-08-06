@@ -17,11 +17,11 @@ import sys
 
 # Set some variables
 # Some of these could arguably be passed in as args.
-buildtag = 'f18-rebuild' # tag(s) to check
-target = 'f18'
-updates = 'f18-candidate'
+buildtag = 'f20-rebuild' # tag(s) to check
+target = 'f20'
+updates = 'f20-candidate'
 rawhide = 'rawhide' # Change to dist-f13 after we branch
-epoch = '2012-07-17 14:18:03.000000' # rebuild anything not built after this date
+epoch = '2013-07-25 00:00:00.000000' # rebuild anything not built after this date
 tobuild = {} # dict of owners to lists of packages needing to be built
 unbuilt = [] # raw list of unbuilt packages
 newbuilds = {}
@@ -31,7 +31,6 @@ kojihubs = [
 'http://koji.fedoraproject.org/kojihub',
 'http://s390.koji.fedoraproject.org/kojihub',
 'http://ppc.koji.fedoraproject.org/kojihub',
-'http://arm.koji.fedoraproject.org/kojihub',
 ]
 
 #'http://sparc.koji.fedoraproject.org/kojihub',

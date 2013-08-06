@@ -14,8 +14,8 @@ import operator
 
 # Set some variables
 # Some of these could arguably be passed in as args.
-target = 'f19' # tag to tag into
-holdingtag = 'f19-rebuild' # tag holding the rebuilds
+target = 'f20' # tag to tag into
+holdingtag = 'f20-rebuild' # tag holding the rebuilds
 newbuilds = {} # dict of packages that have a newer build attempt
 tasks = {} # dict of new build task info
 
@@ -84,6 +84,7 @@ for [request] in requests:
 # Loop through the results and tag if necessary
 kojisession.multicall = True
 taglist = []
+pkgcount = 0
 for build in builds:
     if not build['package_name'] in pkgs:
         print 'Skipping %s, blocked in %s' % (build['package_name'], target)
@@ -101,7 +102,14 @@ for build in builds:
         print 'Tagging %s into %s' % (build['nvr'], target)
         taglist.append(build['nvr'])
         kojisession.tagBuildBypass(target, build)
+        pkgcount += 1
+    if pkgcount == 100:
+        print 'Tagging %s builds.' % pkgcount
+        results = kojisession.multiCall()
+        pkgcount = 0
+        kojisession.multicall = True
 
-print 'Tagging %s builds.' % len(taglist)
-#results = kojisession.multiCall()
+print 'Tagging %s builds.' % pkgcount
+results = kojisession.multiCall()
+print 'Tagged %s builds.' % len(taglist)
 
