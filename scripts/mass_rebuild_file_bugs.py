@@ -17,15 +17,15 @@ from find_failures import get_failed_builds
 
 # Set some variables
 # Some of these could arguably be passed in as args.
-buildtag = 'f19-rebuild' # tag to check
-desttag = 'f19' # Tag where fixed builds go
-epoch = '2013-02-10 14:18:03.000000' # Date to check for failures from
+buildtag = 'f20-rebuild' # tag to check
+desttag = 'f20' # Tag where fixed builds go
+epoch = '2013-07-25 00:00:00.000000' # Date to check for failures from
 failures = {} # dict of owners to lists of packages that failed.
 failed = [] # raw list of failed packages
 
 product = "Fedora" # for BZ product field
 version = "rawhide" # for BZ version field
-tracking_bug = 913825 # Tracking bug for mass build failures
+tracking_bug = 991858 # Tracking bug for mass build failures
 
 def report_failure(product, component, version, summary, comment):
     """This function files a new bugzilla bug for component with given arguments
@@ -97,14 +97,8 @@ if __name__ == '__main__':
 
 http://koji.fedoraproject.org/koji/taskinfo?taskID=%s
 
-Build logs:
-root.log: %s
-build.log: %s
-state.log: %s
-NOTE: build logs are cleaned up after 1 week
-
-For details on mass rebuild see https://fedoraproject.org/wiki/Fedora_19_Mass_Rebuild
-""" % (component, task_id, root_log, build_log, state_log)
+For details on mass rebuild see https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild
+""" % (component, task_id)
 
         if component not in filed_bugs_components:
             print "Filing bug for %s" % component
