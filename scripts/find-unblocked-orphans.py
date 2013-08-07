@@ -237,6 +237,8 @@ for orph in sorted(unblocked.keys()):
 shutil.rmtree(tempdir)
 
 # Print a blurb about where the code came from
-print '\nThe script that generated this page can be found at '
-print 'http://git.fedorahosted.org/cgit/releng/tree/scripts/find-unblocked-orphans.py'
-print 'There you can also report bugs and RFEs.'
+print '\nThe script creating this output is run and developed by Fedora'
+print 'Release Engineering. Please report issues at its trac instance:'
+print 'https://fedorahosted.org/rel-eng/'
+print 'The sources of this script can be found at:'
+print 'https://git.fedorahosted.org/cgit/releng/tree/scripts/find-unblocked-orphans.py'
