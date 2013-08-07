@@ -56,7 +56,7 @@ def _comaintainers(package):
     users = pkginfo.packageListings[0]['people']
     for user in users:
         acl = user['aclOrder']
-        if acl['commit'] and acl['watchbugzilla'] and acl['approveacls'] and acl['watchcommits']:
+        if acl['commit'] or acl['approveacls']:
             comaint.append(user['username'])
     return comaint
 
