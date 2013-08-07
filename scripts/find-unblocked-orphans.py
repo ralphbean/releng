@@ -36,7 +36,7 @@ import shutil
 # they should be branched.
 repo = 'http://kojipkgs.fedoraproject.org/mash/rawhide/i386/os'
 srepourl = 'http://kojipkgs.fedoraproject.org/mash/rawhide/source/SRPMS'
-tag = 'f19' # tag to check in koji
+tag = 'f20' # tag to check in koji
 
 # pre-branch, this should be 8 and 'devel'. Post-branch, you need
 # to look it up via:
