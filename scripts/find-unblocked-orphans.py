@@ -68,12 +68,11 @@ kojisession = koji.ClientSession('https://koji.fedoraproject.org/kojihub')
 
 sys.stderr.write('Contacting pkgdb for list of orphans...\n')
 # Get a list of packages owned by orphan
-pkgs = pkgdb.send_request('/acls/orphans',
-                          req_params={'pkgs_tgp_limit': 0})
+pkgs = pkgdb.orphan_packages()
 
 sys.stderr.write('Getting comaintainers...\n')
 # Reduce to packages orphaned on devel
-for p in pkgs.pkgs:
+for p in pkgs:
     for listing in p['listings']:
         if listing['collectionid'] == develbranch:
             # statuscode cheatsheet:
