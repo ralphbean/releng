@@ -36,19 +36,19 @@ import shutil
 # they should be branched.
 repo = 'http://kojipkgs.fedoraproject.org/mash/rawhide/i386/os'
 srepourl = 'http://kojipkgs.fedoraproject.org/mash/rawhide/source/SRPMS'
-tag = 'f20' # tag to check in koji
+tag = 'f20'  # tag to check in koji
 
 # pre-branch, this should be 8 and 'devel'. Post-branch, you need
 # to look it up via:
 #  pkgdb = fedora.client.PackageDB()
 #  list = pkgdb.get_collection_list()
 # Will generally be 20-something and 'F-xx'
-develbranch = 8 # pkgdb ID for the devel branch
-develbranchname = 'devel' # pkgdb name for the devel branch
+develbranch = 8  # pkgdb ID for the devel branch
+develbranchname = 'devel'  # pkgdb name for the devel branch
 
-orphanuid = 'orphan' # pkgdb uid for orphan
-orphans = {} # list of orphans on the devel branch from pkgdb
-unblocked = {} # holding dict for unblocked orphans plus their deps
+orphanuid = 'orphan'  # pkgdb uid for orphan
+orphans = {}  # list of orphans on the devel branch from pkgdb
+unblocked = {}  # holding dict for unblocked orphans plus their deps
 
 def _comaintainers(package):
     comaint = []
@@ -83,7 +83,7 @@ for p in pkgs:
 
 failed = {}
 for pkg in sys.argv[1:]:
-    failed[pkg] = { 'name': pkg, 'comaintainers' : _comaintainers(pkg) }
+    failed[pkg] = {'name': pkg, 'comaintainers': _comaintainers(pkg)}
 
 sys.stderr.write('Getting builds from koji...\n')
 # Get koji listings for each orphaned package
@@ -163,8 +163,8 @@ def getSRPMPo(po):
         print >> sys.stderr, "Error: Cannot find a source rpm for %s" % srpm
         sys.exit(1)
 
-src_by_bin = {} # Dict of source pkg objects by binary package objects
-bin_by_src = {} # Dict of binary pkgobjects by srpm name
+src_by_bin = {}  # Dict of source pkg objects by binary package objects
+bin_by_src = {}  # Dict of binary pkgobjects by srpm name
 (dummy1, everything, dummy2) = yum.packages.parsePackages(
                                yb.pkgSack.returnPackages(), ['*'])
 # Populate the dicts
@@ -173,7 +173,7 @@ for po in everything:
         continue
     srpmpo = getSRPMPo(po)
     src_by_bin[po] = srpmpo
-    if bin_by_src.has_key(srpmpo.name):
+    if srpmpo.name in bin_by_src:
         bin_by_src[srpmpo.name].append(po)
     else:
         bin_by_src[srpmpo.name] = [po]
@@ -191,7 +191,7 @@ for orph in unblocked.keys():
 # Some of this code was stolen from repoquery
 for orph in unblocked.keys():
     provs = []
-    try: # We may have some orphans that aren't in the repo
+    try:  # We may have some orphans that aren't in the repo
         for pkg in bin_by_src[orph]:
             # add all the provides from the package as strings
             provs.extend([yum.misc.prco_tuple_to_string(prov)
@@ -221,7 +221,7 @@ for orph in unblocked.keys():
                 unblocked[orph].setdefault(pkg.name, []).append(prov)
     except KeyError:
         sys.stderr.write("Orphaned package %s doesn't appear to exist\n" % (orph,))
-        pass # If we don't have a package in the repo, there is nothign to do
+        # If we don't have a package in the repo, there is nothing to do
 
 print "\nList of deps left behind by packages which are orphaned or fail to build:"
 for orph in sorted(unblocked.keys()):
