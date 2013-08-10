@@ -34,6 +34,12 @@ import fedora.client
 import koji
 import yum
 
+try:
+    import texttable
+    with_texttable = True
+except ImportError:
+    with_texttable = False
+
 # Set some variables
 # Some of these could arguably be passed in as args.
 # If this is pre-branch, these repos should be rawhide; otherwise,
@@ -54,6 +60,25 @@ RAWHIDE_BRANCHNAME = 'devel'  # pkgdb name for the devel branch
 # pkgdb uid for orphan
 ORPHAN_UID = 'orphan'
 
+HEADER = """The following packages are orphaned or do not build for two
+releases and will be retired when Fedora ({0}) is branched, unless someone
+adopts them. If you know for sure that the package should be retired, please do
+so now with a proper reason:
+https://fedoraproject.org/wiki/How_to_remove_a_package_at_end_of_life
+
+According to https://fedoraproject.org/wiki/Schedule branching will
+occur not earlier than 2013-08-20. The packages will be retired shortly before.
+
+Note: If you received this mail directly you (co)maintainer one of the affected
+packages or a package that depends on one.
+""".format(TAG.upper())
+
+FOOTER = """The script creating this output is run and developed by Fedora
+Release Engineering. Please report issues at its trac instance:
+https://fedorahosted.org/rel-eng/
+The sources of this script can be found at:
+https://git.fedorahosted.org/cgit/releng/tree/scripts/find-unblocked-orphans.py
+"""
 pkgdb = fedora.client.PackageDB()
 
 
@@ -186,8 +211,6 @@ def orphan_packages(collection_id=RAWHIDE_COLLECTION,
         return orphans
     else:
         pkgs = pkgdb.orphan_packages()
-
-        sys.stderr.write('Getting comaintainers...\n')
         # Reduce to packages orphaned on devel
         for p in pkgs:
             for listing in p['listings']:
@@ -349,7 +372,7 @@ def main():
     unblocked = unblocked_packages(sorted(orphans + failed))
     sys.stderr.write('done\n')
 
-    sys.stderr.write('Calculating dependencies...\n')
+    sys.stderr.write('Calculating dependencies...')
     # Create yum object and depsolve out if requested.
     # TODO: add app args to either depsolve or not
 
@@ -389,34 +412,64 @@ def main():
                 to_check.extend(new_names)
             if not to_check:
                 break
+    sys.stderr.write('done\n')
 
     sys.stderr.write("Waiting for (co)maintainer information...")
     people_queue.join()
     sys.stderr.write("done\n")
     write_cache(people_dict, "orphans-people.pickle")
 
-    for package_name in unblocked:
-        #reason = package_name in orphans and "orphan" or "fails to build"
-        p = ', '.join(people_dict[package_name])
-        print "{0} {1}".format(package_name, p)
+    affected_people = {}
 
-    print "\nDependent packages:"
-    for name, subdict in dep_map.items():
+    print HEADER
+    if with_texttable:
+        table = texttable.Texttable(max_width=80)
+        table.header(["Package", "(co)maintainers"])
+        table.set_cols_align(["l", "l"])
+        table.set_deco(table.HEADER)
+
+    for package_name in unblocked:
+        people = people_dict[package_name]
+        for p in people:
+            affected_people.setdefault(p, set()).add(package_name)
+        p = ', '.join(people)
+
+        if with_texttable:
+            table.add_row([package_name, p])
+        else:
+            print "{0} {1}".format(package_name, p)
+
+    if with_texttable:
+        print table.draw()
+
+    print "\nThe following packages require above mentioned orphaned/FTBS "\
+          "packages:"
+    for package_name, subdict in dep_map.items():
         if subdict:
-            print "\nRemoving: %s" % name
+            print "Depending on: %s" % package_name
             for fedora_package, dep_packages in subdict.items():
-                p = ", ".join(people_dict[fedora_package])
-                print "\t {0} {1}".format(fedora_package, p)
+                people = people_dict[fedora_package]
+                for p in people:
+                    affected_people.setdefault(p, set()).add(package_name)
+                p = ", ".join(people)
+                print "\t{0} (maintained by: {1})".format(fedora_package, p)
                 for dep in dep_packages:
                     provides = ", ".join(sorted(dep_packages[dep]))
                     print "\t\t%s requires %s" % (dep.name, provides)
+                print
+            print
 
-    # Pointer to this script
-    print '\nThe script creating this output is run and developed by Fedora'
-    print 'Release Engineering. Please report issues at its trac instance:'
-    print 'https://fedorahosted.org/rel-eng/'
-    print 'The sources of this script can be found at:'
-    print 'https://git.fedorahosted.org/cgit/releng/tree/scripts/find-unblocked-orphans.py'
+    print "\nAffected (co)maintainers"
+    for person in sorted(affected_people.iterkeys()):
+        packages = affected_people[person]
+        if person == ORPHAN_UID:
+            continue
+        print "{0}: {1}".format(person, ", ".join(packages))
+    print "\n"
+    print FOOTER
+    addresses = ["{0}@fedoraproject.org".format(p)
+                 for p in affected_people.keys() if p != ORPHAN_UID]
+    sys.stderr.write("Bcc: {0}\n".format(", ".join(addresses)))
 
 
 if __name__ == "__main__":
