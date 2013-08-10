@@ -202,8 +202,6 @@ def SRPM(package):
         sys.exit(1)
 
 
-
-
 def orphan_packages(collection_id=RAWHIDE_COLLECTION,
                     cache_filename='orphans.pickle'):
     orphans = get_cache(cache_filename, default=[])
@@ -350,7 +348,7 @@ def dependent_packages(name, ignore):
                     dep_packages.setdefault(dependent_pkg, set()).add(prov)
     except KeyError:
         # If we don't have a package in the repo, there is nothing to do
-        sys.stderr.write("package %s not found in repo\n".format(name))
+        sys.stderr.write("Package {0} not found in repo\n".format(name))
     return OrderedDict(sorted(dep_packages.items()))
 
 
@@ -389,14 +387,17 @@ def main():
     for name in unblocked:
         ignore = rpm_pkg_names
         dep_map[name] = OrderedDict()
+        to_check = [name]
+        allow_more = True
         while True:
-            to_check = [name]
+            sys.stderr.write("to_check: {0}\n".format(repr(to_check)))
             dep_packages = dependent_packages(to_check.pop(), ignore)
             if dep_packages:
                 new_names = []
                 new_srpm_names = set()
                 for pkg, dependencies in dep_packages.items():
-                    new_names.append(pkg.name)
+                    if pkg.name not in to_check and pkg.name not in new_names:
+                        new_names.append(pkg.name)
                     if pkg.arch != "src":
                         srpm_name = package_mapper.by_bin[pkg].name
                     else:
@@ -410,9 +411,17 @@ def main():
                     people_queue.put(srpm_name)
 
                 ignore.extend(new_names)
-                to_check.extend(new_names)
+                if allow_more:
+                    to_check.extend(new_names)
+                    if len(set(dep_map[name].keys() + to_check)) > 10:
+                        allow_more = False
+                        to_check = to_check[0:10]
             if not to_check:
                 break
+        if not allow_more:
+            sys.stderr.write("More than 10 broken deps for package"
+                                "'{0}', dependency check not"
+                                " completed\n".format(name))
     sys.stderr.write('done\n')
 
     sys.stderr.write("Waiting for (co)maintainer information...")
