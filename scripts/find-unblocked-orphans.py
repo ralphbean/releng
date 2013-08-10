@@ -61,7 +61,7 @@ RAWHIDE_BRANCHNAME = 'devel'  # pkgdb name for the devel branch
 # pkgdb uid for orphan
 ORPHAN_UID = 'orphan'
 
-HEADER = """The following packages are orphaned or do not build for two
+HEADER = """The following packages are orphaned or did not build for two
 releases and will be retired when Fedora ({0}) is branched, unless someone
 adopts them. If you know for sure that the package should be retired, please do
 so now with a proper reason:
@@ -70,7 +70,7 @@ https://fedoraproject.org/wiki/How_to_remove_a_package_at_end_of_life
 According to https://fedoraproject.org/wiki/Schedule branching will
 occur not earlier than 2013-08-20. The packages will be retired shortly before.
 
-Note: If you received this mail directly you (co)maintainer one of the affected
+Note: If you received this mail directly you (co)maintain one of the affected
 packages or a package that depends on one.
 """.format(TAG.upper())
 
