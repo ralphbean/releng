@@ -133,7 +133,7 @@ def setup_yum(url=None, release=None, arch=None):
         arch = basearch
     elif arch != basearch:
         # try to force yum to use the supplied arch rather than the host arch
-        fakearch = {'i386':'i686',  'x86_64':'x86_64',  'ppc':'ppc64'}
+        fakearch = {'i386':'i686',  'x86_64':'x86_64',  'ppc':'ppc64', 'armhfp':'armv7hl'}
         my.preconf.arch = fakearch[arch]
     my.conf.cachedir = cachedir
     my.conf.installroot = cachedir
