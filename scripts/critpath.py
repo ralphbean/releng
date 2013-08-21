@@ -30,8 +30,8 @@ from rpmUtils.arch import getBaseArch
 # Old definition
 #critpath_groups = ['@core','@critical-path-base','@critical-path-gnome']
 critpath_groups = ['@core', '@critical-path-apps', '@critical-path-base', '@critical-path-gnome', '@critical-path-kde', '@critical-path-lxde', '@critical-path-xfce' ]
-base_arches = ('i386', 'x86_64')
-known_arches = base_arches + ('i586','i686')
+base_arches = ('armhfp', 'i386', 'x86_64')
+known_arches = base_arches + ('armv7hl','i586','i686')
 fedora_baseurl = 'http://download.fedoraproject.org/pub/fedora/linux/'
 releasepath = {
     'devel': 'development/rawhide/$basearch/os/',
@@ -42,12 +42,12 @@ updatepath = {
     'rawhide': ''
 }
 
-for r in ['12', '13', '14', '15', '16', '17', '18']: # 13, 14, ...
+for r in ['12', '13', '14', '15', '16', '17', '18', '19']: # 13, 14, ...
     releasepath[r] = 'releases/%s/Everything/$basearch/os/' % r
     updatepath[r] = 'updates/%s/$basearch/' % r
 
 # Branched Fedora goes here
-branched = '19'
+branched = '20'
 releasepath['branched'] = 'development/%s/$basearch/os' % branched
 updatepath['branched'] = ''
 
