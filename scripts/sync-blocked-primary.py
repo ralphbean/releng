@@ -29,7 +29,7 @@ import shutil
 
 # Set some variables
 # Some of these could arguably be passed in as args.
-tags = ['f20', 'f19', 'f18', 'f17'] # tag to check in koji
+tags = ['f21', 'f20', 'f19', 'f18'] # tag to check in koji
 
 arches = ['arm', 'ppc', 's390']
 

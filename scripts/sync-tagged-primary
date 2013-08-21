@@ -2,9 +2,12 @@
 
 tags_updates="f20 f19-updates f18-updates"
 tags_testing="f18-updates-testing f19-updates-testing"
+tags_candidate="f18-updates-candidate f19-updates-candidate"
 
 for arch in arm ppc s390
 do
     ./sync-tagged-primary.py $arch $tags_updates
     ./sync-tagged-primary.py $arch $tags_testing
+    ./sync-tagged-primary.py $arch $tags_candidate
+    ./sync-tagged-primary.py $arch trashcan
 done

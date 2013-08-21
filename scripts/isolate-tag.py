@@ -25,7 +25,7 @@
 import koji
 import os
 
-tag = 'f20'
+tag = 'f21'
 
 # Create a koji session
 kojisession = koji.ClientSession('https://koji.fedoraproject.org/kojihub')
