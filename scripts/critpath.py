@@ -32,7 +32,7 @@ from rpmUtils.arch import getBaseArch
 critpath_groups = ['@core', '@critical-path-apps', '@critical-path-base', '@critical-path-gnome', '@critical-path-kde', '@critical-path-lxde', '@critical-path-xfce' ]
 base_arches = ('armhfp', 'i386', 'x86_64')
 known_arches = base_arches + ('armv7hl','i586','i686')
-fedora_baseurl = 'http://download.fedoraproject.org/pub/fedora/linux/'
+fedora_baseurl = 'http://dl.fedoraproject.org/pub/fedora/linux/'
 releasepath = {
     'devel': 'development/rawhide/$basearch/os/',
     'rawhide': 'development/rawhide/$basearch/os/'
