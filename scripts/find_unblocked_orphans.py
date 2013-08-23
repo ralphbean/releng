@@ -396,9 +396,93 @@ def recursive_deps(packages, max_deps=10):
                 break
         if not allow_more:
             sys.stderr.write("More than {0} broken deps for package"
-                             "'1}', dependency check not"
+                             "'{1}', dependency check not"
                              " completed\n".format(max_deps, name))
     return dep_map
+
+
+def maintainer_table(packages):
+    affected_people = {}
+
+    if with_texttable:
+        table = texttable.Texttable(max_width=80)
+        table.header(["Package", "(co)maintainers"])
+        table.set_cols_align(["l", "l"])
+        table.set_deco(table.HEADER)
+    else:
+        table = ""
+
+    for package_name in packages:
+        people = people_dict[package_name]
+        for p in people:
+            affected_people.setdefault(p, set()).add(package_name)
+        p = ', '.join(people)
+
+        if with_texttable:
+            table.add_row([package_name, p])
+        else:
+            table += "{0} {1}\n".format(package_name, p)
+
+    if with_texttable:
+        table = table.draw()
+    return table, affected_people
+
+
+def dependency_info(dep_map, affected_people):
+    info = ""
+    for package_name, subdict in dep_map.items():
+        if subdict:
+            info += "Depending on: %s\n" % package_name
+            for fedora_package, dep_packages in subdict.items():
+                people = people_dict[fedora_package]
+                for p in people:
+                    affected_people.setdefault(p, set()).add(package_name)
+                p = ", ".join(people)
+                info += "\t{0} (maintained by: {1})\n".format(fedora_package,
+                                                              p)
+                for dep in dep_packages:
+                    provides = ", ".join(sorted(dep_packages[dep]))
+                    info += "\t\t%s requires %s\n" % (dep.name, provides)
+                info += "\n"
+            info += "\n"
+    return info
+
+
+def maintainer_info(affected_people):
+    info = ""
+    for person in sorted(affected_people.iterkeys()):
+        packages = affected_people[person]
+        if person == ORPHAN_UID:
+            continue
+        info += "{0}: {1}\n".format(person, ", ".join(packages))
+    return info
+
+
+def package_info(packages):
+    info = ""
+    sys.stderr.write('Calculating dependencies...')
+    # Create yum object and depsolve out if requested.
+    # TODO: add app args to either depsolve or not
+    dep_map = recursive_deps(packages)
+    sys.stderr.write('done\n')
+
+    sys.stderr.write("Waiting for (co)maintainer information...")
+    people_queue.join()
+    sys.stderr.write("done\n")
+    write_cache(people_dict, "orphans-people.pickle")
+
+    table, affected_people = maintainer_table(packages)
+    info += table
+    info += "\nThe following packages require above mentioned packages:\n"
+    info += dependency_info(dep_map, affected_people)
+
+    info += "Affected (co)maintainers"
+    info += maintainer_info(affected_people)
+
+    addresses = ["{0}@fedoraproject.org".format(p)
+                 for p in affected_people.keys() if p != ORPHAN_UID]
+    addresses = "Bcc: {0}\n".format(", ".join(addresses))
+    return info, addresses
 
 
 def main():
@@ -420,69 +504,12 @@ def main():
     unblocked = unblocked_packages(sorted((list(orphans) + failed)))
     sys.stderr.write('done\n')
 
-    sys.stderr.write('Calculating dependencies...')
-    # Create yum object and depsolve out if requested.
-    # TODO: add app args to either depsolve or not
-    dep_map = recursive_deps(unblocked)
-    sys.stderr.write('done\n')
-
-    sys.stderr.write("Waiting for (co)maintainer information...")
-    people_queue.join()
-    sys.stderr.write("done\n")
-    write_cache(people_dict, "orphans-people.pickle")
-
-    affected_people = {}
-
     print HEADER
-    if with_texttable:
-        table = texttable.Texttable(max_width=80)
-        table.header(["Package", "(co)maintainers"])
-        table.set_cols_align(["l", "l"])
-        table.set_deco(table.HEADER)
-
-    for package_name in unblocked:
-        people = people_dict[package_name]
-        for p in people:
-            affected_people.setdefault(p, set()).add(package_name)
-        p = ', '.join(people)
-
-        if with_texttable:
-            table.add_row([package_name, p])
-        else:
-            print "{0} {1}".format(package_name, p)
-
-    if with_texttable:
-        print table.draw()
-
-    print "\nThe following packages require above mentioned orphaned/FTBS "\
-          "packages:"
-    for package_name, subdict in dep_map.items():
-        if subdict:
-            print "Depending on: %s" % package_name
-            for fedora_package, dep_packages in subdict.items():
-                people = people_dict[fedora_package]
-                for p in people:
-                    affected_people.setdefault(p, set()).add(package_name)
-                p = ", ".join(people)
-                print "\t{0} (maintained by: {1})".format(fedora_package, p)
-                for dep in dep_packages:
-                    provides = ", ".join(sorted(dep_packages[dep]))
-                    print "\t\t%s requires %s" % (dep.name, provides)
-                print
-            print
-
-    print "\nAffected (co)maintainers"
-    for person in sorted(affected_people.iterkeys()):
-        packages = affected_people[person]
-        if person == ORPHAN_UID:
-            continue
-        print "{0}: {1}".format(person, ", ".join(packages))
-    print "\n"
+    info, addresses = package_info(unblocked)
+    print info
     print FOOTER
-    addresses = ["{0}@fedoraproject.org".format(p)
-                 for p in affected_people.keys() if p != ORPHAN_UID]
-    sys.stderr.write("Bcc: {0}\n".format(", ".join(addresses)))
 
+    sys.stderr.write(addresses)
 
 if __name__ == "__main__":
     main()
