@@ -395,9 +395,9 @@ def recursive_deps(packages, max_deps=10):
             if not to_check:
                 break
         if not allow_more:
-            sys.stderr.write("More than 10 broken deps for package"
-                             "'{0}', dependency check not"
-                             " completed\n".format(name))
+            sys.stderr.write("More than {0} broken deps for package"
+                             "'1}', dependency check not"
+                             " completed\n".format(max_deps, name))
     return dep_map
 
 
