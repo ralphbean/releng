@@ -348,39 +348,17 @@ def dependent_packages(name, ignore):
     return OrderedDict(sorted(dep_packages.items()))
 
 
-def main():
-    failed = sys.argv[1:]
-    # list of orphans on the devel branch from pkgdb
-    sys.stderr.write('Contacting pkgdb for list of orphans...')
-    orphans = orphan_packages()
-    sys.stderr.write('done\n')
-
-    # Start threads to get information about (co)maintainers for packages
-    for i in range(0, 2):
-        people_thread = Thread(target=people_worker)
-        people_thread.daemon = True
-        people_thread.start()
-    # keep pylint silent
-    del i
-
-    sys.stderr.write('Getting builds from koji...')
-    unblocked = unblocked_packages(sorted((list(orphans) + failed)))
-    sys.stderr.write('done\n')
-
-    sys.stderr.write('Calculating dependencies...')
-    # Create yum object and depsolve out if requested.
-    # TODO: add app args to either depsolve or not
-
+def recursive_deps(packages, max_deps=10):
     # get a list of all rpm_pkgs that are to be removed
     rpm_pkg_names = []
-    for name in unblocked:
+    for name in packages:
         # Empty list if pkg is only for a different arch
         bin_pkgs = package_mapper.by_src.get(name, [])
         rpm_pkg_names.extend([p.name for p in bin_pkgs])
 
     # dict for all dependent package for each to-be-removed package
     dep_map = OrderedDict()
-    for name in unblocked:
+    for name in packages:
         ignore = rpm_pkg_names
         dep_map[name] = OrderedDict()
         to_check = [name]
@@ -410,15 +388,42 @@ def main():
                 ignore.extend(new_names)
                 if allow_more:
                     to_check.extend(new_names)
-                    if len(set(dep_map[name].keys() + to_check)) > 10:
+                    dep_count = len(set(dep_map[name].keys() + to_check))
+                    if dep_count > max_deps:
                         allow_more = False
-                        to_check = to_check[0:10]
+                        to_check = to_check[0:max_deps]
             if not to_check:
                 break
         if not allow_more:
             sys.stderr.write("More than 10 broken deps for package"
                              "'{0}', dependency check not"
                              " completed\n".format(name))
+    return dep_map
+
+
+def main():
+    failed = sys.argv[1:]
+    # list of orphans on the devel branch from pkgdb
+    sys.stderr.write('Contacting pkgdb for list of orphans...')
+    orphans = orphan_packages()
+    sys.stderr.write('done\n')
+
+    # Start threads to get information about (co)maintainers for packages
+    for i in range(0, 2):
+        people_thread = Thread(target=people_worker)
+        people_thread.daemon = True
+        people_thread.start()
+    # keep pylint silent
+    del i
+
+    sys.stderr.write('Getting builds from koji...')
+    unblocked = unblocked_packages(sorted((list(orphans) + failed)))
+    sys.stderr.write('done\n')
+
+    sys.stderr.write('Calculating dependencies...')
+    # Create yum object and depsolve out if requested.
+    # TODO: add app args to either depsolve or not
+    dep_map = recursive_deps(unblocked)
     sys.stderr.write('done\n')
 
     sys.stderr.write("Waiting for (co)maintainer information...")
