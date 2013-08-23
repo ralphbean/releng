@@ -130,26 +130,22 @@ people_queue = Queue()
 people_dict = get_cache("orphans-people.pickle", default={})
 
 
-def _comaintainers(package, branch=RAWHIDE_BRANCHNAME):
-    comaint = []
+def get_people(package, branch=RAWHIDE_BRANCHNAME):
+    def associated(pkglisting):
+        acl = pkglisting['aclOrder']
+        return acl['commit'] or \
+            acl['approveacls'] or \
+            acl['watchbugzilla'] or \
+            acl['watchcommits']
+
     pkginfo = pkgdb.get_package_info(package, branch=branch)
-    users = pkginfo.packageListings[0]['people']
-    for user in users:
-        acl = user['aclOrder']
-        # any user except orphan
-        if acl['commit'] or acl['approveacls']:
-            comaint.append(user['username'])
-    return comaint
+    pkginfo = pkginfo.packageListings[0]
+    people_ = [pkginfo.owner]
+    people_.extend(p['username'] for p in pkginfo['people'] if associated(p))
+    return people_
 
 
 def people_worker():
-    def get_people(package, branch=RAWHIDE_BRANCHNAME):
-        pkginfo = pkgdb.get_package_info(package, branch=branch)
-        pkginfo = pkginfo.packageListings[0]
-        people_ = [pkginfo.owner]
-        people_.extend(p['username'] for p in pkginfo['people'])
-        return people_
-
     while True:
         package = people_queue.get()
         if package not in people_dict:
