@@ -40,7 +40,7 @@ rm -f /var/lib/rpm/__db*
 mkdir -p output/$BRANCH/$ARCH/os/
 ln -s /tmp/treebuild.$TREE/$BRANCH/$ARCH/os/Packages output/$BRANCH/$ARCH/os/Packages
 ln -s /tmp/treebuild.$TREE/$BRANCH/$ARCH/os/repodata output/$BRANCH/$ARCH/os/repodata
-pungi -c ./rawhide.ks -B --destdir /tmp/treebuild.$TREE/output --cachedir /tmp/treebuild.$TREE/cache --ver $BRANCH --flavor Fedora
+pungi -c ./rawhide.ks -B --destdir /tmp/treebuild.$TREE/output --cachedir /tmp/treebuild.$TREE/cache --ver $BRANCH
 umount $BRANCH
 rm -rf output/$BRANCH/$ARCH/os/{Packages,repodata}
 EEE
