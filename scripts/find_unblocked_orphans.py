@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# find-unblocked-orphans.py - A utility to find orphaned packages in pkgdb
+# find_unblocked_orphans.py - A utility to find orphaned packages in pkgdb
 #                             that are unblocked in koji and to show what
 #                             may require those orphans
 #
@@ -78,7 +78,7 @@ FOOTER = """The script creating this output is run and developed by Fedora
 Release Engineering. Please report issues at its trac instance:
 https://fedorahosted.org/rel-eng/
 The sources of this script can be found at:
-https://git.fedorahosted.org/cgit/releng/tree/scripts/find-unblocked-orphans.py
+https://git.fedorahosted.org/cgit/releng/tree/scripts/find_unblocked_orphans.py
 """
 pkgdb = fedora.client.PackageDB()
 
