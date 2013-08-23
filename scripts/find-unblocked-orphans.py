@@ -204,7 +204,7 @@ def SRPM(package):
 
 def orphan_packages(collection_id=RAWHIDE_COLLECTION,
                     cache_filename='orphans.pickle'):
-    orphans = get_cache(cache_filename, default=[])
+    orphans = get_cache(cache_filename, default={})
 
     if orphans:
         return orphans
@@ -219,7 +219,7 @@ def orphan_packages(collection_id=RAWHIDE_COLLECTION,
                     # 20 deprecated
                     if listing['owner'] == ORPHAN_UID and \
                             listing['statuscode'] == 14:
-                        orphans.append(p['name'])
+                        orphans[p['name']] = p
             try:
                 write_cache(orphans, cache_filename)
             except IOError, e:
@@ -368,7 +368,7 @@ def main():
     del i
 
     sys.stderr.write('Getting builds from koji...')
-    unblocked = unblocked_packages(sorted(orphans + failed))
+    unblocked = unblocked_packages(sorted((list(orphans) + failed)))
     sys.stderr.write('done\n')
 
     sys.stderr.write('Calculating dependencies...')
@@ -405,7 +405,8 @@ def main():
                     new_srpm_names.add(srpm_name)
 
                     for dep in dependencies:
-                        dep_map[name].setdefault(srpm_name, OrderedDict()).setdefault(pkg, set()).add(dep)
+                        dep_map[name].setdefault(srpm_name,
+                            OrderedDict()).setdefault(pkg, set()).add(dep)
 
                 for srpm_name in new_srpm_names:
                     people_queue.put(srpm_name)
@@ -420,8 +421,8 @@ def main():
                 break
         if not allow_more:
             sys.stderr.write("More than 10 broken deps for package"
-                                "'{0}', dependency check not"
-                                " completed\n".format(name))
+                             "'{0}', dependency check not"
+                             " completed\n".format(name))
     sys.stderr.write('done\n')
 
     sys.stderr.write("Waiting for (co)maintainer information...")
