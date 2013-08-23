@@ -442,7 +442,7 @@ def dependency_info(dep_map, affected_people):
                                                               p)
                 for dep in dep_packages:
                     provides = ", ".join(sorted(dep_packages[dep]))
-                    info += "\t\t%s requires %s\n" % (dep.name, provides)
+                    info += "\t\t%s requires %s\n" % (dep.nvra, provides)
                 info += "\n"
             info += "\n"
     return info
