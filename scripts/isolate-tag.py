@@ -39,9 +39,9 @@ kojisession.ssl_login(clientcert, clientca, serverca)
 # Get all builds tagged into the tag w/o inherited builds
 builds = kojisession.listTagged(tag, latest=True)
 
-buildlist = []
+tagged = []
 for build in builds:
-    buildlist.append(build['nvr'])
+    tagged.append(build['nvr'])
 
 # Get all builds tagged to the tag including inherited builds
 allbuilds = kojisession.listTagged(tag, latest=True, inherit=True)
@@ -50,7 +50,7 @@ allbuilds = kojisession.listTagged(tag, latest=True, inherit=True)
 tagbuilds = []
 
 for build in allbuilds:
-    if build['nvr'] not in buildlist:
+    if build['nvr'] not in tagged:
         tagbuilds.append(build['nvr'])
 
 kojisession.multicall = True
