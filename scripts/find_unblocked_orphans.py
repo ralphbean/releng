@@ -27,6 +27,7 @@ from collections import OrderedDict
 import cPickle as pickle
 import datetime
 import os
+import argparse
 from Queue import Queue
 import sys
 from threading import Thread
@@ -486,11 +487,22 @@ def package_info(packages):
 
 
 def main():
-    failed = sys.argv[1:]
-    # list of orphans on the devel branch from pkgdb
-    sys.stderr.write('Contacting pkgdb for list of orphans...')
-    orphans = orphan_packages()
-    sys.stderr.write('done\n')
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--skip-orphans", dest="skip_orphans",
+                        help="Do not look for orphans",
+                        default=False, action="store_true")
+    parser.add_argument("failed", nargs="*",
+                        help="Additional packages, e.g. FTBFS packages")
+    args = parser.parse_args()
+    failed = args.failed
+
+    if args.skip_orphans:
+        orphans = []
+    else:
+        # list of orphans on the devel branch from pkgdb
+        sys.stderr.write('Contacting pkgdb for list of orphans...')
+        orphans = orphan_packages()
+        sys.stderr.write('done\n')
 
     # Start threads to get information about (co)maintainers for packages
     for i in range(0, 2):
