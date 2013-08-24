@@ -477,7 +477,7 @@ def package_info(packages):
     info += "\nThe following packages require above mentioned packages:\n"
     info += dependency_info(dep_map, affected_people)
 
-    info += "Affected (co)maintainers"
+    info += "Affected (co)maintainers\n"
     info += maintainer_info(affected_people)
 
     addresses = ["{0}@fedoraproject.org".format(p)
