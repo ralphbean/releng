@@ -58,7 +58,7 @@ def buildCompose(composePath, treeinfos, name):
             logging.critical('%s is not parsable: %s', treeinfo, e)
             return 10
 
-        variant = treeInfoParser.get('general','variant')
+        variant = treeInfoParser.get('general','variant') or 'Fedora'
         version = treeInfoParser.get('general','version')
         family = treeInfoParser.get('general','family')
         arch = treeInfoParser.get('general','arch')
