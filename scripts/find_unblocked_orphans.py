@@ -359,12 +359,13 @@ def recursive_deps(packages, max_deps=10):
                 new_names = []
                 new_srpm_names = set()
                 for pkg, dependencies in dep_packages.items():
-                    if pkg.name not in to_check and pkg.name not in new_names:
-                        new_names.append(pkg.name)
                     if pkg.arch != "src":
                         srpm_name = package_mapper.by_bin[pkg].name
                     else:
                         srpm_name = pkg.name
+                    if srpm_name not in to_check and \
+                            srpm_name not in new_names:
+                        new_names.append(srpm_name)
                     new_srpm_names.add(srpm_name)
 
                     for dep in dependencies:
