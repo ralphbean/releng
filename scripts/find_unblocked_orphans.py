@@ -286,54 +286,57 @@ def dependent_packages(name, ignore):
     # Generate a dict of orphans to things requiring them and why
     # Some of this code was stolen from repoquery
     try:  # We may have some orphans that aren't in the repo
-        for pkg in package_mapper.by_src[name]:
-            # add all the provides from the package as strings
-            string_provides = [yum.misc.prco_tuple_to_string(prov)
-                               for prov in pkg.provides]
-            provides.extend(string_provides)
-
-            # add all files as provides
-            # pkg.files is a dict with keys like "file" and "dir"
-            # values are a list of file/dir paths
-            for paths in pkg.files.itervalues():
-                # sometimes paths start with "//" instead of "/"
-                # normalise "//" to "/":
-                # os.path.normpath("//") == "//", but
-                # os.path.normpath("///") == "/"
-                file_provides = [os.path.normpath('//%s' % fn)
-                                 for fn in paths]
-                provides.extend(file_provides)
-
-        # Zip through the provides and find what's needed
-        for prov in provides:
-            # check only base provide, ignore specific versions
-            # "foo = 1.fc20" -> "foo"
-            base_provide = prov.split()[0]
-
-            # Elide provide if also provided by another package
-            for pkg in yb.pkgSack.searchProvides(base_provide):
-                # FIXME: might miss broken in case the other provider
-                # depends on a to-be-removed package as well
-                if pkg.name not in ignore:
-                    break
-            else:
-                for dependent_pkg in yb.pkgSack.searchRequires(base_provide):
-                    # skip if the dependent rpm package belongs to the
-                    # to-be-removed Fedora package
-                    if dependent_pkg in package_mapper.by_src[name]:
-                        continue
-
-                    # skip if the dependent rpm package is also a
-                    # package that should be removed
-                    if dependent_pkg.name in ignore:
-                        continue
-
-                    # use setdefault to either create an entry for the
-                    # dependent package or add the required prov
-                    dep_packages.setdefault(dependent_pkg, set()).add(prov)
+        rpms = package_mapper.by_src[name]
     except KeyError:
         # If we don't have a package in the repo, there is nothing to do
         sys.stderr.write("Package {0} not found in repo\n".format(name))
+        rpms = []
+
+    for pkg in rpms:
+        # add all the provides from the package as strings
+        string_provides = [yum.misc.prco_tuple_to_string(prov)
+                           for prov in pkg.provides]
+        provides.extend(string_provides)
+
+        # add all files as provides
+        # pkg.files is a dict with keys like "file" and "dir"
+        # values are a list of file/dir paths
+        for paths in pkg.files.itervalues():
+            # sometimes paths start with "//" instead of "/"
+            # normalise "//" to "/":
+            # os.path.normpath("//") == "//", but
+            # os.path.normpath("///") == "/"
+            file_provides = [os.path.normpath('//%s' % fn)
+                             for fn in paths]
+            provides.extend(file_provides)
+
+    # Zip through the provides and find what's needed
+    for prov in provides:
+        # check only base provide, ignore specific versions
+        # "foo = 1.fc20" -> "foo"
+        base_provide = prov.split()[0]
+
+        # Elide provide if also provided by another package
+        for pkg in yb.pkgSack.searchProvides(base_provide):
+            # FIXME: might miss broken in case the other provider
+            # depends on a to-be-removed package as well
+            if pkg.name not in ignore:
+                break
+        else:
+            for dependent_pkg in yb.pkgSack.searchRequires(base_provide):
+                # skip if the dependent rpm package belongs to the
+                # to-be-removed Fedora package
+                if dependent_pkg in package_mapper.by_src[name]:
+                    continue
+
+                # skip if the dependent rpm package is also a
+                # package that should be removed
+                if dependent_pkg.name in ignore:
+                    continue
+
+                # use setdefault to either create an entry for the
+                # dependent package or add the required prov
+                dep_packages.setdefault(dependent_pkg, set()).add(prov)
     return OrderedDict(sorted(dep_packages.items()))
 
 
