@@ -369,8 +369,10 @@ def recursive_deps(packages, max_deps=10):
                     new_srpm_names.add(srpm_name)
 
                     for dep in dependencies:
-                        dep_map[name].setdefault(srpm_name,
-                            OrderedDict()).setdefault(pkg, set()).add(dep)
+                        dep_map[name].setdefault(
+                            srpm_name,
+                            OrderedDict()
+                        ).setdefault(pkg, set()).add(dep)
 
                 for srpm_name in new_srpm_names:
                     people_queue.put(srpm_name)
