@@ -52,10 +52,10 @@ parser.add_option("--threads", type="int", default="3",
 ### Begin Configuration ###
 
 # distributions to build for:
-distronames = ['f17', 'f18', 'f19', 'f20']
+distronames = ['f18', 'f19', 'f20', 'f21']
 
 # which is rawhide?
-rawhide = 'f20'
+rawhide = 'f21'
 
 # koji setup
 auth_cert = os.path.expanduser('~/.fedora.cert')
@@ -67,13 +67,13 @@ remote = koji.ClientSession('http://koji.fedoraproject.org/kojihub')
 # If you want to hard-code values for yourself, do it here:
 
 # number of threads (i.e. max simultaneous koji-shadow instances) per distro
-threads = options.threads 
+threads = int(options.threads) 
 
 # Don't actually build anything or attempt to tag, write logs to /tmp
 testonly = options.testonly
 
 # koji-shadow configuration
-shadowcommand = options.shadowconfig
+shadowcommand = options.shadowcommand
 shadowconfig = options.shadowconfig
 logdir = options.logdir
 
@@ -90,7 +90,7 @@ if testonly:
 # TODO: Rotate and/or only keep X amount of logs
 logger = logging.getLogger('KojiStalk')
 logger.setLevel(logging.DEBUG)
-fh = logging.FileHandler(os.path.join(logdir, 'KojiStalk.log'))
+fh = logging.handlers.TimedRotatingFileHandler(os.path.join(logdir, 'KojiStalk.log'), when='d', interval=7, backupCount=8)
 fh.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
