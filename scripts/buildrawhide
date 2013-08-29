@@ -100,7 +100,7 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-
 echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
-    --topic branched.pungify.start \
+    --topic rawhide.pungify.start \
     --json-input
 
 #only run critpath on primary arch
@@ -118,7 +118,7 @@ wait
 echo "{\"log\": \"done\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
-    --topic branched.pungify.complete \
+    --topic rawhide.pungify.complete \
     --json-input
 
 echo "Running build_composeinfo"
