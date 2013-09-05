@@ -71,7 +71,7 @@ popd
 # stage the composed tree to final locateion
 mkdir /pub/alt/stage/$VERSION$COMPOSE/
 chmod 700 /pub/alt/stage/$VERSION$COMPOSE/
-for type in Fedora Spins Live Images; do rsync -avhH $FINALDEST/$VERSION/$type/ /pub/alt/stage/$VERSION$COMPOSE/$type/; done
+for type in Fedora Spins Live Images; do sg releng "rsync -avhH $FINALDEST/$VERSION/$type/ /pub/alt/stage/$VERSION$COMPOSE/$type/"; done
 chmod 755 /pub/alt/stage/$VERSION$COMPOSE/
 
 echo "======= compose output for trac ======="
