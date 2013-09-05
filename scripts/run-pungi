@@ -1,24 +1,91 @@
 #!/bin/bash
 
-#lets make sure we run everything as the releng group
-newgrp releng
 
 VERSION=$1
 COMPOSE=$2
 DESTDIR=/srv/pungi/$VERSION$COMPOSE
+FINALDEST=/mnt/fedora_koji/compose/$VERSION$COMPOSE
+KICKSTART=/srv/pungi/spin-kickstarts/fedora-install-fedora.ks
 
-KICKSTART=/srv/pungi/spin-kickstarts.ausil/fedora-install-fedora.ks
-
-for arch in i386 x86_64
+for arch in armhfp i386 x86_64
 do
- mock -r fedora-branched-compose-$arch --init
- mock -r fedora-branched-compose-$arch --shell "pungi -c $KICKSTART --destdir $DESTDIR --cachedir /srv/pungi/cache/ --ver $VERSION --flavor Fedora"
- mock -r fedora-branched-compose-$arch --clean
+ if [[ $arch == armhfp ]]
+  then HOST=arm03-releng00.arm.fedoraproject.org
+  else HOST=compose-x86-02.phx2.fedoraproject.org
+ fi
+  ssh $HOST /bin/bash -- << EOF
+ set -x
+ umask 002
+ mock -r fedora-branched-compose-$arch --init || exit 1
+ mock -r fedora-branched-compose-$arch --shell "pungi -c $KICKSTART --destdir $DESTDIR --cachedir /srv/pungi/cache/ --ver $VERSION --flavor Fedora" || exit 1
+ mock -r fedora-branched-compose-$arch --clean || exit 1
  if [[ $arch == i386 ]]
     then basearch=i686
+    elif [[ $arch == armhfp ]]
+    then basearch=armv7hl
     else basearch=$arch
  fi
- repoclosure -a $basearch --repofrompath=$arch,$DESTDIR/$VERSION/Fedora/$arch/os --repoid=$arch > $DESTDIR/logs/Fedora.$arch.repoclosure.log
+ sg releng "repoclosure -a $basearch --repofrompath=$arch,$DESTDIR/$VERSION/Fedora/$arch/os --repoid=$arch > $DESTDIR/logs/Fedora.$arch.repoclosure.log"
+ rsync -avhH --exclude=work $DESTDIR /mnt/fedora_koji/compose/$VERSION$COMPOSE/
+EOF
+
 done
 
-./build_composeinfo $DESTDIR/$VERSION/Fedora
+
+hardlink -vvc $FINALDEST/$VERSION/Fedora
+
+sg releng "./build_composeinfo $FINALDEST/$VERSION/Fedora"
+
+pushd $FINALDEST/$VERSION/
+mkdir -p Images/armhfp Images/i386 Images/x86_64 Spins/i386 Spins/x86_64 Live/i386 Live/x86_64
+popd
+
+
+USER=$(whoami)
+# stage images
+sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora*armhfp-$VERSION*raw.xz $FINALDEST/$VERSION/Images/armhfp/
+sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-i386*$VERSION*raw.xz $FINALDEST/$VERSION/Images/i386/
+sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-i386*$VERSION*qcow2 $FINALDEST/$VERSION/Images/i386/
+sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-x86_64*$VERSION*raw.xz $FINALDEST/$VERSION/Images/x86_64/
+sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-x86_64*$VERSION*qcow2 $FINALDEST/$VERSION/Images/x86_64/
+
+sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task*/*i686*$VERSION*iso $FINALDEST/$VERSION/Spins/i386/
+sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task*/*x86_64*$VERSION*iso $FINALDEST/$VERSION/Spins/x86_64/
+
+mv $FINALDEST/$VERSION/Spins/i386/Fedora-Live-Desktop* $FINALDEST/$VERSION/Live/i386/ 
+mv $FINALDEST/$VERSION/Spins/i386/Fedora-Live-KDE* $FINALDEST/$VERSION/Live/i386/ 
+mv $FINALDEST/$VERSION/Spins/x86_64/Fedora-Live-Desktop* $FINALDEST/$VERSION/Live/x86_64/ 
+mv $FINALDEST/$VERSION/Spins/x86_64/Fedora-Live-KDE* $FINALDEST/$VERSION/Live/x86_64/ 
+
+for type in Spins Live
+do
+pushd $FINALDEST/$VERSION/$type/
+for arch in i386 x86_64; do pushd $arch; sha256sum -b *iso>  Fedora-$type-$arch-$VERSION-CHECKSUM; popd; done
+popd
+done
+
+pushd $FINALDEST/$VERSION/Images
+for arch in armhfp i386 x86_64; do pushd $arch; sha256sum -b *qcow2 *raw.xz>  Fedora-Images-$arch-$VERSION-CHECKSUM; popd; done
+popd
+
+# stage the composed tree to final locateion
+mkdir /pub/alt/stage/$VERSION$COMPOSE/
+chmod 700 /pub/alt/stage/$VERSION$COMPOSE/
+for type in Fedora Spins Live Images; do rsync -avhH $FINALDEST/$VERSION/$type/ /pub/alt/stage/$VERSION$COMPOSE/$type/; done
+chmod 755 /pub/alt/stage/$VERSION$COMPOSE/
+
+echo "======= compose output for trac ======="
+echo "http://dl.fedoraproject.org/pub/alt/stage/$VERSION$COMPOSE/"
+echo ""
+echo "armhfp repoclosure"
+echo "{{{"
+cat $FINALDEST/logs/Fedora.armhfp.repoclosure.log
+echo "}}}"
+echo "i386 repoclosure"
+echo "{{{"
+cat $FINALDEST/logs/Fedora.i386.repoclosure.log
+echo "}}}"
+echo "x86_64 repoclosure"
+echo "{{{"
+cat $FINALDEST/logs/Fedora.x86_64.repoclosure.log
+echo "}}}"
