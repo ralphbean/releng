@@ -3,9 +3,17 @@
 
 VERSION=$1
 COMPOSE=$2
-DESTDIR=/srv/pungi/$VERSION$COMPOSE
-FINALDEST=/mnt/fedora_koji/compose/$VERSION$COMPOSE
-KICKSTART=/srv/pungi/spin-kickstarts/fedora-install-fedora.ks
+DESTDIR=/srv/pungi/$VERSION$COMPOSE/
+FINALDEST=/mnt/fedora_koji/compose/$VERSION$COMPOSE/
+KICKSTARTS=/srv/pungi/spin-kickstarts/
+
+FULLPATH=$(cwd)
+pushd $KICKSTARTS
+git pull --rebase
+$FULLPATH/build-livecds $VERSION $COMPOSE
+$FULLPATH/build-arm-images $VERSION $COMPOSE
+$FULLPATH/build-cloud-images $VERSION $COMPOSE
+pushd
 
 for arch in armhfp i386 x86_64
 do
@@ -17,7 +25,7 @@ do
  set -x
  umask 002
  mock -r fedora-branched-compose-$arch --init || exit 1
- mock -r fedora-branched-compose-$arch --shell "pungi -c $KICKSTART --destdir $DESTDIR --cachedir /srv/pungi/cache/ --ver $VERSION --flavor Fedora" || exit 1
+ mock -r fedora-branched-compose-$arch --shell "pungi -c $KICKSTARTS/fedora-install-fedora.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ --ver $VERSION --flavor Fedora" || exit 1
  mock -r fedora-branched-compose-$arch --clean || exit 1
  if [[ $arch == i386 ]]
     then basearch=i686
@@ -26,7 +34,7 @@ do
     else basearch=$arch
  fi
  sg releng "repoclosure -a $basearch --repofrompath=$arch,$DESTDIR/$VERSION/Fedora/$arch/os --repoid=$arch > $DESTDIR/logs/Fedora.$arch.repoclosure.log"
- rsync -avhH --exclude=work $DESTDIR /mnt/fedora_koji/compose/$VERSION$COMPOSE/
+ rsync -avhH --exclude=work $DESTDIR /mnt/fedora_koji/compose/$VERSION$COMPOSE
 EOF
 
 done
@@ -35,6 +43,19 @@ done
 hardlink -vvc $FINALDEST/$VERSION/Fedora
 
 sg releng "./build_composeinfo $FINALDEST/$VERSION/Fedora"
+
+
+while true
+do
+  if [ $(koji list-tasks --mine|grep OPEN|grep -e livecd -e appliance|wc -l) -ne 0 ]
+  then
+    echo "appliance or livecd tasks running, waiting 2 minutes"
+    sleep 120
+  else
+    break
+  fi
+done
+
 
 pushd $FINALDEST/$VERSION/
 mkdir -p Images/armhfp Images/i386 Images/x86_64 Spins/i386 Spins/x86_64 Live/i386 Live/x86_64
@@ -69,10 +90,10 @@ for arch in armhfp i386 x86_64; do pushd $arch; sha256sum -b *qcow2 *raw.xz>  Fe
 popd
 
 # stage the composed tree to final locateion
-mkdir /pub/alt/stage/$VERSION$COMPOSE/
-chmod 700 /pub/alt/stage/$VERSION$COMPOSE/
+sg releng "mkdir /pub/alt/stage/$VERSION$COMPOSE/"
+sg releng "chmod 700 /pub/alt/stage/$VERSION$COMPOSE/"
 for type in Fedora Spins Live Images; do sg releng "rsync -avhH $FINALDEST/$VERSION/$type/ /pub/alt/stage/$VERSION$COMPOSE/$type/"; done
-chmod 755 /pub/alt/stage/$VERSION$COMPOSE/
+sg releng "chmod 755 /pub/alt/stage/$VERSION$COMPOSE/"
 
 echo "======= compose output for trac ======="
 echo "http://dl.fedoraproject.org/pub/alt/stage/$VERSION$COMPOSE/"
