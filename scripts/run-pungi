@@ -3,6 +3,7 @@
 
 VERSION=$1
 COMPOSE=$2
+DATE=$3
 DESTDIR=/srv/pungi/$VERSION$COMPOSE/
 FINALDEST=/mnt/fedora_koji/compose/$VERSION$COMPOSE/
 KICKSTARTS=/srv/pungi/spin-kickstarts/
@@ -12,7 +13,7 @@ pushd $KICKSTARTS
 git pull --rebase
 $FULLPATH/build-livecds $VERSION $COMPOSE
 $FULLPATH/build-arm-images $VERSION $COMPOSE
-$FULLPATH/build-cloud-images $VERSION $COMPOSE
+$FULLPATH/build-cloud-images $VERSION $DATE
 pushd
 
 for arch in armhfp i386 x86_64
@@ -33,8 +34,8 @@ do
     then basearch=armv7hl
     else basearch=$arch
  fi
- sg releng "repoclosure -a $basearch --repofrompath=$arch,$DESTDIR/$VERSION/Fedora/$arch/os --repoid=$arch > $DESTDIR/logs/Fedora.$arch.repoclosure.log"
- rsync -avhH --exclude=work $DESTDIR /mnt/fedora_koji/compose/$VERSION$COMPOSE
+ sg releng "repoclosure -a $basearch --repofrompath=$arch,$DESTDIR$VERSION/Fedora/$arch/os --repoid=$arch > $DESTDIR/logs/Fedora.$arch.repoclosure.log"
+ rsync -avhH --exclude=work $DESTDIR $FINALDEST
 EOF
 
 done
@@ -63,15 +64,16 @@ popd
 
 
 USER=$(whoami)
+SHORTCOMPOSE=$(echo $COMPOSE|sed -e 's|RC||g')
 # stage images
-sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora*armhfp-$VERSION*raw.xz $FINALDEST/$VERSION/Images/armhfp/
-sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-i386*$VERSION*raw.xz $FINALDEST/$VERSION/Images/i386/
-sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-i386*$VERSION*qcow2 $FINALDEST/$VERSION/Images/i386/
-sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-x86_64*$VERSION*raw.xz $FINALDEST/$VERSION/Images/x86_64/
-sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-x86_64*$VERSION*qcow2 $FINALDEST/$VERSION/Images/x86_64/
+sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora*armhfp-$VERSION$SHORTCOMPOSE-sda.raw.xz $FINALDEST/$VERSION/Images/armhfp/
+sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-i386*$VERSION-$DATE-sda.raw.xz $FINALDEST/$VERSION/Images/i386/
+sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-i386*$VERSION-$DATE-sda.qcow2 $FINALDEST/$VERSION/Images/i386/
+sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-x86_64*$VERSION-$DATE-sda.raw.xz $FINALDEST/$VERSION/Images/x86_64/
+sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-x86_64*$VERSION-$DATE-sda.qcow2 $FINALDEST/$VERSION/Images/x86_64/
 
-sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task*/*i686*$VERSION*iso $FINALDEST/$VERSION/Spins/i386/
-sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task*/*x86_64*$VERSION*iso $FINALDEST/$VERSION/Spins/x86_64/
+sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task*/*i686*$VERSION$SHORTCOMPOSE.iso $FINALDEST/$VERSION/Spins/i386/
+sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task*/*x86_64*$VERSION$SHORTCOMPOSE.iso $FINALDEST/$VERSION/Spins/x86_64/
 
 mv $FINALDEST/$VERSION/Spins/i386/Fedora-Live-Desktop* $FINALDEST/$VERSION/Live/i386/ 
 mv $FINALDEST/$VERSION/Spins/i386/Fedora-Live-KDE* $FINALDEST/$VERSION/Live/i386/ 
