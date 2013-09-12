@@ -15,10 +15,13 @@ import time
 pvgrubs = {
   'public': {
     'part': {
+      'sa-east-1':      {'i386': 'aki-bc3ce3a1', 'x86_64': 'aki-cc3ce3d1'},
       'us-east-1':      {'i386': 'aki-407d9529', 'x86_64': 'aki-427d952b'},
       'us-west-1':      {'i386': 'aki-99a0f1dc', 'x86_64': 'aki-9ba0f1de'},
+      'us-west-2':      {'i386': 'aki-c2e26ff2', 'x86_64': 'aki-98e26fa8'},
       'eu-west-1':      {'i386': 'aki-4deec439', 'x86_64': 'aki-4feec43b'},
       'ap-southeast-1': {'i386': 'aki-13d5aa41', 'x86_64': 'aki-11d5aa43'},
+      'ap-southeast-2': {'i386': 'aki-9b8413a1', 'x86_64': 'aki-998413a3'},
       'ap-northeast-1': {'i386': 'aki-d209a2d3', 'x86_64': 'aki-d409a2d5'}}}
 }
 
@@ -83,10 +86,13 @@ class EC2Obj(object):
     keypath = os.path.expanduser('.')
     keys = {
         '125523088429': { # fedaws
+            'sa-east-1':      'releng-sa-east-1',
             'us-east-1':      'releng-us-east',
             'us-west-1':      'releng-us-west',
+            'us-west-2':      'releng-us-west-2',
             'eu-west-1':      'releng-eu-west',
             'ap-southeast-1': 'releng-ap-southeast',
+            'ap-southeast-2': 'releng-ap-southeast-2',
             'ap-northeast-1': 'releng-ap-northeast'}
     }
 
@@ -182,8 +188,8 @@ class EC2Obj(object):
             region = 'ap-southeast-1'
         elif reg == 'ap-northeast':
             region = 'ap-northeast-1'
-        elif reg in ('us-east-1', 'us-west-1', 'eu-west-1', 'ap-southeast-1',
-                     'ap-northeast-1'):
+        elif reg in ('sa-east-1', 'us-east-1', 'us-west-1', 'us-west-2', 'eu-west-1', 'ap-southeast-1',
+                     'ap-southeast-2', 'ap-northeast-1'):
             # these are what we want, do nothing
             pass
         else:
@@ -268,6 +274,7 @@ class EC2Obj(object):
                 ami_info['arch'])
         elif aki != None:
             cmd += '--kernel %s ' % aki
+        print ami_info['arch']
         if ami_info['arch'] == 'i386':
             cmd += '-t m1.small '
         elif ami_info['arch'] == 'x86_64':
@@ -594,11 +601,13 @@ class EC2Obj(object):
         """
         if aki == None:
             aki = get_pvgrub(True, disk, self.region, arch)
-        cmd = 'euca-register -a %s -U %s --kernel %s -b /dev/sdf=ephemeral0 -b /dev/sdg=ephemeral1 -n "%s"' % \
-            (arch, self.rurl, aki, name)
+        cmd = 'euca-register -a %s -U %s -b /dev/sdf=ephemeral0 -b /dev/sdg=ephemeral1 -n "%s"' % \
+            (arch, self.rurl, name)
         if disk:
+            cmd += ' --virtualization-type hvm'
             cmd += ' -b /dev/sda=%s --root-device-name /dev/sda' % snap_id
         else:
+            cmd += ' --kernel %s' % aki
             cmd += ' -b /dev/sda1=%s --root-device-name /dev/sda1' % snap_id
         if ari != None:
             cmd += ' --ramdisk %s' % ari
@@ -621,7 +630,7 @@ class EC2Obj(object):
         conn = boto.ec2.connect_to_region(self.region,
             aws_access_key_id=self.cred.access,
             aws_secret_access_key=self.cred.secret)
-        if aki == None:
+        if aki == None and not disk:
             aki = get_pvgrub(True, disk, self.region, arch)
         if disk:
             dev = '/dev/sda'
@@ -631,10 +640,16 @@ class EC2Obj(object):
         ebs.snapshot_id = snap_id
         block_map = boto.ec2.blockdevicemapping.BlockDeviceMapping()
         block_map[dev] = ebs
-        result = conn.register_image(name=name,
-            description='Official Fedora AMI - %s' % name,
-            architecture=arch, kernel_id=aki,
-            root_device_name=dev, block_device_map=block_map)
+        if disk:
+            result = conn.register_image(name=name,
+                description='Official Fedora AMI - %s' % name,
+                architecture=arch, 
+                root_device_name=dev, block_device_map=block_map)
+        else:
+            result = conn.register_image(name=name,
+                description='Official Fedora AMI - %s' % name,
+                architecture=arch, kernel_id=aki,
+                root_device_name=dev, block_device_map=block_map)
         self.logger.info('Registered an AMI: %s' % result)
         return result
 

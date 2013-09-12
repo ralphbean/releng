@@ -11,19 +11,23 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 
 import fedora_ec2
 
 #
 # Constants
 #
-
 # we assume whatever account we're using has access to the same set of AMIs
 amis = {
-    'us-east-1':      {'i386': 'ami-dde92db4', 'x86_64': 'ami-cde92da4'},
-    'us-west-1':      {'i386': 'ami-9baaf8de', 'x86_64': 'ami-9faaf8da'},
-    'eu-west-1':      {'i386': 'ami-da7444ae', 'x86_64': 'ami-d67444a2'},
-    'ap-southeast-1': {'i386': 'ami-3895ed6a', 'x86_64': 'ami-3c95ed6e'}
+    'us-east-1':      {'i386': 'ami-e9ec2080', 'x86_64': 'ami-d9ed21b0'},
+    'us-west-1':      {'i386': 'ami-3978247c', 'x86_64': 'ami-f1762ab4'},
+    'us-west-2':      {'i386': 'ami-3c0a870c', 'x86_64': 'ami-3c0a870c'},
+    'eu-west-1':      {'i386': 'ami-c9c4f6bd', 'x86_64': 'ami-69c5f71d'},
+    'ap-southeast-1': {'i386': 'ami-08007a5a', 'x86_64': 'ami-2c007a7e'},
+    'ap-southeast-2': {'i386': 'ami-a7b7209d', 'x86_64': 'ami-a7b7209d'},
+    'ap-northeast-1': {'i386': 'ami-6aab1f6b', 'x86_64': 'ami-ea9723eb'},
+    'sa-east-1':      {'i386': 'ami-3038e72d', 'x86_64': 'ami-3038e72d'}
 }
 results = {}
 result_lock = threading.Lock()
@@ -133,14 +137,17 @@ def prep_part(image):
     """
     output, rc = run_cmd('/sbin/kpartx -a -v %s' % image)
     lines = output.split('\n')
-    loop = lines[1].split()[2]
+    print lines
+    loop = lines[0].split()[2]
+    print loop
+    time.sleep(3)
     mainlog.info('mounted disk image; partition available on %s' % loop)
     mapdev = os.path.join('/dev/mapper', loop)
     tmpdir = tempfile.mkdtemp(prefix='ebs-mnt-')
     run_cmd('/bin/mount %s %s' % (mapdev, tmpdir))
     mainlog.info('mount on %s' % tmpdir)
-    run_cmd("/bin/sed -i -e 's/(hd0,0)/(hd0)/' %s/boot/grub/menu.lst" %
-#    run_cmd("/bin/sed -i -e 's/(hd0,0)/(hd0)/' %s/boot/grub/grub.conf" %
+#    run_cmd("/bin/sed -i -e 's/(hd0,0)/(hd0)/' %s/boot/grub/menu.lst" %
+    run_cmd("/bin/sed -i -e 's/(hd0,0)/(hd0)/' %s/boot/grub/grub.conf" %
         tmpdir)
     mainlog.info('tweaked menu.lst to boot as a partition')
     run_cmd('/bin/umount %s' % tmpdir)
