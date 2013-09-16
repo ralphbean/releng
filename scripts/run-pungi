@@ -22,18 +22,19 @@ do
   then HOST=arm03-releng00.arm.fedoraproject.org
   else HOST=compose-x86-02.phx2.fedoraproject.org
  fi
-  ssh $HOST /bin/bash -- << EOF
- set -x
- umask 002
- mock -r fedora-branched-compose-$arch --init || exit 1
- mock -r fedora-branched-compose-$arch --shell "pungi -c $KICKSTARTS/fedora-install-fedora.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ --ver $VERSION --flavor Fedora" || exit 1
- mock -r fedora-branched-compose-$arch --clean || exit 1
+
  if [[ $arch == i386 ]]
     then basearch=i686
     elif [[ $arch == armhfp ]]
     then basearch=armv7hl
     else basearch=$arch
  fi
+  ssh $HOST /bin/bash -- << EOF
+ set -x
+ umask 002
+ mock -r fedora-branched-compose-$arch --init || exit 1
+ mock -r fedora-branched-compose-$arch --shell "pungi -c $KICKSTARTS/fedora-install-fedora.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ --ver $VERSION --flavor Fedora" || exit 1
+ mock -r fedora-branched-compose-$arch --clean || exit 1
  sg releng "repoclosure -a $basearch --repofrompath=$arch,$DESTDIR$VERSION/Fedora/$arch/os --repoid=$arch > $DESTDIR/logs/Fedora.$arch.repoclosure.log"
  rsync -avhH --exclude=work $DESTDIR $FINALDEST
 EOF
