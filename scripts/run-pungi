@@ -10,10 +10,10 @@ KICKSTARTS=/srv/pungi/spin-kickstarts/
 
 FULLPATH=$(cwd)
 pushd $KICKSTARTS
-git pull --rebase
-$FULLPATH/build-livecds $VERSION $COMPOSE
-$FULLPATH/build-arm-images $VERSION $COMPOSE
-$FULLPATH/build-cloud-images $VERSION $DATE
+#it pull --rebase
+#FULLPATH/build-livecds $VERSION $COMPOSE
+#FULLPATH/build-arm-images $VERSION $COMPOSE
+#FULLPATH/build-cloud-images $VERSION $DATE
 pushd
 
 for arch in armhfp i386 x86_64
@@ -104,7 +104,7 @@ popd
 sg releng "mkdir /pub/alt/stage/$VERSION$COMPOSE/"
 sg releng "chmod 700 /pub/alt/stage/$VERSION$COMPOSE/"
 for type in Fedora Spins Live Images; do sg releng "rsync -avhH $FINALDEST/$VERSION/$type/ /pub/alt/stage/$VERSION$COMPOSE/$type/"; done
-sg releng "chmod 755 /pub/alt/stage/$VERSION$COMPOSE/"
+#sg releng "chmod 755 /pub/alt/stage/$VERSION$COMPOSE/"
 
 echo "======= compose output for trac ======="
 echo "http://dl.fedoraproject.org/pub/alt/stage/$VERSION$COMPOSE/"
