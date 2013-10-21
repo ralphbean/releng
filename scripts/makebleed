@@ -1,0 +1,20 @@
+#!/bin/bash
+
+PKGS="$1"
+
+for pkg in $PKGS
+do
+  sg releng "koji download-build --key=246110c1 $pkg"
+done
+
+sg releng "mv *src.rpm SRPMS/;mv *i686.rpm i386/ ; mv *x86_64.rpm x86_64/; mv *armv7hl.rpm armhfp/"
+
+sg releng "cp *noarch.rpm armhfp/ &&cp *noarch.rpm i386/ && mv *noarch.rpm x86_64/"
+
+for dir in armhfp i386 x86_64 SRPMS
+do
+ sg releng "createrepo --update -d $dir"
+done
+
+sg releng "rsync -avhH --delete ~/bleed/ /mnt/fedora_koji/koji/mash/bleed/"
+

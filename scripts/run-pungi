@@ -8,7 +8,7 @@ DESTDIR=/srv/pungi/$VERSION$COMPOSE/
 FINALDEST=/mnt/fedora_koji/compose/$VERSION$COMPOSE/
 KICKSTARTS=/srv/pungi/spin-kickstarts/
 
-FULLPATH=$(cwd)
+FULLPATH=$(pwd)
 pushd $KICKSTARTS
 #it pull --rebase
 #FULLPATH/build-livecds $VERSION $COMPOSE
