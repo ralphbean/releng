@@ -113,7 +113,7 @@ echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fe
 
 #only run critpath on primary arch
 [ -z "$ARCH" ] && {
-./scripts/critpath.py --url file:///mnt/koji/mash/branched-$DATE/ -o /mnt/koji/mash/branched-$DATE/logs/critpath.txt branched &> /mnt/koji/mash/branched-$DATE/logs/critpath.log
+./scripts/critpath.py --url file:///mnt/koji/mash/branched-$DATE/$BRANCHED/ -o /mnt/koji/mash/branched-$DATE/logs/critpath.txt branched &> /mnt/koji/mash/branched-$DATE/logs/critpath.log
 
 for basearch in armhfp i386 x86_64 ; do
     HOST=$(koji list-hosts --quiet --enabled --ready --arch=$basearch  --channel compose | sed 's|/| |g' | sort -g -k4 -k5r | awk -F ' ' '{ print $1 ; exit }')
