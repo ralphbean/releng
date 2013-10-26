@@ -1,0 +1,31 @@
+#!/usr/bin/bash
+
+ARCHES="armv7hl"
+
+DATE=`date +%Y%m%d`
+
+RELEASE=20-Beta
+BUILD=TC6
+VERSION=20
+
+TARGET=f20-candidate
+
+GITHASH=$(git rev-parse --short HEAD)
+
+SPINS="Minimal Desktop KDE LXDE Mate SoaS XFCE Minimal-VFAT Desktop-VFAT KDE-VFAT LXDE-VFAT Mate-VFAT SoaS-VFAT XFCE-VFAT"
+for spin in $SPINS
+do
+    declare -l lspin
+    lspin=$spin
+    ksflatten fedora-arm-$lspin.ks -o fedora-arm-$lspin-$GITHASH.ks >& /dev/null
+    for ARCH in $ARCHES
+    do
+       if [[ $ARCH == armv7hl ]]
+         then BASEARCH=armhfp
+         else BASEARCH=$ARCH
+       fi
+    koji spin-appliance --scratch --release $BUILD --nowait Fedora-$spin-$BASEARCH $RELEASE  --repo=http://kojipkgs.fedoraproject.org/mash/branched/$BASEARCH/os/ --repo=http://kojipkgs.fedoraproject.org/mash/bleed/$BASEARCH/ $TARGET $ARCH fedora-arm-$lspin-$GITHASH.ks
+   done
+done
+
+
