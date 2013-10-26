@@ -4,17 +4,17 @@ ARCHES="i686 x86_64"
 
 DATE=`date +%Y%m%d.%H`
 
-RELEASE=16-Beta
-VERSION=16
+RELEASE=20-Beta
+BUILD=TC6
+VERSION=20
 
-TARGET=f16
+TARGET=f20-candidate
 
 GITHASH=$(git rev-parse --short HEAD)
 
 #SPINS="LXDE XFCE"
-SPINS="Desktop KDE LXDE XFCE"
-#SPINS="Design-suite Desktop KDE LXDE Meego Security SoaS XFCE"
-
+#SPINS="Desktop KDE LXDE XFCE SoaS MATE-Compiz"
+SPINS="Desktop KDE LXDE MATE-Compiz Security SoaS XFCE"
 for spin in $SPINS
 do
     declare -l lspin
@@ -26,23 +26,38 @@ do
          then BASEARCH=i386
          else BASEARCH=$ARCH
        fi
-    koji spin-livecd   --noprogress --isoname Fedora-$RELEASE-$ARCH-Live-$spin.iso --nowait  --repo=http://infrastructure.fedoraproject.org/pub/fedora/linux/development/$VERSION/$BASEARCH/os/,http://kojipkgs.fedoraproject.org/mash/bleed/$BASEARCH/ $TARGET $ARCH fedora-livecd-$lspin-$GITHASH.ks
+    koji spin-livecd --scratch  --release $BUILD --noprogress Fedora-Live-$spin-$ARCH $RELEASE --nowait  --repo=http://infrastructure.fedoraproject.org/pub/fedora/linux/development/$VERSION/$BASEARCH/os/ --repo=http://kojipkgs.fedoraproject.org/mash/bleed/$BASEARCH/ $TARGET $ARCH fedora-livecd-$lspin-$GITHASH.ks
    done
 done
 
-#PINS="Games"
+SPINS="Games Electronic-Lab Robotics Scientific-KDE"
+for spin in $SPINS
+do
+    declare -l lspin
+    lspin=$spin
+    ksflatten fedora-livedvd-$lspin.ks -o fedora-livedvd-$lspin-$GITHASH.ks >& /dev/null
+    for ARCH in $ARCHES
+    do
+       if [[ $ARCH == i686 ]]
+         then BASEARCH=i386
+         else BASEARCH=$ARCH
+       fi
+    koji spin-livecd --scratch --release $BUILD --noprogress Fedora-Live-$spin-$ARCH $RELEASE --nowait  --repo=http://infrastructure.fedoraproject.org/pub/fedora/linux/development/$VERSION/$BASEARCH/os/ --repo=http://kojipkgs.fedoraproject.org/mash/bleed/$BASEARCH/ $TARGET $ARCH fedora-livedvd-$lspin-$GITHASH.ks
+   done
+done
 
-#or spin in $SPINS
-#o
-#   declare -l lspin
-#   lspin=$spin
-#   ksflatten fedora-livedvd-$lspin.ks -o fedora-livedvd-$lspin-$GITHASH.ks >& /dev/null
-#   for ARCH in $ARCHES
-#   do
-#      if [[ $ARCH == i686 ]]
-#        then BASEARCH=i386
-#        else BASEARCH=$ARCH
-#      fi
-#   koji spin-livecd   --noprogress --isoname Fedora-$RELEASE-$ARCH-Live-$spin.iso --nowait  --repo=http://infrastructure.fedoraproject.org/pub/fedora/linux/development/$VERSION/$BASEARCH/os/,http://kojipkgs.fedoraproject.org/mash/bleed/$BASEARCH/ $TARGET $ARCH fedora-livedvd-$lspin-$GITHASH.ks
-#  done
-#one
+SPINS="Design-suite Jam-KDE"
+for spin in $SPINS
+do
+    declare -l lspin
+    lspin=$spin
+    ksflatten fedora-live-$lspin.ks -o fedora-live-$lspin-$GITHASH.ks >& /dev/null
+    for ARCH in $ARCHES
+    do
+       if [[ $ARCH == i686 ]]
+         then BASEARCH=i386
+         else BASEARCH=$ARCH
+       fi
+    koji spin-livecd --scratch --release $BUILD --noprogress Fedora-Live-$spin-$ARCH $RELEASE --nowait  --repo=http://infrastructure.fedoraproject.org/pub/fedora/linux/development/$VERSION/$BASEARCH/os/ --repo=http://kojipkgs.fedoraproject.org/mash/bleed/$BASEARCH/ $TARGET $ARCH fedora-live-$lspin-$GITHASH.ks
+   done
+done
