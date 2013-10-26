@@ -1,0 +1,17 @@
+#!/usr/bin/bash
+
+DATE=$(date "+%Y%m%d")
+
+RELEASE=20-Beta-TC6
+
+VERSION=20
+
+TARGET=f20-candidate
+
+for arch in i386 x86_64
+do
+for format in qcow2 raw
+do
+koji spin-appliance --nowait --scratch --repo=http://infrastructure.fedoraproject.org/pub/fedora/linux/development/$VERSION/$arch/os/ --repo=http://kojipkgs.fedoraproject.org/mash/bleed/$arch/ --vmem=2048 --vcpu=4 Fedora-$arch --release=$DATE $RELEASE $TARGET $arch fedora-$VERSION-$arch-cloud.ks --format=$format
+done
+done
