@@ -31,7 +31,7 @@ if len(sys.argv) > 3:
     builds = sys.argv[i+3:]
 else:
     print("Build srpm in secondary koji")
-    print("Usage: %s <arch> <target> <build> ...<build-N>" % sys.argv[0])
+    print("Usage: %s [--scratch] <arch> <target> <build> ...<build-N>" % sys.argv[0])
     exit(0)
 
 LOCALKOJIHUB = 'https://%s.koji.fedoraproject.org/kojihub' % (SECONDARY_ARCH)
