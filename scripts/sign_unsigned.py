@@ -16,7 +16,8 @@ import getpass
 # AbstractTool class
 #     parent for all classes, just to define the options only once
 #
-# Copyright (c) 2006 Red Hat
+# Copyright (C) 2006-2013 Red Hat, Inc.
+# SPDX-License-Identifier:      GPL-2.0+
 #
 # Authors:
 #     Daniel Mach <dmach@redhat.com>

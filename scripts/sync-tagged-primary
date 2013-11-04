@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Copyright (C) 2013 Red Hat, Inc.
+# SPDX-License-Identifier:      GPL-2.0+
+
 tags_updates="f20 f19-updates f18-updates"
 tags_testing="f18-updates-testing f19-updates-testing"
 tags_candidate="f18-updates-candidate f19-updates-candidate"

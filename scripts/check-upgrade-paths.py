@@ -3,7 +3,8 @@
 # check-upgrade-paths.py - A utility to examine a set of tags to verify upgrade
 #       paths for all the packages.
 #
-# Copyright (c) 2008 Red Hat
+# Copyright (C) 2013 Red Hat Inc.
+# SPDX-License-Identifier:	GPL-2.0+
 #
 # Authors:
 #     Jesse Keating <jkeating@redhat.com>

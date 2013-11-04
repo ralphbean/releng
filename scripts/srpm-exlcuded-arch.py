@@ -2,7 +2,9 @@
 
 # srpm-exlcuded-arch: is a tool to give you a list of packge names that
 # are excluded on the given arches.  access to a srpm tree is needed.
-# Copyright (c) 2008 Red Hat
+#
+# Copyright (C) 2008-2013 Red Hat, Inc.
+# SPDX-License-Identifier:      GPL-2.0+
 #
 # Authors:
 #       Dennis Gilmore <dennis@ausil.us>

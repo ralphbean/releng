@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright 2010, 2011 Red Hat, Inc.
-# License: GPLv2
+# Copyright (C) 2010-2013 Red Hat, Inc.
+# SPDX-License-Identifier:      GPL-2.0
 # Author: Dan Horák <dhorak@redhat.com>
 #
 # Compare the content of a tag between 2 koji instances

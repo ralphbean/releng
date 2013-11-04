@@ -1,5 +1,8 @@
 #!/usr/bin/bash
 
+# Copyright (C) 2012 Red Hat Inc.
+# SPDX-License-Identifier:	GPL-2.0+
+
 ARCHES="armv7hl"
 
 DATE=`date +%Y%m%d`

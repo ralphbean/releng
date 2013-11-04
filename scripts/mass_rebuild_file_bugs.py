@@ -3,7 +3,8 @@
 # mass_rebuild_file_bugs.py - A utility to discover failed builds in a given tag
 #                    and file bugs in bugzilla for these failed builds
 #
-# Copyright (c) 2013 Red Hat
+# Copyright (C) 2013 Red Hat, Inc.
+# SPDX-License-Identifier:      GPL-2.0+
 #
 # Authors:
 #     Stanislav Ochotnicky <sochotnicky@redhat.com>

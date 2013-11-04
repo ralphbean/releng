@@ -3,14 +3,9 @@
 # secondary-sync - a command line tool to sync all fedora secondary arches
 # from the hubs to a central mirror
 #
-# Copyright (C) 2011 Red Hat Inc.
+# Copyright (C) 2011-2013 Red Hat, Inc.
+# SPDX-License-Identifier:      GPL-2.0+
 # Author(s):  Dennis Gilmore <dennis@ausil.us>
-#
-# This program is free software; you can redistribute it and/or modify it
-# under the terms of the GNU General Public License as published by the
-# Free Software Foundation; either version 2 of the License, or (at your
-# option) any later version.  See http://www.gnu.org/copyleft/gpl.html for
-# the full text of the license.
 
 import rpm
 import os

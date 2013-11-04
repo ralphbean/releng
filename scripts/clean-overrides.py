@@ -3,11 +3,11 @@
 # clean-overrides.py - A utility to examine a buildroot override tag and
 #       compare contents to an updates tag.
 #
-# Copyright (c) 2007 Red Hat
 #
 # Authors:
 #     Jesse Keating <jkeating@redhat.com>
-
+# Copyright (C) 2013 Red Hat Inc,
+# SPDX-License-Identifier:	GPL-2.0+
 
 import koji
 import rpm

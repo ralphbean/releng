@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+# Copyright (C) 2013 Red Hat, Inc.
+# SPDX-License-Identifier:      GPL-2.0+
 # template for finding builds that meet some time/buildroot component critera.
 # Edit to suit.
 

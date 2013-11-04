@@ -2,7 +2,8 @@
 #
 # mass-rebuild.py - A utility to rebuild packages.
 #
-# Copyright (c) 2009 Red Hat
+# Copyright (C) 2009-2013 Red Hat, Inc.
+# SPDX-License-Identifier:      GPL-2.0+
 #
 # Authors:
 #     Jesse Keating <jkeating@redhat.com>

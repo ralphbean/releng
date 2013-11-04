@@ -1,5 +1,7 @@
 #!/bin/sh -x
 
+# Copyright (C) 2013 Red Hat, Inc.
+# SPDX-License-Identifier:      GPL-2.0+
 # pungify - run pungi on a particular rawhide tree
 # needs passed:
 #	the tree version (usually a datestamp)

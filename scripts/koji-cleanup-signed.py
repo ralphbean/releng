@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+# Copyright (C) 2013 Red Hat, Inc.
+# SPDX-License-Identifier:      GPL-2.0
+
 import os
 
 keys = ['069C8460', '30C9ECF8',

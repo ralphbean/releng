@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright 2011 Red Hat, Inc.
-# License: GPLv2
+# Copyright (C) 2011-2013 Red Hat, Inc.
+# SPDX-License-Identifier:      GPL-2.0
 # Author: Dan Horák <dhorak@redhat.com>
 #
 # Grab source rpm for a build from primary koji and build it in secondary koji

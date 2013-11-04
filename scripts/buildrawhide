@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copyright (C) 2013 Red Hat Inc.
+# SPDX-License-Identifier:	GPL-2.0+
+
 # runs currently on releng03.phx2.fedoraproject.org
 
 DATE=$1

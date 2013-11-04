@@ -2,7 +2,8 @@
 #
 # mass-tag.py - A utility to tag rebuilt packages.
 #
-# Copyright (c) 2009 Red Hat
+# Copyright (C) 2009-2013 Red Hat, Inc.
+# SPDX-License-Identifier:      GPL-2.0+
 #
 # Authors:
 #     Jesse Keating <jkeating@redhat.com>
