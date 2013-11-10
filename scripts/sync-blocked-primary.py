@@ -4,7 +4,7 @@
 #                           to a secondary arch for a given tag
 #
 # Copyright (C) 2011-2013 Red Hat, Inc.
-# SPDX-License-Identifier:      GPL-2.0+
+# SPDX-License-Identifier:      GPL-2.0
 #
 # Authors:
 #     Dennis Gilmore <ausil@fedoraproject.org>

@@ -3,7 +3,7 @@
 # prune-tag.py - A utility to prune all but the latest build in a given tag.
 #
 # Copyright (C) 2009-2013 Red Hat, Inc.
-# SPDX-License-Identifier:      GPL-2.0+
+# SPDX-License-Identifier:      GPL-2.0
 #
 # Authors:
 #     Jesse Keating <jkeating@redhat.com>

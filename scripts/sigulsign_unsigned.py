@@ -3,7 +3,7 @@
 # sigulsign_unsigned.py - A utility to use sigul to sign rpms in koji
 #
 # Copyright (C) 2009-2013 Red Hat, Inc.
-# SPDX-License-Identifier:      GPL-2.0+
+# SPDX-License-Identifier:      GPL-2.0
 #
 # Authors:
 #     Jesse Keating <jkeating@redhat.com>

@@ -5,7 +5,7 @@
 #                             may require those orphans
 #
 # Copyright (c) 2009-2013 Red Hat
-# SPDX-License-Identifier:	GPL-2.0+
+# SPDX-License-Identifier:	GPL-2.0
 #
 # Authors:
 #     Jesse Keating <jkeating@redhat.com>

@@ -3,7 +3,7 @@
 #
 # find_FTBFS.py - Find FTBFS packages
 #
-# SPDX-License-Identifier:	GPL-2.0+
+# SPDX-License-Identifier:	GPL-2.0
 #
 # Authors:
 #     Till Maas <opensource@till.name>
