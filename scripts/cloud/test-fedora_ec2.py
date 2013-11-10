@@ -1,4 +1,6 @@
 #!/usr/bin/python -tt
+# Copyright (C) 2013 Red Hat Inc.
+# SPDX-License-Identifier:	GPL-2.0+
 
 import glob
 import os

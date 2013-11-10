@@ -1,7 +1,8 @@
 #!/usr/bin/python -tt
 # Upload images to EBS volumes in EC2 in all regions
 # Author: Jay Greguske <jgregusk@redhat.com>
-#
+# Copyright (C) 2013 Red Hat Inc.
+# SPDX-License-Identifier:	GPL-2.0+
 
 import logging
 import math

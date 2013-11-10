@@ -1,7 +1,8 @@
 #!/usr/bin/python -tt
 # A library for accessing and working with EC2.
 # Author: Jay Greguske  <jgregusk@redhat.com>
-#
+# Copyright (C) 2013 Red Hat Inc.
+# SPDX-License-Identifier:	GPL-2.0+
 
 import boto.ec2
 import logging
