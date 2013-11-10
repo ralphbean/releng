@@ -1,6 +1,7 @@
 #!/usr/bin/python -tt
 # generate html and rss output files based on ini of torrents.
 # (c) 2007 Seth Vidal - skvidal @ fedoraproject.org
+# SPDX-License-Identifier:	GPL-2.0+
 
 # read in .ini files in a dir
 # take each section from them and assemble an html file and an rss feed of the
