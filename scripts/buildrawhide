@@ -167,6 +167,34 @@ if [ "$mail" = "0" ]; then
     cat /mnt/koji/mash/rawhide-$DATE/logs/start /mnt/koji/mash/rawhide-$DATE/logs/depcheck /mnt/koji/mash/rawhide-$DATE/logs/repodiff /mnt/koji/mash/rawhide-$DATE/logs/finish |  mutt -e "set from=\"$FROM\"" -e 'set envelope_from=yes' -s "$SUBJECT" $MAIL
 fi
 
+[ -z "$ARCH" ] && {
+# Emit a message using bodhi's cert (since we should be running as "masher").
+echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
+    --cert-prefix bodhi \
+    --modname compose \
+    --topic branched.image.start \
+    --json-input
+
+FULLPATH=$(pwd)
+TMPDIR=$(mktemp -d /tmp/branched.$DATE.XXXXXX)
+mkdir -p $TMPDIR
+pushd $TMPDIR
+git clone git://git.fedorahosted.org/git/spin-kickstarts/
+cd spin-kickstarts
+#git checkout f$BRANCHED
+$FULLPATH/scripts/build-livecds $BRANCHED $DATE
+$FULLPATH/scripts/build-arm-images $BRANCHED $DATE
+$FULLPATH/scripts/build-cloud-images $BRANCHED $DATE
+pushd
+
+# Emit a message using bodhi's cert (since we should be running as "masher").
+echo "{\"log\": \"done\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
+    --cert-prefix bodhi \
+    --modname compose \
+    --topic branched.image.complete \
+    --json-input
+}
+
 # Emit a message using bodhi's cert (since we should be running as "masher").
 echo "{\"log\": \"done\", \"branch\": \"rawhide\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
     --cert-prefix bodhi \
