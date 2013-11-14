@@ -189,9 +189,9 @@ pushd $TMPDIR
 git clone git://git.fedorahosted.org/git/spin-kickstarts/
 cd spin-kickstarts
 git checkout f$BRANCHED
-$FULLPATH/scripts/build-livecds $BRANCHED $DATE
-$FULLPATH/scripts/build-arm-images $BRANCHED $DATE
-$FULLPATH/scripts/build-cloud-images $BRANCHED $DATE
+$FULLPATH/scripts/build-livecds $BRANCHED $DATE $BRANCHED
+$FULLPATH/scripts/build-arm-images $BRANCHED $DATE $BRANCHED
+$FULLPATH/scripts/build-cloud-images $BRANCHED $DATE $BRANCHED
 pushd
 
 # Emit a message using bodhi's cert (since we should be running as "masher").

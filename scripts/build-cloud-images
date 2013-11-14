@@ -1,20 +1,30 @@
 #!/usr/bin/bash
 
-# Copyright (C) 2012 Red Hat Inc.
-# SPDX-License-Identifier:	GPL-2.0+
+# Copyright (C) 2013 Red Hat Inc.
+# SPDX-License-Identifier:      GPL-2.0+
 
-DATE=$(date "+%Y%m%d")
 
-RELEASE=20-Beta-TC6
+RELEASE=$1
+BUILD=$2
+VERSION=$3
 
-VERSION=20
+GITHASH=$(git rev-parse --short HEAD)
 
-TARGET=f20-candidate
+    declare -l lspin
+    lspin=$spin
+
+if [ "$VERSION" == "rawhide" ]; then
+TARGET=rawhide
+else
+TARGET=f$VERSION-candidate
 
 for arch in i386 x86_64
 do
+    declare -l lspin
+    lspin=$spin
+    ksflatten fedora-$arch-cloud.ks -o fedora-$arch-cloud-$GITHASH.ks >& /dev/null
 for format in qcow2 raw
 do
-koji spin-appliance --nowait --scratch --repo=http://infrastructure.fedoraproject.org/pub/fedora/linux/development/$VERSION/$arch/os/ --repo=http://kojipkgs.fedoraproject.org/mash/bleed/$arch/ --vmem=2048 --vcpu=4 Fedora-$arch --release=$DATE $RELEASE $TARGET $arch fedora-$VERSION-$arch-cloud.ks --format=$format
+koji spin-appliance --nowait --scratch --repo=http://infrastructure.fedoraproject.org/pub/fedora/linux/development/$VERSION/$arch/os/ --repo=http://kojipkgs.fedoraproject.org/mash/bleed/$arch/ --vmem=2048 --vcpu=4 Fedora-$arch --release=$DATE $RELEASE $TARGET $arch fedora-$arch-cloud-$GITHASH.ks --format=$format
 done
 done

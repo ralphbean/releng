@@ -5,17 +5,18 @@
 
 ARCHES="armv7hl"
 
-DATE=`date +%Y%m%d`
+RELEASE=$1
+BUILD=$2
+VERSION=$3
 
-RELEASE=20-Beta
-BUILD=TC6
-VERSION=20
-
-TARGET=f20-candidate
+if [ "$VERSION" == "rawhide" ]; then
+TARGET=rawhide
+else
+TARGET=f$VERSION-candidate
 
 GITHASH=$(git rev-parse --short HEAD)
 
-SPINS="Minimal Desktop KDE LXDE Mate SoaS XFCE Minimal-VFAT Desktop-VFAT KDE-VFAT LXDE-VFAT Mate-VFAT SoaS-VFAT XFCE-VFAT"
+SPINS="Minimal Desktop KDE LXDE Mate SoaS Xfce Minimal-VFAT Desktop-VFAT KDE-VFAT LXDE-VFAT Mate-VFAT SoaS-VFAT Xfce-VFAT"
 for spin in $SPINS
 do
     declare -l lspin
@@ -27,7 +28,7 @@ do
          then BASEARCH=armhfp
          else BASEARCH=$ARCH
        fi
-    koji spin-appliance --scratch --release $BUILD --nowait Fedora-$spin-$BASEARCH $RELEASE  --repo=http://kojipkgs.fedoraproject.org/mash/branched/$BASEARCH/os/ --repo=http://kojipkgs.fedoraproject.org/mash/bleed/$BASEARCH/ $TARGET $ARCH fedora-arm-$lspin-$GITHASH.ks
+    koji spin-appliance --scratch --release $BUILD --nowait Fedora-$spin-$BASEARCH $RELEASE  --repo=http://infrastructure.fedoraproject.org/pub/fedora/linux/development/$VERSION/$BASEARCH/os/ --repo=http://kojipkgs.fedoraproject.org/mash/bleed/$BASEARCH/ $TARGET $ARCH fedora-arm-$lspin-$GITHASH.ks
    done
 done
 

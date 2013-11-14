@@ -5,19 +5,18 @@
 
 ARCHES="i686 x86_64"
 
-DATE=`date +%Y%m%d.%H`
+RELEASE=$1
+BUILD=$2
+VERSION=$3
 
-RELEASE=20-Beta
-BUILD=TC6
-VERSION=20
-
-TARGET=f20-candidate
+if [ "$VERSION" == "rawhide" ]; then
+TARGET=rawhide
+else
+TARGET=f$VERSION-candidate
 
 GITHASH=$(git rev-parse --short HEAD)
 
-#SPINS="LXDE XFCE"
-#SPINS="Desktop KDE LXDE XFCE SoaS MATE-Compiz"
-SPINS="Desktop KDE LXDE MATE-Compiz Security SoaS XFCE"
+SPINS="Desktop KDE LXDE MATE-Compiz Security SoaS Xfce"
 for spin in $SPINS
 do
     declare -l lspin

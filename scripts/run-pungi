@@ -81,13 +81,13 @@ sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task*/*x86_64
 
 mv $FINALDEST/$VERSION/Spins/i386/Fedora-Live-Desktop* $FINALDEST/$VERSION/Live/i386/
 mv $FINALDEST/$VERSION/Spins/i386/Fedora-Live-KDE* $FINALDEST/$VERSION/Live/i386/
-mv $FINALDEST/$VERSION/Spins/i386/Fedora-Live-XFCE* $FINALDEST/$VERSION/Live/i386/
+mv $FINALDEST/$VERSION/Spins/i386/Fedora-Live-Xfce* $FINALDEST/$VERSION/Live/i386/
 mv $FINALDEST/$VERSION/Spins/i386/Fedora-Live-SoaS* $FINALDEST/$VERSION/Live/i386/
 mv $FINALDEST/$VERSION/Spins/i386/Fedora-Live-LXDE* $FINALDEST/$VERSION/Live/i386/
 mv $FINALDEST/$VERSION/Spins/i386/Fedora-Live-MATE-Compiz* $FINALDEST/$VERSION/Live/i386/
 mv $FINALDEST/$VERSION/Spins/x86_64/Fedora-Live-Desktop* $FINALDEST/$VERSION/Live/x86_64/
 mv $FINALDEST/$VERSION/Spins/x86_64/Fedora-Live-KDE* $FINALDEST/$VERSION/Live/x86_64/
-mv $FINALDEST/$VERSION/Spins/x86_64/Fedora-Live-XFCE* $FINALDEST/$VERSION/Live/x86_64/
+mv $FINALDEST/$VERSION/Spins/x86_64/Fedora-Live-Xfce* $FINALDEST/$VERSION/Live/x86_64/
 mv $FINALDEST/$VERSION/Spins/x86_64/Fedora-Live-SoaS* $FINALDEST/$VERSION/Live/x86_64/
 mv $FINALDEST/$VERSION/Spins/x86_64/Fedora-Live-LXDE* $FINALDEST/$VERSION/Live/x86_64/
 mv $FINALDEST/$VERSION/Spins/x86_64/Fedora-Live-MATE-Compiz* $FINALDEST/$VERSION/Live/x86_64/
