@@ -17,6 +17,7 @@ if [ "$VERSION" == "rawhide" ]; then
 TARGET=rawhide
 else
 TARGET=f$VERSION-candidate
+fi
 
 for arch in i386 x86_64
 do

@@ -13,6 +13,7 @@ if [ "$VERSION" == "rawhide" ]; then
 TARGET=rawhide
 else
 TARGET=f$VERSION-candidate
+fi
 
 GITHASH=$(git rev-parse --short HEAD)
 
