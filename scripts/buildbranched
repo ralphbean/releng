@@ -182,17 +182,13 @@ echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fe
     --topic branched.image.start \
     --json-input
 
-FULLPATH=$(pwd)
-TMPDIR=$(mktemp -d /tmp/branched.$DATE.XXXXXX)
-mkdir -p $TMPDIR
-pushd $TMPDIR
+cd ../
 git clone git://git.fedorahosted.org/git/spin-kickstarts/
 cd spin-kickstarts
 git checkout f$BRANCHED
-$FULLPATH/scripts/build-livecds $BRANCHED $DATE $BRANCHED
-$FULLPATH/scripts/build-arm-images $BRANCHED $DATE $BRANCHED
-$FULLPATH/scripts/build-cloud-images $BRANCHED $DATE $BRANCHED
-pushd
+../releng/scripts/build-livecds $BRANCHED $DATE $BRANCHED
+../releng/scripts/build-arm-images $BRANCHED $DATE $BRANCHED
+../releng/scripts/build-cloud-images $BRANCHED $DATE $BRANCHED
 
 # Emit a message using bodhi's cert (since we should be running as "masher").
 echo "{\"log\": \"done\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
