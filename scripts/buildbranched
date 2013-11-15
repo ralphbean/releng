@@ -153,7 +153,6 @@ echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fe
     --topic branched.rsync.start \
     --json-input
 
-cd /tmp
 # data
 $RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --link-dest=$TREEPREFIX/development/rawhide/ --exclude repodata/ /mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH/ $DESTPATH
 # repodata & cleanup

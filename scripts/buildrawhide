@@ -146,7 +146,6 @@ echo "{\"log\": \"start\", \"branch\": \"rawhide\", \"arch\": \"$ARCH\"}" | fedm
     --topic rawhide.rsync.start \
     --json-input
 
-cd /tmp
 # data
 $RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --exclude repodata/ /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/ $DESTPATH
 # repodata & cleanup
