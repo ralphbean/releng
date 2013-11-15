@@ -172,7 +172,7 @@ fi
 echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
-    --topic branched.image.start \
+    --topic rawhide.image.start \
     --json-input
 
 cd ../
@@ -187,7 +187,7 @@ cd spin-kickstarts
 echo "{\"log\": \"done\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
-    --topic branched.image.complete \
+    --topic rawhide.image.complete \
     --json-input
 }
 
