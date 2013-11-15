@@ -13,10 +13,13 @@ KICKSTARTS=/srv/pungi/spin-kickstarts/
 
 FULLPATH=$(pwd)
 pushd $KICKSTARTS
-#it pull --rebase
-#FULLPATH/build-livecds $VERSION $COMPOSE
-#FULLPATH/build-arm-images $VERSION $COMPOSE
-#FULLPATH/build-cloud-images $VERSION $DATE
+git reset --hard
+git pull --rebase
+sed -i -e 's|repo --name=fedora .*$|repo --name=fedora --baseurl=http://kojipkgs.fedoraproject.org/mash/branched/$basearch/os/\nrepo --name=bleed --baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/$basearch|g' fedora-install-fedora.ks
+sed -i -e 's|repo --name=fedora-source .*$|repo --name=fedora-source  --baseurl=http://kojipkgs.fedoraproject.org/mash/branched/source/SRPMS/\nrepo --name=bleed-source --baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/SRPMS|g' fedora-install-fedora.ks
+$FULLPATH/build-livecds $VERSION $COMPOSE
+$FULLPATH/build-arm-images $VERSION $COMPOSE
+$FULLPATH/build-cloud-images $VERSION $DATE
 pushd
 
 for arch in armhfp i386 x86_64
