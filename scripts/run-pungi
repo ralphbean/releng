@@ -7,6 +7,7 @@
 VERSION=$1
 COMPOSE=$2
 DATE=$3
+BRANCHED=$4
 DESTDIR=/srv/pungi/$VERSION$COMPOSE/
 FINALDEST=/mnt/fedora_koji/compose/$VERSION$COMPOSE/
 KICKSTARTS=/srv/pungi/spin-kickstarts/
@@ -17,9 +18,9 @@ git reset --hard
 git pull --rebase
 sed -i -e 's|repo --name=fedora .*$|repo --name=fedora --baseurl=http://kojipkgs.fedoraproject.org/mash/branched/$basearch/os/\nrepo --name=bleed --baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/$basearch|g' fedora-install-fedora.ks
 sed -i -e 's|repo --name=fedora-source .*$|repo --name=fedora-source  --baseurl=http://kojipkgs.fedoraproject.org/mash/branched/source/SRPMS/\nrepo --name=bleed-source --baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/SRPMS|g' fedora-install-fedora.ks
-$FULLPATH/build-livecds $VERSION $COMPOSE
-$FULLPATH/build-arm-images $VERSION $COMPOSE
-$FULLPATH/build-cloud-images $VERSION $DATE
+$FULLPATH/build-livecds $VERSION $COMPOSE $BRANCHED
+$FULLPATH/build-arm-images $VERSION $COMPOSE $BRANCHED
+$FULLPATH/build-cloud-images $VERSION $DATE $BRANCHED
 pushd
 
 for arch in armhfp i386 x86_64
