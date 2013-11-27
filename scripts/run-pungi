@@ -80,14 +80,14 @@ popd
 
 USER=$(whoami)
 # stage images
-sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora*armhfp-$VERSION$SHORTCOMPOSE-sda.raw.xz $FINALDEST/$VERSION/Images/armhfp/"
+sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora*armhfp-$SHORTVERSION-$SHORTCOMPOSE-sda.raw.xz $FINALDEST/$VERSION/Images/armhfp/"
 sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-i386*$VERSION-$DATE-sda.raw.xz $FINALDEST/$VERSION/Images/i386/"
 sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-i386*$VERSION-$DATE-sda.qcow2 $FINALDEST/$VERSION/Images/i386/"
 sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-x86_64*$VERSION-$DATE-sda.raw.xz $FINALDEST/$VERSION/Images/x86_64/"
 sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-x86_64*$VERSION-$DATE-sda.qcow2 $FINALDEST/$VERSION/Images/x86_64/"
 
-sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task*/*i686*$VERSION$SHORTCOMPOSE.iso $FINALDEST/$VERSION/Spins/i386/"
-sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task*/*x86_64*$VERSION$SHORTCOMPOSE.iso $FINALDEST/$VERSION/Spins/x86_64/"
+sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task*/*i686*$SHORTVERSION-$SHORTCOMPOSE.iso $FINALDEST/$VERSION/Spins/i386/"
+sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task*/*x86_64*$SHORTVERSION-$SHORTCOMPOSE.iso $FINALDEST/$VERSION/Spins/x86_64/"
 
 mv $FINALDEST/$VERSION/Spins/i386/Fedora-Live-Desktop* $FINALDEST/$VERSION/Live/i386/
 mv $FINALDEST/$VERSION/Spins/i386/Fedora-Live-KDE* $FINALDEST/$VERSION/Live/i386/
