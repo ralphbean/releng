@@ -26,6 +26,6 @@ do
     ksflatten fedora-$arch-cloud.ks -o fedora-$arch-cloud-$GITHASH.ks >& /dev/null
 for format in qcow2 raw
 do
-koji spin-appliance --nowait --scratch --repo=http://infrastructure.fedoraproject.org/pub/fedora/linux/development/$VERSION/$arch/os/ --repo=http://kojipkgs.fedoraproject.org/mash/bleed/$arch/ --vmem=2048 --vcpu=4 Fedora-$arch --release=$DATE $RELEASE $TARGET $arch fedora-$arch-cloud-$GITHASH.ks --format=$format
+koji spin-appliance --nowait --scratch --repo=http://infrastructure.fedoraproject.org/pub/fedora/linux/development/$VERSION/$arch/os/ --repo=http://kojipkgs.fedoraproject.org/mash/bleed/$arch/ --vmem=2048 --vcpu=4 Fedora-$arch --release=$BUILD $RELEASE $TARGET $arch fedora-$arch-cloud-$GITHASH.ks --format=$format
 done
 done
