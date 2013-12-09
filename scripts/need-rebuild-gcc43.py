@@ -11,8 +11,9 @@ import datetime
 ## releng folks, update the blacklist below for packages that the maintainer
 ## wishes to opt-out of autorebuilding.
 
-blacklist = ['thunderbird','banshee','epiphany','epiphany-extensions','libipoddevice','malaga-suomi-voikko','bless','sysvinit','mecab-ipadic','mecab-jumandic','kazehakase','qt','knetworkmanager','autogen','bacula','xfdesktop','fontforge',
-'anjuta','gengetopt','pida','openbabel','plplot','paraview']
+blacklist = []
+#['thunderbird','banshee','epiphany','epiphany-extensions','libipoddevice','malaga-suomi-voikko','bless','sysvinit','mecab-ipadic','mecab-jumandic','kazehakase','qt','knetworkmanager','autogen','bacula','xfdesktop','fontforge',
+#'anjuta','gengetopt','pida','openbabel','plplot','paraview']
 
 kojisession = koji.ClientSession('http://koji.fedoraproject.org/kojihub')
 tocheck = []
@@ -22,14 +23,14 @@ ownermap = {}
 
 print datetime.datetime.isoformat(datetime.datetime.utcnow())
 
-f9builds = kojisession.listTagged('dist-f9', inherit=True, latest=True)
-pkgs = kojisession.listPackages('dist-f9', inherited=True)
+f9builds = kojisession.listTagged('f20', inherit=True, latest=True)
+pkgs = kojisession.listPackages('f20', inherited=True)
 
 for pkg in pkgs:
     ownermap[pkg['package_name']] = pkg['owner_name']
 
 for build in f9builds:
-    if build['creation_time'] < '2008-01-30 15:22:10.000000':
+    if build['creation_time'] < '2013-11-09 23:43:46.000000':
         tocheck.append(build)
 
 checknum = len(tocheck)
@@ -55,7 +56,7 @@ for build in tocheck:
             for rootid in kojisession.listBuildroots(taskID=task['id']):
                 for pkg in kojisession.listRPMs(componentBuildrootID=rootid['id']):
                     if pkg['name'] == 'gcc':
-                        if pkg['version'] < '4.3.0':
+                        if pkg['version'] == '4.8.2' and pkg['release'] == '1.fc20' :
                             if not build in needbuild:
                                 print "adding", build['name']
                                 needbuild.append(build)
