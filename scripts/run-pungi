@@ -12,7 +12,7 @@ DESTDIR=/srv/pungi/$VERSION$COMPOSE/
 FINALDEST=/mnt/fedora_koji/compose/$VERSION$COMPOSE/
 KICKSTARTS=/srv/pungi/spin-kickstarts/
 
-SHORTCOMPOSE=$(echo $COMPOSE|sed -e 's|RC||g')
+SHORTCOMPOSE=$(echo $COMPOSE|sed -e 's|-RC||g')
 SHORTVERSION=$VERSION
 [ -z "$COMPOSE" ] && {
         SHORTVERSION=$(echo $VERSION|sed -e 's|-TC.*||')
