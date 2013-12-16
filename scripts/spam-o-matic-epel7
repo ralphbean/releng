@@ -41,7 +41,7 @@ def generateConfig(distdir, treename, arch):
 debuglevel=2
 logfile=/var/log/yum.log
 pkgpolicy=newest
-distroverpkg=redhat-release
+distroverpkg=redhat-release-everything
 reposdir=/dev/null
 keepcache=0
 
@@ -52,15 +52,11 @@ enabled=1
 
 [rhel-server]
 name=RHEL Server
-baseurl=http://kojipkgs.fedoraproject.org/repo/rhel/rhel-%s-server-6/
+baseurl=http://kojipkgs.fedoraproject.org/rhel/beta/7/%s/os/
 enabled=1
 
-[rhel-server-optional]
-name=RHEL Server - optional
-baseurl=http://kojipkgs.fedoraproject.org/repo/rhel/rhel-%s-server-optional-6/
-enabled=1
 
-""" % (treename, arch, treename, arch, distdir, arch, subdir, arch, arch)
+""" % (treename, arch, treename, arch, distdir, arch, subdir, arch)
     os.write(fd,confheader)
     os.close(fd)
     return conffile
