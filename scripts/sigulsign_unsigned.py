@@ -56,6 +56,7 @@ KEYS = {'fedora-12-sparc': {'id': 'b3eb779b', 'v3': True},
         'fedora-11': {'id': 'd22e77f2', 'v3': True},
         'fedora-10': {'id': '4ebfc273', 'v3': False},
         'fedora-10-testing': {'id': '0b86274e', 'v3': False},
+        'epel-7': {'id': '352c64e5', 'v3': True},
         'epel-6': {'id': '0608b895', 'v3': True},
         'epel-5': {'id': '217521f6', 'v3': False}}
 
