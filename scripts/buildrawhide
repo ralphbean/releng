@@ -136,7 +136,7 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --clean
 rm /mnt/koji/mash/$DIST
 ln -s /mnt/koji/mash/$DIST-$DATE/$BRANCHED$EXPANDARCH/ /mnt/koji/mash/$DIST
 
-echo "Compose finisheded at `date --utc`" > /mnt/koji/mash/rawhide-$DATE/logs/finish
+echo "Compose finished at `date --utc`" > /mnt/koji/mash/rawhide-$DATE/logs/finish
 echo >> /mnt/koji/mash/rawhide-$DATE/logs/finish
 
 # Emit a message using bodhi's cert (since we should be running as "masher").
