@@ -43,14 +43,14 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --no-clean --install koji yum createrepo c
 # Copy in the hosts file so that we get the right address for koji
 mock -r $MOCKCONFIG --uniqueext=$DATE --copyin /etc/hosts /etc/hosts >/dev/null 2>&1 # this reports to fail, but actually works
 mock -r $MOCKCONFIG --uniqueext=$DATE --copyin /etc/mash/epel7.mash /etc/mash/epel7.mash > /dev/null 2>&1 # this reports to fail, but actually works
-mock -r $MOCKCONFIG --uniqueext=$DATE --copyin /usr/share/mash/spam-o-matic-epel7 /usr/share/mash/spam-o-matic-epel7 > /dev/null 2>&1 # this reports to fail, but actually works
+mock -r $MOCKCONFIG --uniqueext=$DATE --copyin scripts/spam-o-matic-epel7 /usr/share/mash/spam-o-matic-epel7 > /dev/null 2>&1 # this reports to fail, but actually works
 # Drop privs here so that we run as the masher UID
 mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash -o /mnt/koji/mash/epel-$DATE --compsfile /mnt/koji/mash/epel-$DATE/logs/comps-epel7.xml epel7 > /mnt/koji/mash/epel-$DATE/logs/mash.log 2>&1" || exit 1
 
 mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "rm -f /var/lib/rpm/__db*"
 mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -q --new=file:///mnt/koji/mash/epel-$DATE/epel7/SRPMS --old=file:///pub/epel/beta/7/SRPMS > /mnt/koji/mash/epel-$DATE/logs/repodiff"
 
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic-epel7 --treename=epel-6 /mnt/koji/mash/epel-$DATE/epel7/ >/mnt/koji/mash/epel-$DATE/logs/depcheck" &
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic-epel7 --treename=epel-7 /mnt/koji/mash/epel-$DATE/epel7/ >/mnt/koji/mash/epel-$DATE/logs/depcheck" &
 
 
 wait
