@@ -48,7 +48,7 @@ DESTPATH="$TREEPREFIX/development/rawhide/"
 
 TMPDIR=`mktemp -d /tmp/rawhide.$DATE.XXXX`
 mkdir -p /mnt/koji/mash/rawhide-$DATE/logs
-echo "Compose started at "$(date --utc) > /mnt/koji/mash/rawhide-$DATE/logs/start"
+echo "Compose started at $(date --utc) > /mnt/koji/mash/rawhide-$DATE/logs/start"
 echo >> /mnt/koji/mash/rawhide-$DATE/logs/start
 
 touch /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.out
