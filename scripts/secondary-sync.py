@@ -149,7 +149,7 @@ def syncArch(arch, repodata):
         if not canonarch == arch:
             archlist = ARCHES[canonarch]
             for subarch in archlist:
-                cmd.extend(['--exclude=%s*' % subarch])
+                cmd.extend(['--exclude=%s' % subarch])
     if repodata:
         cmd.extend(['--delete-after'])
     else:
