@@ -18,7 +18,9 @@ import sys
 
 
 CANONARCHES = ['arm', 'ppc', 's390']
-ARCHES = ['arm', 'armhfp', 'aarch64', 'ppc', 'ppc64', 's390', 's390x']
+ARCHES = {'arm': ['arm', 'armhfp', 'aarch64'],
+          'ppc': ['ppc', 'ppc64', 'pipc64le'],
+          's390': ['s390', 's390x']}
 #TARGETPATH = '/srv/pub/fedora-secondary/test/'
 TARGETPATH = '/srv/pub/fedora-secondary/'
 
@@ -145,7 +147,9 @@ def syncArch(arch, repodata):
     cmd = ['rsync', '-avhHp', '--exclude=.snapshot', '--exclude=archive', '--exclude=SRPMS', '--exclude=source']
     for canonarch in CANONARCHES:
         if not canonarch == arch:
-            cmd.extend(['--exclude=%s*' % canonarch])
+            archlist = ARCHES[canonarch]
+            for subarch in archlist:
+                cmd.extend(['--exclude=%s*' % subarch])
     if repodata:
         cmd.extend(['--delete-after'])
     else:
