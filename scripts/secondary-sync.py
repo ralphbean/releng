@@ -191,11 +191,12 @@ def getSRPM(rpmfilename):
          return None
     return h.sprintf('%{SOURCERPM}')
 
-def srpmLocation(base):
+def srpmLocation(base, package):
     ''' 
     Takes a base path for the sources rpm
     Returns the target path the arch of the hub and path on the hub to find the source
     '''
+    basearch = None
     for arch in CANONARCHES:
         if not base.find(arch) == -1:
             hubarch = arch
@@ -205,7 +206,7 @@ def srpmLocation(base):
                     break
             break
 
-    if not base.endswith(basearch):
+    if not (base.endswith(basearch) or base.endswith("%s/%s" % (basearch, package[1]))) :
         target = base.replace('%s/os/Packages' % basearch, 'source/SRPMS')
     else:
         target = base.replace(basearch, 'SRPMS')
@@ -245,7 +246,7 @@ def main(opts):
                 srpmfile = getSRPM(os.path.join( root, name))
                 if not srpmfile == None:
                     print "getting data for %s" % name
-                    srpms[srpmfile] = srpmLocation(root)
+                    srpms[srpmfile] = srpmLocation(root, name)
             if name.endswith('src.rpm'):
                 existing_srpms[name] = root
 
