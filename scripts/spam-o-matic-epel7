@@ -52,9 +52,13 @@ enabled=1
 
 [rhel-server]
 name=RHEL Server
-baseurl=http://kojipkgs.fedoraproject.org/rhel/beta/7/%s/os/
+baseurl=http://kojipkgs.fedoraproject.org/rhel/rc/7/Server/%s/os/
 enabled=1
 
+[rhel-server-optional]
+name=RHEL Server optional
+baseurl=http://kojipkgs.fedoraproject.org/rhel/rc/7/Server-optional/%s/os/
+enabled=1
 
 """ % (treename, arch, treename, arch, distdir, arch, subdir, arch)
     os.write(fd,confheader)
