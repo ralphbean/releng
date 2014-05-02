@@ -23,6 +23,9 @@ for spin in base
 do
     declare -l lspin
     lspin=$spin
-    ksflatten -c fedora-cloud-$spin.ks -o fedora-cloud-$spin-$GITHASH.ks >& /dev/null
- koji  image-build fedora-cloud-$spin $VERSION --distro Fedora-19 $TARGET --kickstart fedora-cloud-$spin-$GITHASH.ks http://kojipkgs.fedoraproject.org/mash/$VERSION-$BUILD/$VERSION/\$arch/os/ x86_64 i386 --disk-size=3G --format=qcow2 --format=raw --release=$VERSION --scratch --repo=http://kojipkgs.fedoraproject.org/mash/$VERSION-$BUILD/$VERSION/\$arch/os/ --nowait
+    url=http://kojipkgs.fedoraproject.org/mash/$VERSION-$BUILD/$VERSION/\$arch/os/
+    kickstart=fedora-cloud-$lspin-$GITHASH.ks
+    ksflatten -c fedora-cloud-$spin.ks -o $kickstart >& /dev/null
+    echo "url --url=$url"|sed -e 's|$arch|$basearch|g' >> $kickstart
+ koji image-build fedora-cloud-$spin $VERSION --distro Fedora-20 $TARGET --kickstart $kickstart $url x86_64 i386 --format=qcow2 --format=raw --release=$VERSION --scratch --repo=$url --nowait --disk-size=3
 done
