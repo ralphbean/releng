@@ -17,7 +17,7 @@ fi
 
 GITHASH=$(git rev-parse --short HEAD)
 
-SPINS="Minimal Desktop KDE LXDE Mate SoaS Xfce Minimal-VFAT Desktop-VFAT KDE-VFAT LXDE-VFAT Mate-VFAT SoaS-VFAT Xfce-VFAT"
+SPINS="Minimal Workstation KDE LXDE Mate SoaS Xfce"
 for spin in $SPINS
 do
     declare -l lspin
