@@ -17,7 +17,7 @@ fi
 
 GITHASH=$(git rev-parse --short HEAD)
 
-SPINS="Desktop KDE LXDE MATE-Compiz Security SoaS Xfce"
+SPINS="KDE LXDE MATE-Compiz Security SoaS Xfce"
 for spin in $SPINS
 do
     declare -l lspin
@@ -49,7 +49,7 @@ do
    done
 done
 
-SPINS="Design-suite Jam-KDE"
+SPINS="Workstation Design-suite Jam-KDE"
 for spin in $SPINS
 do
     declare -l lspin
