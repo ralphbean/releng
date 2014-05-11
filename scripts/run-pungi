@@ -23,8 +23,8 @@ FULLPATH=$(pwd)
 pushd $KICKSTARTS
 git reset --hard
 git pull --rebase
-sed -i -e 's|repo --name=fedora .*$|repo --name=fedora --baseurl=http://kojipkgs.fedoraproject.org/mash/rawhide/$basearch/os/\nrepo --name=bleed --baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/$basearch|g' fedora-install-fedora.ks
-sed -i -e 's|repo --name=fedora-source .*$|repo --name=fedora-source  --baseurl=http://kojipkgs.fedoraproject.org/mash/rawhide/source/SRPMS/\nrepo --name=bleed-source --baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/SRPMS|g' fedora-install-fedora.ks
+sed -i -e 's|repo --name=fedora .*$|repo --name=fedora --baseurl=http://kojipkgs.fedoraproject.org/mash/rawhide/$basearch/os/\nrepo --name=bleed --baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/$basearch|g' fedora-install*.ks
+sed -i -e 's|repo --name=fedora-source .*$|repo --name=fedora-source  --baseurl=http://kojipkgs.fedoraproject.org/mash/rawhide/source/SRPMS/\nrepo --name=bleed-source --baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/SRPMS|g' fedora-install*.ks
 $FULLPATH/build-livecds "$SHORTVERSION" "$SHORTCOMPOSE" "$BRANCH"
 $FULLPATH/build-arm-images "$SHORTVERSION" "$SHORTCOMPOSE" "$BRANCH"
 #$FULLPATH/build-cloud-images "$VERSION" "$DATE" "$BRANCH"
