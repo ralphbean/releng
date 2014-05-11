@@ -43,7 +43,7 @@ do
     then basearch=armv7hl
     else basearch=$arch
  fi
-  ssh $HOST /bin/bash -- 2>&1 &<< EOF
+  ssh $HOST /bin/bash -- << EOF
  set -x
  umask 002
  mock -r fedora-rawhide-compose-$arch --init || exit 1
