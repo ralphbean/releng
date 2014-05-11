@@ -22,7 +22,7 @@ for spin in $SPINS
 do
     declare -l lspin
     lspin=$spin
-    ksflatten fedora-livecd-$lspin.ks -o fedora-livecd-$lspin-$GITHASH.ks >& /dev/null
+    ksflatten -c fedora-livecd-$lspin.ks -o fedora-livecd-$lspin-$GITHASH.ks >& /dev/null
     for ARCH in $ARCHES
     do
        if [[ $ARCH == i686 ]]
@@ -38,7 +38,7 @@ for spin in $SPINS
 do
     declare -l lspin
     lspin=$spin
-    ksflatten fedora-livedvd-$lspin.ks -o fedora-livedvd-$lspin-$GITHASH.ks >& /dev/null
+    ksflatten -c fedora-livedvd-$lspin.ks -o fedora-livedvd-$lspin-$GITHASH.ks >& /dev/null
     for ARCH in $ARCHES
     do
        if [[ $ARCH == i686 ]]
@@ -54,7 +54,7 @@ for spin in $SPINS
 do
     declare -l lspin
     lspin=$spin
-    ksflatten fedora-live-$lspin.ks -o fedora-live-$lspin-$GITHASH.ks >& /dev/null
+    ksflatten -c fedora-live-$lspin.ks -o fedora-live-$lspin-$GITHASH.ks >& /dev/null
     for ARCH in $ARCHES
     do
        if [[ $ARCH == i686 ]]
