@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-# Copyright (C) 2013 Red Hat, Inc.
+# Copyright (C) 2013-2014 Red Hat, Inc.
 # SPDX-License-Identifier:      GPL-2.0+
 
 VERSION=$1
@@ -46,12 +46,12 @@ do
   ssh $HOST /bin/bash -- 2>&1 &<< EOF
  set -x
  umask 002
- mock -r fedora-branched-compose-$arch --init || exit 1
- mock -r fedora-branched-compose-$arch --shell "pungi -c $KICKSTARTS/fedora-install-workstation.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ --ver $VERSION --flavor Workstation" || exit 1
- mock -r fedora-branched-compose-$arch --shell "pungi -c $KICKSTARTS/fedora-install-server.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ --ver $VERSION --flavor Server" || exit 1
- mock -r fedora-branched-compose-$arch --shell "pungi -c $KICKSTARTS/fedora-install-cloud.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ --ver $VERSION --flavor Cloud" || exit 1
- mock -r fedora-branched-compose-$arch --clean || exit 1
- sg releng "repoclosure -a $basearch --repofrompath=$arch,$DESTDIR$VERSION/Fedora/$arch/os --repoid=$arch > $DESTDIR/logs/Fedora.$arch.repoclosure.log"
+ mock -r fedora-rawhide-compose-$arch --init || exit 1
+ mock -r fedora-rawhide-compose-$arch --shell "pungi -c $KICKSTARTS/fedora-install-workstation.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ --ver $VERSION --flavor Workstation" || exit 1
+ mock -r fedora-rawhide-compose-$arch --shell "pungi -c $KICKSTARTS/fedora-install-server.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ --ver $VERSION --flavor Server" || exit 1
+ mock -r fedora-rawhide-compose-$arch --shell "pungi -c $KICKSTARTS/fedora-install-cloud.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ --ver $VERSION --flavor Cloud" || exit 1
+ mock -r fedora-rawhide-compose-$arch --clean || exit 1
+ sg releng "repoclosure -a $basearch --repofrompath=$arch,$DESTDIR$VERSION/Workstation/$arch/os --repoid=$arch > $DESTDIR/logs/Workstation.$arch.repoclosure.log"
  sg releng "repoclosure -a $basearch --repofrompath=$arch,$DESTDIR$VERSION/Server/$arch/os --repoid=$arch > $DESTDIR/logs/Server.$arch.repoclosure.log"
  sg releng "repoclosure -a $basearch --repofrompath=$arch,$DESTDIR$VERSION/Cloud/$arch/os --repoid=$arch > $DESTDIR/logs/Cloud.$arch.repoclosure.log"
  rsync -avhH --exclude=work $DESTDIR $FINALDEST
@@ -95,13 +95,13 @@ sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora
 sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task*/*i686*$SHORTVERSION-$SHORTCOMPOSE.iso $FINALDEST/$VERSION/Spins/i386/"
 sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task*/*x86_64*$SHORTVERSION-$SHORTCOMPOSE.iso $FINALDEST/$VERSION/Spins/x86_64/"
 
-mv $FINALDEST/$VERSION/Spins/i386/Fedora-Live-Desktop* $FINALDEST/$VERSION/Live/i386/
+mv $FINALDEST/$VERSION/Spins/i386/Fedora-Live-Workstation* $FINALDEST/$VERSION/Workstation/i386/iso/
 mv $FINALDEST/$VERSION/Spins/i386/Fedora-Live-KDE* $FINALDEST/$VERSION/Live/i386/
 mv $FINALDEST/$VERSION/Spins/i386/Fedora-Live-Xfce* $FINALDEST/$VERSION/Live/i386/
 mv $FINALDEST/$VERSION/Spins/i386/Fedora-Live-SoaS* $FINALDEST/$VERSION/Live/i386/
 mv $FINALDEST/$VERSION/Spins/i386/Fedora-Live-LXDE* $FINALDEST/$VERSION/Live/i386/
 mv $FINALDEST/$VERSION/Spins/i386/Fedora-Live-MATE-Compiz* $FINALDEST/$VERSION/Live/i386/
-mv $FINALDEST/$VERSION/Spins/x86_64/Fedora-Live-Desktop* $FINALDEST/$VERSION/Live/x86_64/
+mv $FINALDEST/$VERSION/Spins/x86_64/Fedora-Live-Workstaton* $FINALDEST/$VERSION/Workstation/x86_64/iso/
 mv $FINALDEST/$VERSION/Spins/x86_64/Fedora-Live-KDE* $FINALDEST/$VERSION/Live/x86_64/
 mv $FINALDEST/$VERSION/Spins/x86_64/Fedora-Live-Xfce* $FINALDEST/$VERSION/Live/x86_64/
 mv $FINALDEST/$VERSION/Spins/x86_64/Fedora-Live-SoaS* $FINALDEST/$VERSION/Live/x86_64/
@@ -122,21 +122,47 @@ popd
 # stage the composed tree to final locateion
 sg releng "mkdir /pub/alt/stage/$VERSION$COMPOSE/"
 sg releng "chmod 700 /pub/alt/stage/$VERSION$COMPOSE/"
-for type in Fedora Spins Live Images; do sg releng "rsync -avhH $FINALDEST/$VERSION/$type/ /pub/alt/stage/$VERSION$COMPOSE/$type/"; done
+for type in Workstation Server Cloud Spins Live Images; do sg releng "rsync -avhH $FINALDEST/$VERSION/$type/ /pub/alt/stage/$VERSION$COMPOSE/$type/"; done
 #sg releng "chmod 755 /pub/alt/stage/$VERSION$COMPOSE/"
 
 echo "======= compose output for trac ======="
 echo "http://dl.fedoraproject.org/pub/alt/stage/$VERSION$COMPOSE/"
 echo ""
-echo "armhfp repoclosure"
+echo "armhfp Workstation repoclosure"
 echo "{{{"
-cat $FINALDEST/logs/Fedora.armhfp.repoclosure.log
+cat $FINALDEST/logs/Workstation.armhfp.repoclosure.log
 echo "}}}"
-echo "i386 repoclosure"
+echo "i386 Workstation repoclosure"
 echo "{{{"
-cat $FINALDEST/logs/Fedora.i386.repoclosure.log
+cat $FINALDEST/logs/Workstation.i386.repoclosure.log
 echo "}}}"
-echo "x86_64 repoclosure"
+echo "x86_64 Workstation repoclosure"
 echo "{{{"
-cat $FINALDEST/logs/Fedora.x86_64.repoclosure.log
+cat $FINALDEST/logs/Workstation.x86_64.repoclosure.log
+echo "}}}"
+echo ""
+echo "armhfp Server repoclosure"
+echo "{{{"
+cat $FINALDEST/logs/Server.armhfp.repoclosure.log
+echo "}}}"
+echo "i386 Server repoclosure"
+echo "{{{"
+cat $FINALDEST/logs/Server.i386.repoclosure.log
+echo "}}}"
+echo "x86_64 Server repoclosure"
+echo "{{{"
+cat $FINALDEST/logs/Server.x86_64.repoclosure.log
+echo "}}}"
+echo ""
+echo "armhfp Cloud repoclosure"
+echo "{{{"
+cat $FINALDEST/logs/Cloud.armhfp.repoclosure.log
+echo "}}}"
+echo "i386 Cloud repoclosure"
+echo "{{{"
+cat $FINALDEST/logs/Cloud.i386.repoclosure.log
+echo "}}}"
+echo "x86_64 Cloud repoclosure"
+echo "{{{"
+cat $FINALDEST/logs/Cloud.x86_64.repoclosure.log
 echo "}}}"
