@@ -34,8 +34,12 @@ smtpserver = 'localhost'
 
 def usage():
     print """
-    check-upgrade-paths.py tag1 tag2 [tag3 tag4]
+    check-upgrade-paths.py tag1 [/]tag2 [[/]tag3 [/]tag4]
     tags must be in ascending order, f8-gold dist-f8-updates dist-f8-updates-testing dist-f9-updates ...
+    prepending a / is special: A /B C means A will not be checked against B, but against the union of B and C
+    Only A is affected, everything preceding A will still be checked against B normally, as will B against C.
+    The usecase for this feature is updates-testing, e.g.:
+    dist-f8-updates dist-f8-updates-testing /dist-f9-updates dist-f9-updates-testing
     """
 
 def compare(pkgA, pkgB):
@@ -87,13 +91,25 @@ elif len(sys.argv) < 3:
     usage()
     sys.exit(1)
 else:
-    tags = sys.argv[1:]
+    cmdtags = sys.argv[1:]
 
 kojisession = koji.ClientSession('http://koji.fedoraproject.org/kojihub')
 tagdict = {}
 pkgdict = {}
+slashdict = {}
 badpaths = {}
 badpathsbybuilder = {}
+
+# Remove prepended slashes and make a dict of them
+tags = []
+for tag in cmdtags:
+  if tag[0] == '/':
+    realtag = tag[1:]
+    tags.append(realtag)
+    slashdict[realtag] = True
+  else:
+    tags.append(tag)
+    slashdict[tag] = False
 
 # Use multicall to get the latest tagged builds from each tag
 kojisession.multicall = True
@@ -117,12 +133,18 @@ for tag in tags:
 # then proceed to the next given tag and again compare upwards
 for pkg in pkgdict:
     for tag in tags[:-1]: # Skip the last tag since there is nothing to compare it to
-        for nexttag in tags[tags.index(tag)+1:]: # Compare from current tag up
+        idx = tags.index(tag)
+        for nexttag in tags[idx+1:]: # Compare from current tag up
             if pkgdict[pkg].has_key(tag):
                 if pkgdict[pkg].has_key(nexttag): # only compare if the next tag knows about this package
                     rc = compare(pkgdict[pkg][tag]['nvr'], pkgdict[pkg][nexttag]['nvr'])
                     if rc <= 0:
                         continue
+                    if rc > 0 and tags.index(nexttag) == idx+1 and slashdict[nexttag] and idx+2 < len(tags):
+                        # Broken? Need to check the next tag!
+                        nextnexttag = tags[idx+2]
+                        if pkgdict[pkg].has_key(nextnexttag):
+                            rc = compare(pkgdict[pkg][tag]['nvr'], pkgdict[pkg][nextnexttag]['nvr'])
                     if rc > 0:
                         # We've got something broken here.
                         if not badpaths.has_key(pkg):
@@ -139,7 +161,7 @@ To: %s
 Subject: Package EVR problems in Fedora %s
 
 """ % (fromaddr, toaddr, datetime.date.today())
-msg += "Broken upgrade path report for tags %s:\n" % ' -> '.join(tags)
+msg += "Broken upgrade path report for tags %s:\n" % ' -> '.join(cmdtags)
 
 pkgs = badpaths.keys()
 pkgs.sort()
