@@ -37,7 +37,8 @@ import xmlrpclib
 import webbrowser
 import socket
 from configobj import ConfigObj, flatten_errors
-from fedora.client import AccountSystem, AuthError, AppError, PackageDB
+from fedora.client import AccountSystem, AuthError, AppError
+from pkgdb2client import PkgDB
 from optparse import OptionParser
 from validate import Validator
 
@@ -136,21 +137,34 @@ def encode_utf8(object, encoding='utf8', errors='replace'):
             return object
     return u''
 
-def add_package(pkgdb, request):
+def add_package(pkgdb, request, bug):
     for retry in range(1, config['pkgdb.retries'] + 1):
         try:
             # Note: must stringify the pkg; it blows up with unicode
-            pkgdb.add_package(pkg=str(request['pkg']),
-                    owner=request['owner'],
-                    description=request['description'],
-                    branches=request['branches'],
-                    cc_list=request['cc_list'],
-                    comaintainers=request['comaintainers'])
+            pkgdb.create_package(
+                str(request['pkg']),
+                request['description'],
+                None,
+                'https://bugzilla.redhat.com/%d' % bug.id,
+                'Approved',
+                True, # TODO: Nuke this eventually?
+                request['branches'],
+                request['owner'],
+                request.get('upstream_url', ''))
+
+            # Set comaintainer ACLs
+            for i in request['comaintainers']:
+                pkgdb.update_acl(
+                    str(request['pkg']),
+                    request['branches'],
+                    ['watchcommits', 'watchbugzilla', 'approveacls', 'commit'],
+                    'Approved',
+                    i)
         except AuthError, e:
             if sys.stdin.isatty():
                 if retry >= config['pkgdb.retries']:
                     break
-                pkgdb.password = getpass.getpass('PackageDB Password: ')
+                #pkgdb.password = getpass.getpass('PackageDB Password: ')
             else:
                 # Don't retry if we're reading the password from stdin
                 break
@@ -160,15 +174,17 @@ def add_package(pkgdb, request):
 def edit_package(pkgdb, request):
     for retry in range(1, config['pkgdb.retries'] + 1):
         try:
-            pkgdb.edit_package(pkg=request['pkg'],
-                    owner=request['owner'],
-                    branches=request['newbranches'],
-                    cc_list=request['cc_list'],
-                    comaintainers=request['comaintainers'])
+            for i in ([request['owner']] + request['comaintainers']):
+                pkgdb.update_acl(
+                    str(request['pkg']),
+                    request['newbranches'],
+                    ['watchcommits', 'watchbugzilla', 'approveacls', 'commit'],
+                    'Approved',
+                    i)
         except AuthError, e:
             if retry >= config['pkgdb.retries']:
                 break
-            pkgdb.password = getpass.getpass('PackageDB Password: ')
+            #pkgdb.password = getpass.getpass('PackageDB Password: ')
         else:
             break
 
@@ -276,25 +292,18 @@ def parse_prefixed_lines(s):
 
 def clean_branches(branches):
     '''Clean up a list of branches and turn them into what pkgdb expects.'''
+    branches = branches.lower()
     branches = re.sub(r',', ' ', branches)
-    branches = re.sub(r'F', 'f', branches)
-    branches = re.sub(r'EL', 'el', branches)
     branches = re.sub(r'devel', ' ', branches)
     branches = re.sub(r'master', ' ', branches)
     branches = re.sub(r'f-([1-9][0-9])', r'f\1', branches)
     branches = re.sub(r'el-([1-6])', r'el\1', branches)
     branches = re.sub(r'el-([7-9])', r'epel\1', branches)
     branches = re.sub(r'epel-([1-9])', r'epel\1', branches)
+    branches = re.sub(r'epel([1-9])', r'el\1', branches)
     branches = re.sub(r' +', ' ', branches)
-
-    # Now make things nasty to satisfy history
-    branches = re.sub(r'el4', r'EL-4', branches)
-    branches = re.sub(r'el5', r'EL-5', branches)
-    branches = re.sub(r'el6', r'EL-6', branches)
-    #branches = re.sub(r'el7', r'epel7', branches)
-
+    branches = re.sub(r'el7', r'epel7', branches)
     branches = branches.strip()
-
     return branches
 
 
@@ -308,6 +317,8 @@ def clean_request(items):
         items['Owners'] = ''
     if not 'Short Description' in items:
         items['Short Description'] = ''
+    if not 'Upstream URL' in items:
+        items['Upstream URL'] = ''
 
     branches = clean_branches(items['Branches'].strip())
     branches += ' devel'
@@ -329,9 +340,13 @@ def clean_request(items):
 
     cclist = items['InitialCC'].strip()
     cclist = re.sub(r',', ' ', cclist)
+
+    upstreamurl = items['Upstream URL'].strip()
+
     request['cc_list'] = cclist.split()
     request['pkg'] = items['Package Name']
     request['description'] = items['Short Description']
+    request['upstream_url'] = upstreamurl
 
     return request
 
@@ -344,6 +359,7 @@ def new_request_string(items, bug):
     r.append("=======================")
     r.append("Package Name: " + items['Package Name'])
     r.append("Short Description: " + items['Short Description'])
+    r.append("Upstream URL: " + items['Upstream URL'])
     r.append("Owners: " + items['Owners'])
     r.append("Branches: " + items['Branches'])
     r.append("InitialCC: " + items['InitialCC'])
@@ -368,22 +384,21 @@ def get_pkgdb_owners(pkgdb, pkg):
     owners = {}
     o = ''
     try:
-        ownerlist = pkgdb.get_owners(pkg)['packageListings']
-    except AppError, e:
+        #ownerlist = pkgdb.get_owners(pkg)['packageListings']
+        package = pkgdb.get_package(pkg)
+    except PkgDBException, e:
         return(owners, o)
 
-    for i in ownerlist:
+    valid_branches = filter(lambda x: x['collection']['branchname'] in branches.keys(), package['packages'])
+    for i in valid_branches:
         branch = i['collection']['branchname']
-        if branch not in branches:
-            continue
-
         owners[branch] = {}
-        owners[branch]['primary'] = i['owner']
-        owners[branch]['comaint'] = []
-        for j in i['people']:
-            #if 'commit' in j['aclOrder']:
-            if j['aclOrder']['commit'] != None and j['username'] != owners[branch]:
-                owners[branch]['comaint'].append(j['username'])
+        owners[branch]['primary'] = i['point_of_contact']
+
+        # Get fas names of all people with commit access
+        # then filter out 'group::' and the POC.
+        comaint = map(lambda x: x['fas_name'], filter(lambda x: x['acl'] == 'commit', i['acls']))
+        owners[branch]['comaint'] = filter(lambda x: not x.startswith('group::') and x != i['point_of_contact'], comaint)
 
     for i in sorted(branches, reverse=True):
         if i in owners:
@@ -481,6 +496,9 @@ def process_new_request(bug, comment, allcomments, firstfound, pkgdb, fas, branc
     if not('Short Description' in items) or not(len(items['Short Description'])):
         warnings.append("WARNING: No description provided.")
         warned = True
+    if not 'Upstream URL' in items:
+        warnings.append("WARNING: No upstream URL provided.")
+        warned = True
     for i in request['branches']:
         if i not in branches:
             warnings.append("WARNING: Invalid branch %s requested" % i)
@@ -507,6 +525,10 @@ def process_new_request(bug, comment, allcomments, firstfound, pkgdb, fas, branc
         warned = True
     elif m.group(1) != items['Package Name']:
         warnings.append("WARNING: Requested package name %s doesn't match bug summary %s" % (items['Package Name'], m.group(1)))
+        warned = True
+
+    if items.get('Upstream URL', None) and not items['Upstream URL'].startwith('http://') and not items['Upstream URL'].startwith('https://'):
+        warnings.append("WARNING: Upstream URL seems to be invalid")
         warned = True
 
     req_string = new_request_string(items, bug)
@@ -566,7 +588,7 @@ def process_new_request(bug, comment, allcomments, firstfound, pkgdb, fas, branc
                     break
                 print 'Calling pkgdb...'
                 try:
-                    add_package(pkgdb, request)
+                    add_package(pkgdb, request, bug)
                 except Exception, e:
                     print "Pkgdb call failed:"
                     print e
@@ -745,7 +767,6 @@ def create_branches(package, pkghost, pkghostlocal, processed):
     return processed
 
 if __name__ == '__main__':
-    branches = {}
     processed = []
     options = parse_commandline()
 
@@ -783,11 +804,16 @@ if __name__ == '__main__':
 
     print "Connecting to pkgdb..."
     config = parse_pkgdb_config()
-    pkgdb = PackageDB(config['pkgdb.url'], username=options.user,
-            debug=options.debug)
+    pkgdb = PkgDB(config['pkgdb.url'], True)
+    pkgdb.login(options.user, getpass.getpass('PackageDB Password: '), True)
+
     print "Getting valid branches...."
-    for i in pkgdb.get_collection_list(eol=False):
-        branches[i[0]['branchname']] = 1
+    collections = pkgdb.get_collections(
+        clt_status=['Active', 'Under Development'])
+    branches = dict(
+        (k,v) for (k,v) in map(
+            lambda q: (q['branchname'], 1),
+            collections['collections']))
 
     # Prune any obsolete branches
     if OBSOLETE_BRANCH in branches:
