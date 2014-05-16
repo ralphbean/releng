@@ -321,7 +321,7 @@ def clean_request(items):
         items['Upstream URL'] = ''
 
     branches = clean_branches(items['Branches'].strip())
-    branches += ' devel'
+    branches += ' master'
     items['Branches'] = branches
     request['branches'] = branches.split() 
 
