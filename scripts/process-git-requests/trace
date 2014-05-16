@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "./process-git-requests", line 856, in <module>
+    (package, more) = process_new_request(i, j,
+comments['bugs'][str(i.id)]['comments'], firstfound, pkgdb, fas, branches)
+  File "./process-git-requests", line 530, in process_new_request
+    if items.get('Upstream URL', None) and not items['Upstream
+URL'].startwith('http://') and not items['Upstream
+URL'].startwith('https://'):
+AttributeError: 'str' object has no attribute 'startwith'

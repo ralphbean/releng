@@ -527,7 +527,7 @@ def process_new_request(bug, comment, allcomments, firstfound, pkgdb, fas, branc
         warnings.append("WARNING: Requested package name %s doesn't match bug summary %s" % (items['Package Name'], m.group(1)))
         warned = True
 
-    if items.get('Upstream URL', None) and not items['Upstream URL'].startwith('http://') and not items['Upstream URL'].startwith('https://'):
+    if items.get('Upstream URL', None) and not items['Upstream URL'].startswith('http://') and not items['Upstream URL'].startwith('https://'):
         warnings.append("WARNING: Upstream URL seems to be invalid")
         warned = True
 
