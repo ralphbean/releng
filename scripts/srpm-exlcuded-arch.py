@@ -19,7 +19,7 @@ OptionParser = optparse.OptionParser
 usage = "%prog [options]"
 parser = OptionParser(usage=usage)
 parser.add_option("-a", "--arches", 
-       help="arches to check for")
+       help="space or command separated list of arches to check for")
 parser.add_option("--path", default='./',
        help="path to dir with srpms, default current directory")
 (options, args) = parser.parse_args()
@@ -28,7 +28,10 @@ if arches == None:
    print "You must pass arches to check for in."
    sys.exit()
 else:
-   arches = arches.split(',')
+   if arches.find(',') == -1:
+        arches = arches.split(' ')
+   else:
+        arches = arches.split(',')
 
 srpm_path = options.path
 srpms = glob.glob('%s/*.rpm' % srpm_path)
