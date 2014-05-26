@@ -19,7 +19,7 @@ import sys
 
 CANONARCHES = ['arm', 'ppc', 's390']
 ARCHES = {'arm': ['arm', 'armhfp', 'aarch64'],
-          'ppc': ['ppc', 'ppc64', 'pipc64le'],
+          'ppc': ['ppc', 'ppc64', 'ppc64le'],
           's390': ['s390', 's390x']}
 #TARGETPATH = '/srv/pub/fedora-secondary/test/'
 TARGETPATH = '/srv/pub/fedora-secondary/'
