@@ -38,7 +38,7 @@ import webbrowser
 import socket
 from configobj import ConfigObj, flatten_errors
 from fedora.client import AccountSystem, AuthError, AppError
-from pkgdb2client import PkgDB
+from pkgdb2client import PkgDB, PkgDBException
 from optparse import OptionParser
 from validate import Validator
 
@@ -137,20 +137,43 @@ def encode_utf8(object, encoding='utf8', errors='replace'):
             return object
     return u''
 
+# Get all valid branches for a package:
+# pkg_branches :: PkgDB -> String -> (IO) [String]
+def pkg_branches(pkgdb, pkg):
+    package = pkgdb.get_package(str(pkg))
+    valid_branches = filter(lambda x: x['collection']['branchname'] in branches.keys(), package['packages'])
+    return map(lambda x: x['collection']['branchname'], valid_branches)
+
 def add_package(pkgdb, request, bug):
+
+    # A nested helper function to see if a package exists or not.
+    # pkg_exists :: String -> (IO) Bool
+    def pkg_exists(pkg):
+        try:
+            pkgdb.get_package(str(pkg))
+        except PkgDBException:
+            # We get an error back if (at least) the package doesn't exist.
+            return False
+        return True
+
     for retry in range(1, config['pkgdb.retries'] + 1):
         try:
-            # Note: must stringify the pkg; it blows up with unicode
-            pkgdb.create_package(
-                str(request['pkg']),
-                request['description'],
-                None,
-                'https://bugzilla.redhat.com/%d' % bug.id,
-                'Approved',
-                True, # TODO: Nuke this eventually?
-                request['branches'],
-                request['owner'],
-                request.get('upstream_url', ''))
+            if pkg_exists(request['pkg']):
+                pkgdb.update_package_poc(request['pkg'],
+                                         pkg_branches(pkgdb, request['pkg']),
+                                         request['owner'])
+            else:
+                # Note: must stringify the pkg; it blows up with unicode
+                pkgdb.create_package(
+                    str(request['pkg']),
+                    request['description'],
+                    None,
+                    'https://bugzilla.redhat.com/%d' % bug.id,
+                    'Approved',
+                    True, # TODO: Nuke this eventually?
+                    request['branches'],
+                    request['owner'],
+                    request.get('upstream_url', ''))
 
             # Set comaintainer ACLs
             for i in request['comaintainers']:
@@ -384,11 +407,12 @@ def get_pkgdb_owners(pkgdb, pkg):
     owners = {}
     o = ''
     try:
-        #ownerlist = pkgdb.get_owners(pkg)['packageListings']
         package = pkgdb.get_package(pkg)
     except PkgDBException, e:
-        return(owners, o)
+        return (owners, o)
 
+    # This mostly duplicates a procedure above, but we need more than just
+    # the branch name :(
     valid_branches = filter(lambda x: x['collection']['branchname'] in branches.keys(), package['packages'])
     for i in valid_branches:
         branch = i['collection']['branchname']
@@ -397,8 +421,11 @@ def get_pkgdb_owners(pkgdb, pkg):
 
         # Get fas names of all people with commit access
         # then filter out 'group::' and the POC.
-        comaint = map(lambda x: x['fas_name'], filter(lambda x: x['acl'] == 'commit', i['acls']))
-        owners[branch]['comaint'] = filter(lambda x: not x.startswith('group::') and x != i['point_of_contact'], comaint)
+        if 'acls' in i:
+            comaint = map(lambda x: x['fas_name'], filter(lambda x: x['acl'] == 'commit', i['acls']))
+            owners[branch]['comaint'] = filter(lambda x: not x.startswith('group::') and x != i['point_of_contact'], comaint)
+        else:
+            owners[branch]['comaint'] = []
 
     for i in sorted(branches, reverse=True):
         if i in owners:
