@@ -15,8 +15,8 @@ import operator
 
 # Set some variables
 # Some of these could arguably be passed in as args.
-target = 'f20' # tag to tag into
-holdingtag = 'f20-rebuild' # tag holding the rebuilds
+target = 'f21' # tag to tag into
+holdingtag = 'f21-python' # tag holding the rebuilds
 newbuilds = {} # dict of packages that have a newer build attempt
 tasks = {} # dict of new build task info
 
