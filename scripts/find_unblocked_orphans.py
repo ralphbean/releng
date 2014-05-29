@@ -20,8 +20,8 @@ from Queue import Queue
 import sys
 from threading import Thread
 
-import fedora.client
 import koji
+import pkgdb2client
 import yum
 
 try:
@@ -37,15 +37,11 @@ except ImportError:
 DEFAULT_REPO = 'http://kojipkgs.fedoraproject.org/mash/rawhide/i386/os'
 DEFAULT_SOURCE_REPO = \
     'http://kojipkgs.fedoraproject.org/mash/rawhide/source/SRPMS'
-TAG = 'f20'  # tag to check in koji
+TAG = 'f21'  # tag to check in koji
 
-# pre-branch, this should be 8 and 'devel'. Post-branch, you need
-# to look it up via:
-#  pkgdb = fedora.client.PackageDB()
-#  list = pkgdb.get_collection_list()
-# Will generally be 20-something and 'F-xx'
-RAWHIDE_COLLECTION = 8  # pkgdb ID for the devel branch
-RAWHIDE_BRANCHNAME = 'devel'  # pkgdb name for the devel branch
+# pre-branch, this should be master'. Post-branch, it will be something like
+# fXY
+RAWHIDE_BRANCHNAME = 'master'  # pkgdb name for the devel branch
 
 # pkgdb uid for orphan
 ORPHAN_UID = 'orphan'
@@ -57,7 +53,7 @@ so now with a proper reason:
 https://fedoraproject.org/wiki/How_to_remove_a_package_at_end_of_life
 
 According to https://fedoraproject.org/wiki/Schedule branching will
-occur not earlier than 2013-08-20. The packages will be retired shortly before.
+occur not earlier than 2015-07-08. The packages will be retired shortly before.
 
 Note: If you received this mail directly you (co)maintain one of the affected
 packages or a package that depends on one.
@@ -69,7 +65,7 @@ https://fedorahosted.org/rel-eng/
 The sources of this script can be found at:
 https://git.fedorahosted.org/cgit/releng/tree/scripts/find_unblocked_orphans.py
 """
-pkgdb = fedora.client.PackageDB()
+pkgdb = pkgdb2client.PkgDB()
 
 
 def get_cache(filename,
@@ -120,17 +116,18 @@ people_dict = get_cache("orphans-people.pickle", default={})
 
 
 def get_people(package, branch=RAWHIDE_BRANCHNAME):
-    def associated(pkglisting):
-        acl = pkglisting['aclOrder']
-        return acl['commit'] or \
-            acl['approveacls'] or \
-            acl['watchbugzilla'] or \
-            acl['watchcommits']
+    def associated(pkginfo):
+        other_people = set()
+        for acl in pkginfo.get("acls", []):
+            if acl["status"] == "Approved":
+                if acl["fas_name"] != "group::provenpackager":
+                    other_people.add(acl["fas_name"])
+        return sorted(other_people)
 
-    pkginfo = pkgdb.get_package_info(package, branch=branch)
-    pkginfo = pkginfo.packageListings[0]
-    people_ = [pkginfo.owner]
-    people_.extend(p['username'] for p in pkginfo['people'] if associated(p))
+    pkginfo = pkgdb.get_package(package, branches=branch)
+    pkginfo = pkginfo["packages"][0]
+    people_ = [pkginfo["point_of_contact"]]
+    people_.extend(associated(pkginfo))
     return people_
 
 
@@ -187,28 +184,21 @@ def SRPM(package):
         sys.exit(1)
 
 
-def orphan_packages(collection_id=RAWHIDE_COLLECTION,
-                    cache_filename='orphans.pickle'):
+def orphan_packages(cache_filename='orphans.pickle'):
     orphans = get_cache(cache_filename, default={})
 
     if orphans:
         return orphans
     else:
-        pkgs = pkgdb.orphan_packages()
-        # Reduce to packages orphaned on devel
+        pkgdbresponse = pkgdb.get_packages("", orphaned=True,
+                                           branches="master", page="all")
+        pkgs = pkgdbresponse["packages"]
         for p in pkgs:
-            for listing in p['listings']:
-                if listing['collectionid'] == collection_id:
-                    # statuscode cheatsheet:
-                    # 14 orphaned
-                    # 20 deprecated
-                    if listing['owner'] == ORPHAN_UID and \
-                            listing['statuscode'] == 14:
-                        orphans[p['name']] = p
-            try:
-                write_cache(orphans, cache_filename)
-            except IOError, e:
-                sys.stderr.write("Caching of orphans failed: {0}\n".format(e))
+            orphans[p["name"]] = p
+        try:
+            write_cache(orphans, cache_filename)
+        except IOError, e:
+            sys.stderr.write("Caching of orphans failed: {0}\n".format(e))
         return orphans
 
 
@@ -355,9 +345,12 @@ def recursive_deps(packages, max_deps=10):
         dep_map[name] = OrderedDict()
         to_check = [name]
         allow_more = True
+        seen = []
         while True:
             sys.stderr.write("to_check: {0}\n".format(repr(to_check)))
-            dep_packages = dependent_packages(to_check.pop(), ignore)
+            check_next = to_check.pop()
+            seen.append(check_next)
+            dep_packages = dependent_packages(check_next, ignore)
             if dep_packages:
                 new_names = []
                 new_srpm_names = set()
@@ -367,7 +360,8 @@ def recursive_deps(packages, max_deps=10):
                     else:
                         srpm_name = pkg.name
                     if srpm_name not in to_check and \
-                            srpm_name not in new_names:
+                            srpm_name not in new_names and \
+                            srpm_name not in seen:
                         new_names.append(srpm_name)
                     new_srpm_names.add(srpm_name)
 
