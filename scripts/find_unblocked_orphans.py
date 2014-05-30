@@ -261,27 +261,31 @@ package_mapper = BinSrcMapper()
 sys.stderr.write("done\n")
 
 
-def dependent_packages(name, ignore):
-    """ Return dependent packages for package ``name`` that are built from
-        different SPECS or that shall be ignored
-        :param ignore: list of names
+def find_dependent_packages(srpmname, ignore):
+    """ Return packages depending on packages built from SRPM ``srpmname``
+        that are built from different SRPMS not specified in ``ignore``.
+
+        :param ignore: list of SRPMs of packages that will not be returned as
+            dependent packages.
         :type ignore: list() of str()
 
         :returns: OrderedDict dependent_package: list of requires only provided
-                  by package ``name``
+                  by package ``srpmname``
                   {dep_pkg: [prov, ...]}
     """
-    provides = []
-    dep_packages = {}
-    # Generate a dict of orphans to things requiring them and why
     # Some of this code was stolen from repoquery
-    try:  # We may have some orphans that aren't in the repo
-        rpms = package_mapper.by_src[name]
+    dependent_packages = {}
+
+    # Handle packags not found in the repo
+    try:
+        rpms = package_mapper.by_src[srpmname]
     except KeyError:
         # If we don't have a package in the repo, there is nothing to do
-        sys.stderr.write("Package {0} not found in repo\n".format(name))
+        sys.stderr.write("Package {0} not found in repo\n".format(srpmname))
         rpms = []
 
+    # provides of all packages built from ``srpmname``
+    provides = []
     for pkg in rpms:
         # add all the provides from the package as strings
         string_provides = [yum.misc.prco_tuple_to_string(prov)
@@ -308,15 +312,15 @@ def dependent_packages(name, ignore):
 
         # Elide provide if also provided by another package
         for pkg in yb.pkgSack.searchProvides(base_provide):
-            # FIXME: might miss broken in case the other provider
+            # FIXME: might miss broken dependencies in case the other provider
             # depends on a to-be-removed package as well
-            if pkg.name not in ignore:
+            if pkg.sourcerpm.rsplit('-', 2)[0] not in ignore:
                 break
         else:
             for dependent_pkg in yb.pkgSack.searchRequires(base_provide):
                 # skip if the dependent rpm package belongs to the
                 # to-be-removed Fedora package
-                if dependent_pkg in package_mapper.by_src[name]:
+                if dependent_pkg in package_mapper.by_src[srpmname]:
                     continue
 
                 # skip if the dependent rpm package is also a
@@ -326,8 +330,8 @@ def dependent_packages(name, ignore):
 
                 # use setdefault to either create an entry for the
                 # dependent package or add the required prov
-                dep_packages.setdefault(dependent_pkg, set()).add(prov)
-    return OrderedDict(sorted(dep_packages.items()))
+                dependent_packages.setdefault(dependent_pkg, set()).add(prov)
+    return OrderedDict(sorted(dependent_packages.items()))
 
 
 def recursive_deps(packages, max_deps=10):
@@ -350,11 +354,11 @@ def recursive_deps(packages, max_deps=10):
             sys.stderr.write("to_check: {0}\n".format(repr(to_check)))
             check_next = to_check.pop()
             seen.append(check_next)
-            dep_packages = dependent_packages(check_next, ignore)
-            if dep_packages:
+            dependent_packages = find_dependent_packages(check_next, ignore)
+            if dependent_packages:
                 new_names = []
                 new_srpm_names = set()
-                for pkg, dependencies in dep_packages.items():
+                for pkg, dependencies in dependent_packages.items():
                     if pkg.arch != "src":
                         srpm_name = package_mapper.by_bin[pkg].name
                     else:
@@ -422,15 +426,15 @@ def dependency_info(dep_map, affected_people):
     for package_name, subdict in dep_map.items():
         if subdict:
             info += "Depending on: %s\n" % package_name
-            for fedora_package, dep_packages in subdict.items():
+            for fedora_package, dependent_packages in subdict.items():
                 people = people_dict[fedora_package]
                 for p in people:
                     affected_people.setdefault(p, set()).add(package_name)
                 p = ", ".join(people)
                 info += "\t{0} (maintained by: {1})\n".format(fedora_package,
                                                               p)
-                for dep in dep_packages:
-                    provides = ", ".join(sorted(dep_packages[dep]))
+                for dep in dependent_packages:
+                    provides = ", ".join(sorted(dependent_packages[dep]))
                     info += "\t\t%s requires %s\n" % (dep.nvra, provides)
                 info += "\n"
             info += "\n"
