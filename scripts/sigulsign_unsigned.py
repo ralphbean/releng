@@ -190,7 +190,7 @@ parser.add_option('--write-all', action='store_true', default=False,
                   help='Write every rpm, not just unsigned')
 parser.add_option('--password',
                   help='Password for the key')
-parser.add_option('--batch-mode',
+parser.add_option('--batch-mode', action="store_true", default=False,
                   help='Read null-byte terminated password from stdin')
 parser.add_option('--arch',
                   help='Architecture when siging secondary arches')
