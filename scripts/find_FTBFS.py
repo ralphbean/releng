@@ -12,13 +12,13 @@ import operator
 
 import koji
 
-branched_tag = 'f20'
+branched_tag = 'f21'
 
 f18_rebuild_start = '2012-07-17 14:18:03.000000'
 f19_rebuild_start = '2013-07-25 00:00:00.000000'
 f20_rebuild_start = '2013-07-25 00:00:00.000000'
 
-epoch = f18_rebuild_start
+epoch = f19_rebuild_start
 
 kojihub = 'http://koji.fedoraproject.org/kojihub'
 kojisession = koji.ClientSession(kojihub)
