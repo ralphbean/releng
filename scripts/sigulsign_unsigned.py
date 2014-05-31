@@ -311,7 +311,7 @@ for ([result], rpm) in zip(results, rpmdict.keys()):
 if opts.just_list:
     logging.info('Just listing rpms')
     print('\n'.join(unsigned))
-    sys.exit(0)
+    exit(status)
 
 logging.debug('Found %s unsigned rpms' % len(unsigned))
 
