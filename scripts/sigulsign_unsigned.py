@@ -60,6 +60,7 @@ KEYS = {'fedora-12-sparc': {'id': 'b3eb779b', 'v3': True},
         'epel-6': {'id': '0608b895', 'v3': True},
         'epel-5': {'id': '217521f6', 'v3': False}}
 
+
 def exit(status):
     """End the program using status, report any errors"""
 
@@ -70,6 +71,7 @@ def exit(status):
                 logging.error('     ' + fault)
 
     sys.exit(status)
+
 
 # Throw out some functions
 def writeRPMs(status, batch=None):
@@ -84,7 +86,7 @@ def writeRPMs(status, batch=None):
 
     # Check to see if we want to write all, or just the unsigned.
     if not opts.write_all:
-        if batch == None:
+        if batch is None:
             rpms = [rpm for rpm in rpmdict.keys() if rpm in unsigned]
         else:
             rpms = batch
@@ -94,7 +96,7 @@ def writeRPMs(status, batch=None):
     kojisession.multicall = True
     for rpm in rpms:
         logging.debug('Writing out %s with %s, %s of %s' % (rpm, key,
-                      rpms.index(rpm)+1, len(rpms)))
+                      rpms.index(rpm) + 1, len(rpms)))
         kojisession.writeSignedRPM(rpm, KEYS[key]['id'])
         count += 1
         workset.append(rpm)
@@ -155,11 +157,11 @@ parser.add_option('--arch',
 # Get our options and arguments
 (opts, args) = parser.parse_args()
 
-if opts.verbose <= 0:   
+if opts.verbose <= 0:
     loglevel = logging.WARNING
 elif opts.verbose == 1:
-    loglevel = logging.INFO 
-else: # options.verbose >= 2
+    loglevel = logging.INFO
+else:  # options.verbose >= 2
     loglevel = logging.DEBUG
 
 
@@ -294,20 +296,25 @@ logging.debug('Found %s unsigned rpms' % len(unsigned))
 
 if opts.arch:
     # Now run the unsigned stuff through sigul
-    command = ['sigul', '--batch', 'sign-rpms', '-k', opts.arch, '--store-in-koji', '--koji-only']
+    command = ['sigul', '--batch', 'sign-rpms', '-k', opts.arch,
+               '--store-in-koji', '--koji-only']
 else:
     # Now run the unsigned stuff through sigul
-    command = ['sigul', '--batch', 'sign-rpms', '--store-in-koji', '--koji-only']
+    command = ['sigul', '--batch', 'sign-rpms', '--store-in-koji',
+               '--koji-only']
 # See if this is a v3 key or not
 if KEYS[key]['v3']:
     command.append('--v3-signature')
 command.append(key)
 
+
 # run sigul
 def run_sigul(rpms, batchnr):
     global status
     logging.debug('Running %s' % subprocess.list2cmdline(command + rpms))
-    logging.info('Signing batch %s/%s with %s rpms' % (batchnr, (total+batchsize-1)/batchsize, len(rpms)))
+    logging.info('Signing batch %s/%s with %s rpms' % (
+        batchnr, (total + batchsize - 1) / batchsize, len(rpms))
+    )
     child = subprocess.Popen(command + rpms, stdin=subprocess.PIPE)
     child.stdin.write(passphrase + '\0')
     ret = child.wait()
