@@ -222,9 +222,9 @@ if not (opts.just_list or opts.just_write):
     else:
         passphrase = getpass.getpass(prompt='Passphrase for %s: ' % key)
 
-if not validate_sigul_password(key, passphrase):
-    logging.error('Error validating passphrase for key %s' % key)
-    sys.exit(1)
+    if not validate_sigul_password(key, passphrase):
+        logging.error('Error validating passphrase for key %s' % key)
+        sys.exit(1)
 # Reset the KOJIHUB if the target is a secondary arch
 if opts.arch:
     KOJIHUB = 'http://%s.koji.fedoraproject.org/kojihub' % opts.arch
