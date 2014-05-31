@@ -168,6 +168,8 @@ parser.add_option('--write-all', action='store_true', default=False,
                   help='Write every rpm, not just unsigned')
 parser.add_option('--password',
                   help='Password for the key')
+parser.add_option('--batch-mode',
+                  help='Read null-byte terminated password from stdin')
 parser.add_option('--arch',
                   help='Architecture when siging secondary arches')
 # Get our options and arguments
@@ -207,6 +209,16 @@ if not key in KEYS.keys():
 if not (opts.just_list or opts.just_write):
     if opts.password:
         passphrase = opts.password
+    elif opts.batch_mode:
+        passphrase = ""
+        while True:
+            pwchar = sys.stdin.read(1)
+            if pwchar == '\0':
+                break
+            elif pwchar == '':
+                raise EOFError('Incomplete password')
+            else:
+                passphrase += pwchar
     else:
         passphrase = getpass.getpass(prompt='Passphrase for %s: ' % key)
 
