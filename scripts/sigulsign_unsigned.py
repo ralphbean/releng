@@ -26,7 +26,6 @@ rpmdict = {}
 unsigned = []
 loglevel = ''
 passphrase = ''
-KOJIHUB = 'https://koji.fedoraproject.org/kojihub'
 # Should probably set these from a koji config file
 SERVERCA = os.path.expanduser('~/.fedora-server-ca.cert')
 CLIENTCA = os.path.expanduser('~/.fedora-upload-ca.cert')
@@ -59,6 +58,22 @@ KEYS = {'fedora-12-sparc': {'id': 'b3eb779b', 'v3': True},
         'epel-7': {'id': '352c64e5', 'v3': True},
         'epel-6': {'id': '0608b895', 'v3': True},
         'epel-5': {'id': '217521f6', 'v3': False}}
+
+
+class KojiHelper(object):
+    def __init__(self, arch=None):
+        if arch:
+            self.kojihub = \
+                'http://{arch}.koji.fedoraproject.org/kojihub'.format(
+                    arch=arch)
+        else:
+            self.kojihub = 'https://koji.fedoraproject.org/kojihub'
+        self.serverca = os.path.expanduser('~/.fedora-server-ca.cert')
+        self.clientca = os.path.expanduser('~/.fedora-upload-ca.cert')
+        self.clientcert = os.path.expanduser('~/.fedora.cert')
+        self.kojisession = koji.ClientSession(self.kojihub)
+        self.kojisession.ssl_login(self.clientcert, self.clientca,
+                                   self.serverca)
 
 
 def exit(status):
@@ -247,13 +262,11 @@ if not (opts.just_list or opts.just_write):
     if not validate_sigul_password(key, passphrase):
         logging.error('Error validating passphrase for key %s' % key)
         sys.exit(1)
-# Reset the KOJIHUB if the target is a secondary arch
-if opts.arch:
-    KOJIHUB = 'http://%s.koji.fedoraproject.org/kojihub' % opts.arch
+
 # setup the koji session
 logging.info('Setting up koji session')
-kojisession = koji.ClientSession(KOJIHUB)
-kojisession.ssl_login(CLIENTCERT, CLIENTCA, SERVERCA)
+kojihelper = KojiHelper(arch=opts.arch)
+kojisession = kojihelper.kojisession
 
 # Get a list of builds
 # If we have a tag option, get all the latest builds from that tag,
