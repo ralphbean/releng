@@ -132,6 +132,22 @@ def writeRPMs(status, batch=None):
     return status
 
 
+def validate_sigul_password(key, password):
+    """ Validate sigul password by trying to get the public key, which is an
+    authenticated operation
+    """
+    command = ['sigul', '--batch', 'get-public-key', key]
+    child = subprocess.Popen(command, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+    child.stdin.write(password + '\0')
+    ret = child.wait()
+    if ret != 0:
+        return False
+    else:
+        return True
+
+
 # Define our usage
 usage = 'usage: %prog [options] key (build1, build2)'
 # Create a parser to parse our arguments
@@ -193,17 +209,10 @@ if not (opts.just_list or opts.just_write):
         passphrase = opts.password
     else:
         passphrase = getpass.getpass(prompt='Passphrase for %s: ' % key)
-    # now try to check that the key is working
-    command = ['sigul', '--batch', 'get-public-key', key]
-    child = subprocess.Popen(command, stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
-    child.stdin.write(passphrase + '\0')
-    ret = child.wait()
-    if ret != 0:
-        logging.error('Error validating passphrase for key %s' % key)
-        sys.exit(1)
 
+if not validate_sigul_password(key, passphrase):
+    logging.error('Error validating passphrase for key %s' % key)
+    sys.exit(1)
 # Reset the KOJIHUB if the target is a secondary arch
 if opts.arch:
     KOJIHUB = 'http://%s.koji.fedoraproject.org/kojihub' % opts.arch
