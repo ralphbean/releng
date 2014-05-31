@@ -307,8 +307,8 @@ build_ids.extend(cmd_build_ids)
 # now get the rpms from each build
 logging.info('Getting rpms from each build')
 kojisession.multicall = True
-for b in build_ids:
-    kojisession.listRPMs(buildID=b['id'])
+for bID in build_ids:
+    kojisession.listRPMs(buildID=bID)
 results = kojisession.multiCall()
 # stuff all the rpms into our rpm list
 for [rpms] in results:
