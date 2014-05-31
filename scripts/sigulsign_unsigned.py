@@ -84,6 +84,23 @@ class KojiHelper(object):
                   ]
         return builds
 
+    def get_build_ids(self, nvrs):
+        errors = []
+
+        build_ids = []
+        self.kojisession.multicall = True
+
+        for build in nvrs:
+            # use strict for now to traceback on bad buildNVRs
+            kojisession.getBuild(build, strict=True)
+
+        for build, result in zip(nvrs, kojisession.multiCall()):
+            if isinstance(result, list):
+                build_ids.append(result[0]["id"])
+            else:
+                errors.append(build)
+        return build_ids, errors
+
 
 def exit(status):
     """End the program using status, report any errors"""
@@ -154,28 +171,6 @@ def writeRPMs(status, batch=None):
                 status += 1
 
     return status
-
-
-def get_buildIDs(kojisession, buildNVRs):
-    global status
-    global errors
-    binfos = []
-    # Build up a list of rpms to operate on
-    # use multicall here to speed things up
-    logging.info('Getting build IDs from Koji')
-    kojisession.multicall = True
-    # first get build IDs for all the buildNVRs
-    for b in buildNVRs:
-        # use strict for now to traceback on bad buildNVRs
-        kojisession.getBuild(b, strict=True)
-    for build, result in zip(buildNVRs, kojisession.multiCall()):
-        if isinstance(result, list):
-            binfos.append(result)
-        else:
-            errors.setdefault('buildNVRs', []).append(build)
-            status += 1
-            logging.error('Invalid n-v-r: %s' % build)
-    return binfos
 
 
 def validate_sigul_password(key, password):
@@ -293,20 +288,26 @@ logging.info('Got %s builds' % len(builds))
 # sort the builds
 builds = sorted(builds)
 buildNVRs = []
-buildIDs = []
+cmd_build_ids = []
 for b in builds:
     if b.isdigit():
-        buildIDs.append(int(b))
+        cmd_build_ids.append(int(b))
     else:
         buildNVRs.append(b)
 
-binfos = get_buildIDs(kojisession, buildNVRs)
-# Add buildIDs
-binfos.extend([[{"id": id_}] for id_ in buildIDs])
+logging.info('Getting build IDs from Koji')
+build_ids, buildID_errors = kojihelper.get_build_ids(buildNVRs)
+for nvr in buildID_errors:
+    logging.error('Invalid n-v-r: %s' % nvr)
+    status += 1
+    errors.setdefault('buildNVRs', []).append(nvr)
+
+build_ids.extend(cmd_build_ids)
+
 # now get the rpms from each build
 logging.info('Getting rpms from each build')
 kojisession.multicall = True
-for [b] in binfos:
+for b in build_ids:
     kojisession.listRPMs(buildID=b['id'])
 results = kojisession.multiCall()
 # stuff all the rpms into our rpm list
