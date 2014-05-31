@@ -75,6 +75,15 @@ class KojiHelper(object):
         self.kojisession.ssl_login(self.clientcert, self.clientca,
                                    self.serverca)
 
+    def listTagged(self, tag, inherit=False):
+        """ Return list of NVRs for a tag
+        """
+        builds = [build['nvr'] for build in
+                  self.kojisession.listTagged(tag, latest=True,
+                                              inherit=inherit)
+                  ]
+        return builds
+
 
 def exit(status):
     """End the program using status, report any errors"""
@@ -274,9 +283,7 @@ kojisession = kojihelper.kojisession
 # key as a build.
 if opts.tag is not None:
     logging.info('Getting builds from %s' % opts.tag)
-    builds = [build['nvr'] for build in
-              kojisession.listTagged(opts.tag, latest=True,
-                                     inherit=opts.inherit)]
+    builds = kojihelper.listTagged(opts.tag, inherit=opts.inherit)
 else:
     logging.info('Getting builds from arguments')
     builds = args[1:]
