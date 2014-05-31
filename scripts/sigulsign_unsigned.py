@@ -142,10 +142,10 @@ def validate_sigul_password(key, password):
                              stderr=subprocess.PIPE)
     child.stdin.write(password + '\0')
     ret = child.wait()
-    if ret != 0:
-        return False
-    else:
+    if ret == 0:
         return True
+    else:
+        return False
 
 
 # Define our usage
