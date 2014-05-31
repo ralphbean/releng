@@ -132,6 +132,28 @@ def writeRPMs(status, batch=None):
     return status
 
 
+def get_buildIDs(kojisession, buildNVRs):
+    global status
+    global errors
+    binfos = []
+    # Build up a list of rpms to operate on
+    # use multicall here to speed things up
+    logging.info('Getting build IDs from Koji')
+    kojisession.multicall = True
+    # first get build IDs for all the buildNVRs
+    for b in buildNVRs:
+        # use strict for now to traceback on bad buildNVRs
+        kojisession.getBuild(b, strict=True)
+    for build, result in zip(buildNVRs, kojisession.multiCall()):
+        if isinstance(result, list):
+            binfos.append(result)
+        else:
+            errors.setdefault('buildNVRs', []).append(build)
+            status += 1
+            logging.error('Invalid n-v-r: %s' % build)
+    return binfos
+
+
 def validate_sigul_password(key, password):
     """ Validate sigul password by trying to get the public key, which is an
     authenticated operation
@@ -250,24 +272,17 @@ logging.info('Got %s builds' % len(builds))
 
 # sort the builds
 builds = sorted(builds)
-
-# Build up a list of rpms to operate on
-# use multicall here to speed things up
-logging.info('Getting build IDs from Koji')
-kojisession.multicall = True
-# first get build IDs for all the builds
+buildNVRs = []
+buildIDs = []
 for b in builds:
-    # use strict for now to traceback on bad builds
-    kojisession.getBuild(b, strict=True)
-binfos = []
-for build, result in zip(builds, kojisession.multiCall()):
-    if isinstance(result, list):
-        binfos.append(result)
+    if b.isdigit():
+        buildIDs.append(int(b))
     else:
-        errors.setdefault('Builds', []).append(build)
-        status += 1
-        logging.error('Invalid n-v-r: %s' % build)
+        buildNVRs.append(b)
 
+binfos = get_buildIDs(kojisession, buildNVRs)
+# Add buildIDs
+binfos.extend([[{"id": id_}] for id_ in buildIDs])
 # now get the rpms from each build
 logging.info('Getting rpms from each build')
 kojisession.multicall = True
