@@ -53,7 +53,7 @@ so now with a proper reason:
 https://fedoraproject.org/wiki/How_to_remove_a_package_at_end_of_life
 
 According to https://fedoraproject.org/wiki/Schedule branching will
-occur not earlier than 2015-07-08. The packages will be retired shortly before.
+occur not earlier than 2014-07-08. The packages will be retired shortly before.
 
 Note: If you received this mail directly you (co)maintain one of the affected
 packages or a package that depends on one.
