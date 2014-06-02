@@ -19,7 +19,7 @@ else
 TARGET=f$VERSION-candidate
 fi
 
-for spin in base
+for spin in base bigdata atomic experimental
 do
     declare -l lspin
     lspin=$spin
