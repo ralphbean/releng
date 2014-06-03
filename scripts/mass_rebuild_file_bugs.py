@@ -12,6 +12,8 @@
 
 import koji
 import getpass
+import tempfile
+import urllib2
 from bugzilla.rhbugzilla import RHBugzilla
 from xmlrpclib import Fault
 from find_failures import get_failed_builds
@@ -28,15 +30,20 @@ product = "Fedora" # for BZ product field
 version = "rawhide" # for BZ version field
 tracking_bug = 991858 # Tracking bug for mass build failures
 
-def report_failure(product, component, version, summary, comment):
-    """This function files a new bugzilla bug for component with given arguments
+
+def report_failure(product, component, version, summary, comment, logs):
+    """This function files a new bugzilla bug for component with given
+    arguments
 
     Keyword arguments:
     product -- bugzilla product (usually Fedora)
     component -- component (package) to file bug against
     version -- component version to file bug for (usually rawhide for Fedora)
     summary -- short bug summary
-    comment -- first comment describing the bug in more detail"""
+    comment -- first comment describing the bug in more detail
+    logs -- list of the log file to attach to the bug report
+
+    """
     data = {
         'product': product,
         'component': component,
@@ -52,16 +59,34 @@ def report_failure(product, component, version, summary, comment):
         }
     bzurl = 'https://bugzilla.redhat.com'
     bzclient = RHBugzilla(url="%s/xmlrpc.cgi" % bzurl)
+
     try:
+        print 'Creating the bug report'
         bug = bzclient.createbug(**data)
-        print "Running bzcreate: %s" % data
+        #print "Running bzcreate: %s" % data
         bug.refresh()
+        print bug
+        for log in logs:
+            name = log.rsplit('/', 1)[-1]
+            response = urllib2.urlopen(log)
+            fp = tempfile.TemporaryFile()
+            fp.write(response.read())
+            fp.seek(0)
+            try:
+                print 'Attaching file %s to the ticket' % name
+                attid = bzclient.attachfile(
+                    bug.id, fp, name, content_type='text/plain')
+            except Fault, ex:
+                print ex
+            finally:
+                fp.close()
     except Fault, ex:
         print ex
         username = raw_input('Bugzilla username: ')
         bzclient.login(user=username,
                        password=getpass.getpass())
-        report_failure(component, summary, comment)
+        report_failure(product, component, version, summary, comment, logs)
+
 
 def get_filed_bugs(tracking_bug):
     """Query bugzilla if given bug has already been filed
@@ -106,7 +131,9 @@ For details on mass rebuild see https://fedoraproject.org/wiki/Fedora_20_Mass_Re
 
         if component not in filed_bugs_components:
             print "Filing bug for %s" % component
-            report_failure(product, component, version, summary, comment)
+            report_failure(
+                product, component, version, summary, comment,
+                logs=[build_log, root_log, state_log])
             filed_bugs_components.append(component)
         else:
             print "Skipping %s, bug already filed" % component
