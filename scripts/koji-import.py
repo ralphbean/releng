@@ -154,8 +154,8 @@ for build in args.build:
     if isNoarch(rpms):
 	buildinfo = remotekojisession.getBuild(buildinfo['id'])
         if args.force:
-            logging.debug("would reset a build")
-            remotekojisession.resetBuild(buildinfo['nvr'])
+            localkojisession.resetBuild(buildinfo['nvr'])
+            localkojisession.createEmptyBuild(buildinfo['package_name'], buildinfo['version'], buildinfo['release'], buildinfo['epoch'])
 	importBuild(rpms, buildinfo, tag=args.tag)
     else:
 	logging.error("not a pure noarch build")
