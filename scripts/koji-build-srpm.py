@@ -17,24 +17,19 @@ import urlgrabber.progress as progress
 import time
 import random
 import string
+import argparse
 
 # get architecture, tag/target and build from command line
-if len(sys.argv) > 3:
-    if sys.argv[1] == '--scratch':
-	scratch = True
-	i = 1
-    else:
-	scratch = False
-	i = 0
-    SECONDARY_ARCH = sys.argv[i+1]
-    tag = sys.argv[i+2]
-    builds = sys.argv[i+3:]
-else:
-    print("Build srpm in secondary koji")
-    print("Usage: %s [--scratch] <arch> <target> <build> ...<build-N>" % sys.argv[0])
-    exit(0)
+parser = argparse.ArgumentParser(description='Build srpm from primary koji in secondary koji.')
+parser.add_argument('--scratch', action='store_true', help='scratch build')
+parser.add_argument('--verbose', action='store_true', help='enables additional output, overrides --quiet')
+parser.add_argument('--quiet', action='store_true', help='suppresses non error related output')
+parser.add_argument('arch', help='secondary arch koji where to build srpms')
+parser.add_argument('tag', help='build to this tag')
+parser.add_argument('build', nargs='+', help='NVR')
+args = parser.parse_args()
 
-LOCALKOJIHUB = 'https://%s.koji.fedoraproject.org/kojihub' % (SECONDARY_ARCH)
+LOCALKOJIHUB = 'https://%s.koji.fedoraproject.org/kojihub' % (args.arch)
 REMOTEKOJIHUB = 'https://koji.fedoraproject.org/kojihub'
 PACKAGEURL = 'http://kojipkgs.fedoraproject.org/'
 
@@ -43,7 +38,13 @@ SERVERCA = os.path.expanduser('~/.fedora-server-ca.cert')
 CLIENTCA = os.path.expanduser('~/.fedora-upload-ca.cert')
 CLIENTCERT = os.path.expanduser('~/.fedora.cert')
 
-loglevel = logging.DEBUG
+if args.verbose:
+    loglevel = logging.DEBUG
+elif args.quiet:
+    loglevel = logging.ERROR
+else: 
+    loglevel = logging.INFO
+
 logging.basicConfig(format='%(levelname)s: %(message)s',
                     level=loglevel)
 
@@ -67,13 +68,13 @@ localkojisession.ssl_login(CLIENTCERT, CLIENTCA, SERVERCA)
 
 pg = progress.TextMeter()
 
-for build in builds:
+for build in args.build:
     buildinfo = remotekojisession.getBuild(build)
 
-#    print("build=%s" % (buildinfo))
+    logging.debug("build=%s" % (buildinfo))
 
     if buildinfo == None:
-	print("build %s doesn't exist" % (pkg))
+	logging.critical("build %s doesn't exist" % (build))
 	break
 
 
@@ -84,16 +85,16 @@ for build in builds:
 	file = grabber.urlgrab(url, progress_obj = pg, text = "%s" % (fname))
 
     serverdir = _unique_path('cli-build')
-    print("uploading %s ..." % (build))
+    logging.info("uploading %s ..." % (build))
     localkojisession.uploadWrapper(fname, serverdir, blocksize=65536)
     source = "%s/%s" % (serverdir, fname)
 
-    if scratch:
+    if args.scratch:
 	opts = {}
 	opts['scratch'] = True
     else:
 	opts = None
 
-    localkojisession.build(source, tag, opts=opts, priority=2)
+    localkojisession.build(source, args.tag, opts=opts, priority=2)
 
     logging.info("submitted build: %s" % buildinfo['nvr'])
