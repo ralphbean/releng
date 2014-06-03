@@ -15,18 +15,19 @@ import random
 import string
 import rpm 
 import shutil
+import argparse
+import tempfile
 
-# get packages from command line
-if len(sys.argv) > 3:
-    SECONDARY_ARCH = sys.argv[1]
-    tag = sys.argv[2]
-    pkgs = sys.argv[3:]
-else:
-    print("Import a build from primary koji to secondary")
-    print("Usage: %s <arch> <tag> <build> ..." % sys.argv[0])
-    exit(0)
+# get parameters from command line
+parser = argparse.ArgumentParser()
+parser.add_argument("--force", help="reimport a failed build", action="store_true")
+parser.add_argument("--verbose", help="be verbose during processing", action="store_true")
+parser.add_argument("arch", help="secondary arch koji where to import the builds")
+parser.add_argument("tag", help="import to this tag")
+parser.add_argument("build", nargs="*", help="build to import")
+args = parser.parse_args()
 
-LOCALKOJIHUB = 'https://%s.koji.fedoraproject.org/kojihub' % (SECONDARY_ARCH)
+LOCALKOJIHUB = 'https://%s.koji.fedoraproject.org/kojihub' % (args.arch)
 REMOTEKOJIHUB = 'https://koji.fedoraproject.org/kojihub'
 PACKAGEURL = 'http://kojipkgs.fedoraproject.org/'
 
@@ -35,7 +36,7 @@ SERVERCA = os.path.expanduser('~/.fedora-server-ca.cert')
 CLIENTCA = os.path.expanduser('~/.fedora-upload-ca.cert')
 CLIENTCERT = os.path.expanduser('~/.fedora.cert')
 
-workpath = '/tmp/koji-import'
+workpath = tempfile.mkdtemp(prefix="koji-import.")
 
 loglevel = logging.DEBUG
 logging.basicConfig(format='%(levelname)s: %(message)s',
@@ -69,7 +70,7 @@ def isNoarch(rpms):
 def tagSuccessful(nvr, tag):
     """tag completed builds into final tags"""
     localkojisession.tagBuildBypass(tag, nvr)
-    print "tagged %s to %s" % (nvr, tag)
+    logging.info("tagged %s to %s" % (nvr, tag))
 
 def _downloadURL(url, destf):
     """Download a url and save it to a file"""
@@ -93,14 +94,14 @@ def _importURL(url, fn):
     #for now, though, just use uploadWrapper
     koji.ensuredir(workpath)
     dst = "%s/%s" % (workpath, fn)
-    print "Downloading %s to %s..." % (url, dst)
+    logging.info("Downloading %s to %s..." % (url, dst))
     _downloadURL(url, dst)
     #fsrc = urllib2.urlopen(url)
     #fdst = file(dst, 'w')
     #shutil.copyfileobj(fsrc, fdst)
     #fsrc.close()
     #fdst.close()
-    print "Uploading %s..." % dst
+    logging.info("Uploading %s..." % dst)
     localkojisession.uploadWrapper(dst, serverdir, blocksize=65536)
     localkojisession.importRPM(serverdir, fn)
 
@@ -117,7 +118,7 @@ def importBuild(rpms, buildinfo, tag=None):
     try:
         _importURL(url, fname)
     except:
-	logging.info("Importing %s failed" % fname)
+	logging.error("Importing %s failed" % fname)
 	return False
     else:
         for rpminfo in rpms:
@@ -132,7 +133,7 @@ def importBuild(rpms, buildinfo, tag=None):
 	    try:
     		_importURL(url, fname)
 	    except:
-		logging.info("Importing %s failed" % fname)
+		logging.error("Importing %s failed" % fname)
 		return False
 
 	tagSuccessful(buildinfo['nvr'], tag)
@@ -143,16 +144,20 @@ logging.info('Setting up koji session')
 localkojisession = koji.ClientSession(LOCALKOJIHUB)
 remotekojisession = koji.ClientSession(REMOTEKOJIHUB)
 localkojisession.ssl_login(CLIENTCERT, CLIENTCA, SERVERCA)
-remotekojisession.ssl_login(CLIENTCERT, CLIENTCA, SERVERCA)
 
-for pkg in pkgs:
-    buildinfo = remotekojisession.getBuild(pkg)
+for build in args.build:
+    buildinfo = remotekojisession.getBuild(build)
 
     logging.info("got build %s" % buildinfo['nvr'])
 
     rpms = remotekojisession.listRPMs(buildinfo['id'])
     if isNoarch(rpms):
 	buildinfo = remotekojisession.getBuild(buildinfo['id'])
-	importBuild(rpms, buildinfo, tag=tag)
+        if args.force:
+            logging.debug("would reset a build")
+            remotekojisession.resetBuild(buildinfo['nvr'])
+	importBuild(rpms, buildinfo, tag=args.tag)
     else:
-	logging.error("not noarch")
+	logging.error("not a pure noarch build")
+
+shutil.rmtree(workpath)
