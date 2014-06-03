@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #
-# mass_rebuild_file_bugs.py - A utility to discover failed builds in a given tag
-#                    and file bugs in bugzilla for these failed builds
+# mass_rebuild_file_bugs.py - A utility to discover failed builds in a
+#    given tag and file bugs in bugzilla for these failed builds
 #
 # Copyright (C) 2013 Red Hat, Inc.
 # SPDX-License-Identifier:      GPL-2.0+
@@ -81,10 +81,13 @@ def get_filed_bugs(tracking_bug):
 
 if __name__ == '__main__':
     kojisession = koji.ClientSession('http://koji.fedoraproject.org/kojihub')
+    print 'Getting the list of failed builds...'
     failbuilds = get_failed_builds(kojisession, epoch, buildtag, desttag)
+    print 'Getting the list of filed bugs...'
     filed_bugs = get_filed_bugs(tracking_bug)
     filed_bugs_components = [bug.component for bug in filed_bugs]
     for build in failbuilds:
+        global product, version
         task_id = build['task_id']
         component = build['package_name']
         summary = "%s: FTBFS in %s" % (component, 'rawhide')
