@@ -104,6 +104,15 @@ def get_filed_bugs(tracking_bug):
     return bzclient.query(query_data)
 
 
+def get_task_failed(kojisession, task_id):
+    ''' For a given task_id, use the provided kojisession to return the
+    task_id of the first children that failed to build.
+    '''
+    for child in kojisession.getTaskChildren(task_id):
+        if child['state'] == 5:  # 5 == Failed
+            return child['id']
+
+
 if __name__ == '__main__':
     kojisession = koji.ClientSession('http://koji.fedoraproject.org/kojihub')
     print 'Getting the list of failed builds...'
@@ -117,11 +126,20 @@ if __name__ == '__main__':
         component = build['package_name']
         summary = "%s: FTBFS in %s" % (component, 'rawhide')
         work_url = 'http://kojipkgs.fedoraproject.org/work'
-        base_path = koji.pathinfo.taskrelpath(task_id)
-        log_url = "%s/%s/" % (work_url, base_path)
-        build_log = log_url + "build.log"
-        root_log = log_url + "root.log"
-        state_log = log_url + "state.log"
+
+        child_id = get_task_failed(kojisession, task_id)
+        if not child_id:
+            print 'No children failed for task: %s (%s)' % (
+                task_id, component)
+            logs = []
+        else:
+            base_path = koji.pathinfo.taskrelpath(child_id)
+            log_url = "%s/%s/" % (work_url, base_path)
+            build_log = log_url + "build.log"
+            root_log = log_url + "root.log"
+            state_log = log_url + "state.log"
+            logs = [build_log, root_log, state_log]
+
         comment = """Your package %s failed to build from source in current rawhide.
 
 http://koji.fedoraproject.org/koji/taskinfo?taskID=%s
@@ -132,8 +150,7 @@ For details on mass rebuild see https://fedoraproject.org/wiki/Fedora_20_Mass_Re
         if component not in filed_bugs_components:
             print "Filing bug for %s" % component
             report_failure(
-                product, component, version, summary, comment,
-                logs=[build_log, root_log, state_log])
+                product, component, version, summary, comment, logs=logs)
             filed_bugs_components.append(component)
         else:
             print "Skipping %s, bug already filed" % component
