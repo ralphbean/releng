@@ -17,14 +17,14 @@ import operator
 
 # Set some variables
 # Some of these could arguably be passed in as args.
-buildtag = 'f20' # tag to build from
-targets = ['f20-candidate', 'rawhide', 'f20'] # tag to build from
-epoch = '2013-07-25 00:00:00.000000' # rebuild anything not built after this date
+buildtag = 'f21' # tag to build from
+targets = ['f21-candidate', 'rawhide', 'f21'] # tag to build from
+epoch = '2014-06-06 00:00:00.000000' # rebuild anything not built after this date
 user = 'Fedora Release Engineering <rel-eng@lists.fedoraproject.org>'
-comment = '- Rebuilt for https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild'
+comment = '- Rebuilt for https://fedoraproject.org/wiki/Fedora_21_Mass_Rebuild'
 workdir = os.path.expanduser('~/massbuild')
 enviro = os.environ
-target = 'f20-rebuild'
+target = 'f21-rebuild'
 enviro['CVS_RSH'] = 'ssh' # use ssh for cvs
 
 pkg_skip_list = ['shim', 'shim-signed', 'kernel', 'grub2']
