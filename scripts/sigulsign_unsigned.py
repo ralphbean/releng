@@ -295,14 +295,15 @@ for b in builds:
     else:
         buildNVRs.append(b)
 
-logging.info('Getting build IDs from Koji')
-build_ids, buildID_errors = kojihelper.get_build_ids(buildNVRs)
-for nvr in buildID_errors:
-    logging.error('Invalid n-v-r: %s' % nvr)
-    status += 1
-    errors.setdefault('buildNVRs', []).append(nvr)
+if buildNVRs != []:
+    logging.info('Getting build IDs from Koji')
+    build_ids, buildID_errors = kojihelper.get_build_ids(buildNVRs)
+    for nvr in buildID_errors:
+        logging.error('Invalid n-v-r: %s' % nvr)
+        status += 1
+        errors.setdefault('buildNVRs', []).append(nvr)
 
-build_ids.extend(cmd_build_ids)
+    build_ids.extend(cmd_build_ids)
 
 # now get the rpms from each build
 logging.info('Getting rpms from each build')
