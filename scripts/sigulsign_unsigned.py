@@ -302,8 +302,10 @@ if buildNVRs != []:
         logging.error('Invalid n-v-r: %s' % nvr)
         status += 1
         errors.setdefault('buildNVRs', []).append(nvr)
+else:
+    build_ids = []
 
-    build_ids.extend(cmd_build_ids)
+build_ids.extend(cmd_build_ids)
 
 # now get the rpms from each build
 logging.info('Getting rpms from each build')
