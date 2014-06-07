@@ -116,18 +116,25 @@ people_dict = get_cache("orphans-people.pickle", default={})
 
 
 def get_people(package, branch=RAWHIDE_BRANCHNAME):
-    def associated(pkginfo):
+    def associated(pkginfo, exclude=None):
+        """
+
+        :param exclude: People to exclude, e.g. the point of contact.
+        :type exclude: list
+        """
         other_people = set()
         for acl in pkginfo.get("acls", []):
             if acl["status"] == "Approved":
-                if acl["fas_name"] != "group::provenpackager":
-                    other_people.add(acl["fas_name"])
+                fas_name = acl["fas_name"]
+                if fas_name != "group::provenpackager" and \
+                        fas_name not in exclude:
+                    other_people.add(fas_name)
         return sorted(other_people)
 
     pkginfo = pkgdb.get_package(package, branches=branch)
     pkginfo = pkginfo["packages"][0]
     people_ = [pkginfo["point_of_contact"]]
-    people_.extend(associated(pkginfo))
+    people_.extend(associated(pkginfo, exclude=people_))
     return people_
 
 
@@ -334,7 +341,7 @@ def find_dependent_packages(srpmname, ignore):
     return OrderedDict(sorted(dependent_packages.items()))
 
 
-def recursive_deps(packages, max_deps=10):
+def recursive_deps(packages, max_deps=20):
     # get a list of all rpm_pkgs that are to be removed
     rpm_pkg_names = []
     for name in packages:
