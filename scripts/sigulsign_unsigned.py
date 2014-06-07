@@ -119,12 +119,6 @@ def writeRPMs(status, batch=None):
     """Use the global rpmdict to write out rpms within.
        Returns status, increased by one in case of failure"""
 
-    status = status
-    count = 0
-    workset = []
-    # Use multicall for speed, but break it into chunks of 100
-    # so that there is some sense of progress
-
     # Check to see if we want to write all, or just the unsigned.
     if opts.write_all:
         rpms = rpmdict.keys()
@@ -134,32 +128,22 @@ def writeRPMs(status, batch=None):
         else:
             rpms = batch
     logging.info('Calling koji to write %s rpms' % len(rpms))
-    kojisession.multicall = True
-    for rpm in rpms:
-        logging.debug('Writing out %s with %s, %s of %s' % (rpm, key,
-                      rpms.index(rpm) + 1, len(rpms)))
-        kojisession.writeSignedRPM(rpm, KEYS[key]['id'])
-        count += 1
-        workset.append(rpm)
+    status = status
+    written = 0
+    rpmcount = len(rpms)
+    while rpms:
+        # Use multicall for speed, but break it into chunks of 100
+        # so that there is some sense of progress
+        kojisession.multicall = True
+        workset = rpms[0:100]
+        rpms = rpms[100:]
 
-        if count > 100:
-            # Get the results and check for any errors.
-            results = kojisession.multiCall()
-            for rpm, result in zip(workset, results):
-                if isinstance(result, dict):
-                    logging.error('Error writing out %s' % rpm)
-                    errors.setdefault('Writing', []).append(rpm)
-                    if result['traceback']:
-                        logging.error('    ' + result['traceback'][-1])
-                    status += 1
+        for rpm in workset:
+            written += 1
+            logging.debug('Writing out %s with %s, %s of %s',
+                          rpm, key, written, rpmcount)
+            kojisession.writeSignedRPM(rpm, KEYS[key]['id'])
 
-            # Reset the counter, workset, and multicall
-            count = 0
-            workset = []
-            kojisession.multicall = True
-
-    # We got to the end without getting all the way to 100
-    else:
         # Get the results and check for any errors.
         results = kojisession.multiCall()
         for rpm, result in zip(workset, results):
@@ -169,7 +153,6 @@ def writeRPMs(status, batch=None):
                 if result['traceback']:
                     logging.error('    ' + result['traceback'][-1])
                 status += 1
-
     return status
 
 
