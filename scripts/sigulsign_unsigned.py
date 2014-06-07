@@ -126,13 +126,13 @@ def writeRPMs(status, batch=None):
     # so that there is some sense of progress
 
     # Check to see if we want to write all, or just the unsigned.
-    if not opts.write_all:
+    if opts.write_all:
+        rpms = rpmdict.keys()
+    else:
         if batch is None:
             rpms = [rpm for rpm in rpmdict.keys() if rpm in unsigned]
         else:
             rpms = batch
-    else:
-        rpms = rpmdict.keys()
     logging.info('Calling koji to write %s rpms' % len(rpms))
     kojisession.multicall = True
     for rpm in rpms:
