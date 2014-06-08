@@ -21,11 +21,8 @@ import logging
 errors = {}
 
 status = 0
-builds = []
 rpmdict = {}
 unsigned = []
-loglevel = ''
-passphrase = ''
 # Should probably set these from a koji config file
 SERVERCA = os.path.expanduser('~/.fedora-server-ca.cert')
 CLIENTCA = os.path.expanduser('~/.fedora-upload-ca.cert')
