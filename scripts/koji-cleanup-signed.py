@@ -1,5 +1,5 @@
 #!/usr/bin/python
-
+# clean up eol signed rpm
 # Copyright (C) 2013 Red Hat, Inc.
 # SPDX-License-Identifier:      GPL-2.0
 
