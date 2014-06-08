@@ -171,224 +171,222 @@ def validate_sigul_password(key, password):
     else:
         return False
 
+if __name__ == "__main__":
+    # Define our usage
+    usage = 'usage: %prog [options] key (build1, build2)'
+    # Create a parser to parse our arguments
+    parser = optparse.OptionParser(usage=usage)
+    parser.add_option('-v', '--verbose', action='count', default=0,
+                      help='Be verbose, specify twice for debug')
+    parser.add_option('--tag',
+                      help='Koji tag to sign, use instead of listing builds')
+    parser.add_option('--inherit', action='store_true', default=False,
+                      help='Use tag inheritance to find builds.')
+    parser.add_option('--just-write', action='store_true', default=False,
+                      help='Just write out signed copies of the rpms')
+    parser.add_option('--just-sign', action='store_true', default=False,
+                      help='Just sign and import the rpms')
+    parser.add_option('--just-list', action='store_true', default=False,
+                      help='Just list the unsigned rpms')
+    parser.add_option('--write-all', action='store_true', default=False,
+                      help='Write every rpm, not just unsigned')
+    parser.add_option('--password',
+                      help='Password for the key')
+    parser.add_option('--batch-mode', action="store_true", default=False,
+                      help='Read null-byte terminated password from stdin')
+    parser.add_option('--arch',
+                      help='Architecture when siging secondary arches')
+    parser.add_option('--sigul-batch-size',
+                      help='Amount of RPMs to sign in a sigul batch',
+                      default=50, type="int")
+    # Get our options and arguments
+    (opts, args) = parser.parse_args()
 
-# Define our usage
-usage = 'usage: %prog [options] key (build1, build2)'
-# Create a parser to parse our arguments
-parser = optparse.OptionParser(usage=usage)
-parser.add_option('-v', '--verbose', action='count', default=0,
-                  help='Be verbose, specify twice for debug')
-parser.add_option('--tag',
-                  help='Koji tag to sign, use instead of listing builds')
-parser.add_option('--inherit', action='store_true', default=False,
-                  help='Use tag inheritance to find builds.')
-parser.add_option('--just-write', action='store_true', default=False,
-                  help='Just write out signed copies of the rpms')
-parser.add_option('--just-sign', action='store_true', default=False,
-                  help='Just sign and import the rpms')
-parser.add_option('--just-list', action='store_true', default=False,
-                  help='Just list the unsigned rpms')
-parser.add_option('--write-all', action='store_true', default=False,
-                  help='Write every rpm, not just unsigned')
-parser.add_option('--password',
-                  help='Password for the key')
-parser.add_option('--batch-mode', action="store_true", default=False,
-                  help='Read null-byte terminated password from stdin')
-parser.add_option('--arch',
-                  help='Architecture when siging secondary arches')
-parser.add_option('--sigul-batch-size',
-                  help='Amount of RPMs to sign in a sigul batch',
-                  default=50, type="int")
-# Get our options and arguments
-(opts, args) = parser.parse_args()
+    if opts.verbose <= 0:
+        loglevel = logging.WARNING
+    elif opts.verbose == 1:
+        loglevel = logging.INFO
+    else:  # options.verbose >= 2
+        loglevel = logging.DEBUG
 
-if opts.verbose <= 0:
-    loglevel = logging.WARNING
-elif opts.verbose == 1:
-    loglevel = logging.INFO
-else:  # options.verbose >= 2
-    loglevel = logging.DEBUG
+    logging.basicConfig(format='%(levelname)s: %(message)s',
+                        level=loglevel)
 
-
-logging.basicConfig(format='%(levelname)s: %(message)s',
-                    level=loglevel)
-
-# Check to see if we got any arguments
-if not args:
-    parser.print_help()
-    sys.exit(1)
-
-# Check to see if we either got a tag or some builds
-if opts.tag and len(args) > 2:
-    logging.error('You must provide either a tag or a build.')
-    parser.print_help()
-    sys.exit(1)
-
-key = args[0]
-logging.debug('Using %s for key %s' % (KEYS[key]['id'], key))
-if not key in KEYS.keys():
-    logging.error('Unknown key %s' % key)
-    parser.print_help()
-    sys.exit(1)
-
-# Get the passphrase for the user if we're going to sign something
-# (This code stolen from sigul client.py)
-if not (opts.just_list or opts.just_write):
-    if opts.password:
-        passphrase = opts.password
-    elif opts.batch_mode:
-        passphrase = ""
-        while True:
-            pwchar = sys.stdin.read(1)
-            if pwchar == '\0':
-                break
-            elif pwchar == '':
-                raise EOFError('Incomplete password')
-            else:
-                passphrase += pwchar
-    else:
-        passphrase = getpass.getpass(prompt='Passphrase for %s: ' % key)
-
-    if not validate_sigul_password(key, passphrase):
-        logging.error('Error validating passphrase for key %s' % key)
+    # Check to see if we got any arguments
+    if not args:
+        parser.print_help()
         sys.exit(1)
 
-# setup the koji session
-logging.info('Setting up koji session')
-kojihelper = KojiHelper(arch=opts.arch)
-kojisession = kojihelper.kojisession
+    # Check to see if we either got a tag or some builds
+    if opts.tag and len(args) > 2:
+        logging.error('You must provide either a tag or a build.')
+        parser.print_help()
+        sys.exit(1)
 
-# Get a list of builds
-# If we have a tag option, get all the latest builds from that tag,
-# optionally using inheritance.  Otherwise take everything after the
-# key as a build.
-if opts.tag is not None:
-    logging.info('Getting builds from %s' % opts.tag)
-    builds = kojihelper.listTagged(opts.tag, inherit=opts.inherit)
-else:
-    logging.info('Getting builds from arguments')
-    builds = args[1:]
+    key = args[0]
+    logging.debug('Using %s for key %s' % (KEYS[key]['id'], key))
+    if not key in KEYS.keys():
+        logging.error('Unknown key %s' % key)
+        parser.print_help()
+        sys.exit(1)
 
-logging.info('Got %s builds' % len(builds))
+    # Get the passphrase for the user if we're going to sign something
+    # (This code stolen from sigul client.py)
+    if not (opts.just_list or opts.just_write):
+        if opts.password:
+            passphrase = opts.password
+        elif opts.batch_mode:
+            passphrase = ""
+            while True:
+                pwchar = sys.stdin.read(1)
+                if pwchar == '\0':
+                    break
+                elif pwchar == '':
+                    raise EOFError('Incomplete password')
+                else:
+                    passphrase += pwchar
+        else:
+            passphrase = getpass.getpass(prompt='Passphrase for %s: ' % key)
 
-# sort the builds
-builds = sorted(builds)
-buildNVRs = []
-cmd_build_ids = []
-for b in builds:
-    if b.isdigit():
-        cmd_build_ids.append(int(b))
+        if not validate_sigul_password(key, passphrase):
+            logging.error('Error validating passphrase for key %s' % key)
+            sys.exit(1)
+
+    # setup the koji session
+    logging.info('Setting up koji session')
+    kojihelper = KojiHelper(arch=opts.arch)
+    kojisession = kojihelper.kojisession
+
+    # Get a list of builds
+    # If we have a tag option, get all the latest builds from that tag,
+    # optionally using inheritance.  Otherwise take everything after the
+    # key as a build.
+    if opts.tag is not None:
+        logging.info('Getting builds from %s' % opts.tag)
+        builds = kojihelper.listTagged(opts.tag, inherit=opts.inherit)
     else:
-        buildNVRs.append(b)
+        logging.info('Getting builds from arguments')
+        builds = args[1:]
 
-if buildNVRs != []:
-    logging.info('Getting build IDs from Koji')
-    build_ids, buildID_errors = kojihelper.get_build_ids(buildNVRs)
-    for nvr in buildID_errors:
-        logging.error('Invalid n-v-r: %s' % nvr)
-        status += 1
-        errors.setdefault('buildNVRs', []).append(nvr)
-else:
-    build_ids = []
+    logging.info('Got %s builds' % len(builds))
 
-build_ids.extend(cmd_build_ids)
+    # sort the builds
+    builds = sorted(builds)
+    buildNVRs = []
+    cmd_build_ids = []
+    for b in builds:
+        if b.isdigit():
+            cmd_build_ids.append(int(b))
+        else:
+            buildNVRs.append(b)
 
-# now get the rpms from each build
-logging.info('Getting rpms from each build')
-kojisession.multicall = True
-for bID in build_ids:
-    kojisession.listRPMs(buildID=bID)
-results = kojisession.multiCall()
-# stuff all the rpms into our rpm list
-for [rpms] in results:
-    for rpm in rpms:
-        rpmdict['%s.%s.rpm' % (rpm['nvr'], rpm['arch'])] = rpm['id']
+    if buildNVRs != []:
+        logging.info('Getting build IDs from Koji')
+        build_ids, buildID_errors = kojihelper.get_build_ids(buildNVRs)
+        for nvr in buildID_errors:
+            logging.error('Invalid n-v-r: %s' % nvr)
+            status += 1
+            errors.setdefault('buildNVRs', []).append(nvr)
+    else:
+        build_ids = []
 
-logging.info('Found %s rpms' % len(rpmdict))
+    build_ids.extend(cmd_build_ids)
 
-# Now do something with the rpms.
-
-# If --just-write was passed, try to write them all out
-# We try to write them all instead of worrying about which
-# are already written or not.  Calls are cheap, restarting
-# mash isn't.
-if opts.just_write:
-    logging.info('Just writing rpms')
-    exit(writeRPMs(status))
-
-# Since we're not just writing things out, we need to figure out what needs
-# to be signed.
-
-# Get unsigned packages
-logging.info('Checking for unsigned rpms in koji')
-kojisession.multicall = True
-# Query for the specific key we're looking for, no results means
-# that it isn't signed and thus add it to the unsigned list
-for rpm in rpmdict.keys():
-    kojisession.queryRPMSigs(rpm_id=rpmdict[rpm], sigkey=KEYS[key]['id'])
-
-results = kojisession.multiCall()
-for ([result], rpm) in zip(results, rpmdict.keys()):
-    if not result:
-        logging.debug('%s is not signed with %s' % (rpm, key))
-        unsigned.append(rpm)
-
-if opts.just_list:
-    logging.info('Just listing rpms')
-    print('\n'.join(unsigned))
-    exit(status)
-
-logging.debug('Found %s unsigned rpms' % len(unsigned))
-
-if opts.arch:
-    # Now run the unsigned stuff through sigul
-    command = ['sigul', '--batch', 'sign-rpms', '-k', opts.arch,
-               '--store-in-koji', '--koji-only']
-else:
-    # Now run the unsigned stuff through sigul
-    command = ['sigul', '--batch', 'sign-rpms', '--store-in-koji',
-               '--koji-only']
-# See if this is a v3 key or not
-if KEYS[key]['v3']:
-    command.append('--v3-signature')
-command.append(key)
-
-
-# run sigul
-def run_sigul(rpms, batchnr):
-    global status
-    logging.debug('Running %s' % subprocess.list2cmdline(command + rpms))
-    logging.info('Signing batch %s/%s with %s rpms' % (
-        batchnr, (total + batchsize - 1) / batchsize, len(rpms))
-    )
-    child = subprocess.Popen(command + rpms, stdin=subprocess.PIPE)
-    child.stdin.write(passphrase + '\0')
-    ret = child.wait()
-    if ret != 0:
-        logging.error('Error signing %s' % (rpms))
+    # now get the rpms from each build
+    logging.info('Getting rpms from each build')
+    kojisession.multicall = True
+    for bID in build_ids:
+        kojisession.listRPMs(buildID=bID)
+    results = kojisession.multiCall()
+    # stuff all the rpms into our rpm list
+    for [rpms] in results:
         for rpm in rpms:
-            errors.setdefault('Signing', []).append(rpm)
-    status += 1
+            rpmdict['%s.%s.rpm' % (rpm['nvr'], rpm['arch'])] = rpm['id']
 
-logging.info('Signing rpms via sigul')
-total = len(unsigned)
-batchsize = opts.sigul_batch_size
-batchnr = 0
-rpms = []
-for rpm in unsigned:
-    rpms += [rpm]
-    if len(rpms) == batchsize:
+    logging.info('Found %s rpms' % len(rpmdict))
+
+    # Now do something with the rpms.
+
+    # If --just-write was passed, try to write them all out
+    # We try to write them all instead of worrying about which
+    # are already written or not.  Calls are cheap, restarting
+    # mash isn't.
+    if opts.just_write:
+        logging.info('Just writing rpms')
+        exit(writeRPMs(status))
+
+    # Since we're not just writing things out, we need to figure out what needs
+    # to be signed.
+
+    # Get unsigned packages
+    logging.info('Checking for unsigned rpms in koji')
+    kojisession.multicall = True
+    # Query for the specific key we're looking for, no results means
+    # that it isn't signed and thus add it to the unsigned list
+    for rpm in rpmdict.keys():
+        kojisession.queryRPMSigs(rpm_id=rpmdict[rpm], sigkey=KEYS[key]['id'])
+
+    results = kojisession.multiCall()
+    for ([result], rpm) in zip(results, rpmdict.keys()):
+        if not result:
+            logging.debug('%s is not signed with %s' % (rpm, key))
+            unsigned.append(rpm)
+
+    if opts.just_list:
+        logging.info('Just listing rpms')
+        print('\n'.join(unsigned))
+        exit(status)
+
+    logging.debug('Found %s unsigned rpms' % len(unsigned))
+
+    if opts.arch:
+        # Now run the unsigned stuff through sigul
+        command = ['sigul', '--batch', 'sign-rpms', '-k', opts.arch,
+                   '--store-in-koji', '--koji-only']
+    else:
+        # Now run the unsigned stuff through sigul
+        command = ['sigul', '--batch', 'sign-rpms', '--store-in-koji',
+                   '--koji-only']
+    # See if this is a v3 key or not
+    if KEYS[key]['v3']:
+        command.append('--v3-signature')
+    command.append(key)
+
+    # run sigul
+    def run_sigul(rpms, batchnr):
+        global status
+        logging.debug('Running %s' % subprocess.list2cmdline(command + rpms))
+        logging.info('Signing batch %s/%s with %s rpms' % (
+            batchnr, (total + batchsize - 1) / batchsize, len(rpms))
+        )
+        child = subprocess.Popen(command + rpms, stdin=subprocess.PIPE)
+        child.stdin.write(passphrase + '\0')
+        ret = child.wait()
+        if ret != 0:
+            logging.error('Error signing %s' % (rpms))
+            for rpm in rpms:
+                errors.setdefault('Signing', []).append(rpm)
+        status += 1
+
+    logging.info('Signing rpms via sigul')
+    total = len(unsigned)
+    batchsize = opts.sigul_batch_size
+    batchnr = 0
+    rpms = []
+    for rpm in unsigned:
+        rpms += [rpm]
+        if len(rpms) == batchsize:
+            batchnr += 1
+            run_sigul(rpms, batchnr)
+            rpms = []
+
+    if len(rpms) > 0:
         batchnr += 1
         run_sigul(rpms, batchnr)
-        rpms = []
 
-if len(rpms) > 0:
-    batchnr += 1
-    run_sigul(rpms, batchnr)
+    # Now that we've signed things, time to write them out, if so desired.
+    if not opts.just_sign:
+        exit(writeRPMs(status))
 
-# Now that we've signed things, time to write them out, if so desired.
-if not opts.just_sign:
-    exit(writeRPMs(status))
-
-logging.info('All done.')
-sys.exit(status)
+    logging.info('All done.')
+    sys.exit(status)
