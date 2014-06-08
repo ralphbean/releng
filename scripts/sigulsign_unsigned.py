@@ -161,7 +161,7 @@ def validate_sigul_password(key, password):
     child = subprocess.Popen(command, stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
-    child.stdin.write(password + '\0')
+    child.communicate(password + '\0')
     ret = child.wait()
     if ret == 0:
         return True
@@ -357,7 +357,7 @@ if __name__ == "__main__":
             batchnr, (total + batchsize - 1) / batchsize, len(rpms))
         )
         child = subprocess.Popen(command + rpms, stdin=subprocess.PIPE)
-        child.stdin.write(passphrase + '\0')
+        child.communicate(passphrase + '\0')
         ret = child.wait()
         if ret != 0:
             logging.error('Error signing %s' % (rpms))
