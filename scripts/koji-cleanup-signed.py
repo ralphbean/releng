@@ -24,7 +24,7 @@ for root, dirs, files in os.walk(rootpath, topdown=False):
     for name in files:
         filepath = os.path.join(root, name)
         for key in keys:
-            if os.path.join(prefix,str.lower(key)) in filepath:
+            if os.path.join(prefix, str.lower(key)) in filepath:
                 print filepath
                 if os.path.exists(filepath):
                     os.remove(filepath)
@@ -32,10 +32,8 @@ for root, dirs, files in os.walk(rootpath, topdown=False):
     for name in dirs:
         filepath = os.path.join(root, name)
         for key in keys:
-            if os.path.join(prefix,str.lower(key)) in filepath:
+            if os.path.join(prefix, str.lower(key)) in filepath:
                 print filepath
                 if os.path.exists(filepath):
                     os.rmdir(filepath)
                 continue
-
-
