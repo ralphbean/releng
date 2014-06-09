@@ -20,15 +20,15 @@ from find_failures import get_failed_builds
 
 # Set some variables
 # Some of these could arguably be passed in as args.
-buildtag = 'f20-rebuild' # tag to check
-desttag = 'f20' # Tag where fixed builds go
-epoch = '2013-07-25 00:00:00.000000' # Date to check for failures from
+buildtag = 'f21-rebuild' # tag to check
+desttag = 'f21' # Tag where fixed builds go
+epoch = '2014-06-06 00:00:00.000000' # rebuild anything not built after this date
 failures = {} # dict of owners to lists of packages that failed.
 failed = [] # raw list of failed packages
 
 product = "Fedora" # for BZ product field
 version = "rawhide" # for BZ version field
-tracking_bug = 991858 # Tracking bug for mass build failures
+tracking_bug = 1105908 # Tracking bug for mass build failures
 
 
 def report_failure(product, component, version, summary, comment, logs):
@@ -144,7 +144,7 @@ if __name__ == '__main__':
 
 http://koji.fedoraproject.org/koji/taskinfo?taskID=%s
 
-For details on mass rebuild see https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild
+For details on mass rebuild see https://fedoraproject.org/wiki/Fedora_21_Mass_Rebuild
 """ % (component, task_id)
 
         if component not in filed_bugs_components:

@@ -17,9 +17,9 @@ import datetime
 
 # Set some variables
 # Some of these could arguably be passed in as args.
-buildtag = 'f20-rebuild' # tag to check
-desttag = 'f20' # Tag where fixed builds go
-epoch = '2013-07-25 00:00:00.000000' # Date to check for failures from
+buildtag = 'f21-rebuild' # tag to check
+desttag = 'f21' # Tag where fixed builds go
+epoch = '2014-06-06 00:00:00.000000' # Date to check for failures from
 failures = {} # dict of owners to lists of packages that failed.
 failed = [] # raw list of failed packages
 
@@ -77,6 +77,8 @@ def get_failed_builds(kojisession, epoch, buildtag, desttag):
     pkginfo = kojisession.multiCall()
 
     for build, [pkg] in zip(failbuilds, pkginfo):
+        if build['package_name'] == 'Fedora-Installation_Guide-20-web-en-US':
+           continue
         build['package_owner'] = pkg[0]['owner_name']
     return failbuilds
 
