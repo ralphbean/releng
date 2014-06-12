@@ -29,5 +29,5 @@ do
     ksflatten -c fedora-cloud-$spin.ks -o $kickstart >& /dev/null
     echo "url --url=$url"|sed -e 's|$arch|$basearch|g' >> $kickstart
  #koji image-build fedora-cloud-$spin $VERSION --distro Fedora-20 $TARGET --ksurl=git://git.fedorahosted.org/git/spin-kickstarts.git?#$GITHASH --kickstart=fedora-cloud-$lspin.ks $url x86_64 i386 --format=qcow2 --format=raw --release=$VERSION --scratch --repo=$url --nowait --disk-size=3
- koji image-build fedora-cloud-$spin $BUILD --distro Fedora-20 $TARGET  --kickstart=fedora-cloud-$lspin-$GITHASH.ks $url x86_64 i386 --format=qcow2 --format=raw --release=$VERSION --scratch --repo=$url --nowait --disk-size=3
+ koji image-build fedora-cloud-$spin $BUILD --distro Fedora-20 $TARGET  --kickstart=fedora-cloud-$lspin-$GITHASH.ks $url x86_64 i386 --format=qcow2 --format=raw-xz --release=$VERSION --scratch --repo=$url --nowait --disk-size=3
 done
