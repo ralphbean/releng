@@ -17,7 +17,7 @@ EXPANDARCH=""
 DEPOPTS=""
 MASHOPTS=""
 MOCKCONFIG=fedora-rawhide-compose-i386
-MAIL="devel@lists.fedoraproject.org,test@lists.fedoraproject.org"
+TOMAIL="devel@lists.fedoraproject.org test@lists.fedoraproject.org"
 SUBJECT='rawhide report: '$DATE' changes'
 FROM="Fedora Rawhide Report <rawhide@fedoraproject.org>"
 RSYNCPREFIX="sudo -u ftpsync"
@@ -26,7 +26,7 @@ TREEPREFIX="/mnt/koji/tree"
 EXPANDARCH="-$ARCH"
 DEPOPTS="--nomail"
 MASHOPTS="-c /etc/mash/mash.$ARCH.conf"
-MAIL="secondary@lists.fedoraproject.org,$ARCH@lists.fedoraproject.org"
+TOMAIL="secondary@lists.fedoraproject.org $ARCH@lists.fedoraproject.org"
 SUBJECT=$ARCH' rawhide report: '$DATE' changes'
 FROM="$(echo $ARCH) Fedora Rawhide Report <rawhide@fedoraproject.org>"
 RSYNCPREFIX=""
@@ -49,7 +49,6 @@ DESTPATH="$TREEPREFIX/development/rawhide/"
 TMPDIR=`mktemp -d /tmp/rawhide.$DATE.XXXX`
 mkdir -p /mnt/koji/mash/rawhide-$DATE/logs
 echo "Compose started at $(date --utc) > /mnt/koji/mash/rawhide-$DATE/logs/start"
-echo >> /mnt/koji/mash/rawhide-$DATE/logs/start
 
 touch /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
 echo "$(date --utc) buildrawhide: started" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
@@ -192,7 +191,9 @@ echo "{\"log\": \"done\", \"branch\": \"rawhide\", \"arch\": \"$ARCH\"}" | fedms
 
 echo "$(date --utc) buildrawhide: starting sending rawhide email report" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
 if [ "$mail" = "0" ]; then
-    cat /mnt/koji/mash/rawhide-$DATE/logs/start /mnt/koji/mash/rawhide-$DATE/logs/depcheck /mnt/koji/mash/rawhide-$DATE/logs/repodiff /mnt/koji/mash/rawhide-$DATE/logs/finish |  mutt -e "set from=\"$FROM\"" -e 'set envelope_from=yes' -s "$SUBJECT" $MAIL
+    for tomail in "$(echo $TOMAIL)" ; do
+         cat /mnt/koji/mash/rawhide-$DATE/logs/start /mnt/koji/mash/rawhide-$DATE/logs/depcheck /mnt/koji/mash/rawhide-$DATE/logs/repodiff /mnt/koji/mash/rawhide-$DATE/logs/finish |  mutt -e "set from=\"$FROM\"" -e 'set envelope_from=yes' -s "$SUBJECT" $tomail
+    done
 fi
 echo "$(date --utc) buildrawhide: finished sending rawhide email report" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
 
