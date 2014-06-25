@@ -77,9 +77,10 @@ def get_failed_builds(kojisession, epoch, buildtag, desttag):
     pkginfo = kojisession.multiCall()
 
     for build, [pkg] in zip(failbuilds, pkginfo):
-        if build['package_name'] == 'Fedora-Installation_Guide-20-web-en-US':
-           continue
-        build['package_owner'] = pkg[0]['owner_name']
+        if len(pkg) > 0:
+            build['package_owner'] = pkg[0]['owner_name']
+        else:
+            continue
     return failbuilds
 
 
