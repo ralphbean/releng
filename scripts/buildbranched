@@ -8,7 +8,7 @@
 DATE=$1
 ARCH=$2
 
-BRANCHED="20"
+BRANCHED="21"
 
 TREEPREFIX="/pub/fedora/linux"
 MASHDIR="/mnt/koji/mash/branched-$DATE"
