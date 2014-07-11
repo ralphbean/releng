@@ -61,7 +61,6 @@ do
  sg releng "repoclosure -a $basearch --repofrompath=$arch,$DESTDIR$VERSION/Workstation/$arch/os --repoid=$arch > $DESTDIR/logs/Workstation.$arch.repoclosure.log"
  sg releng "repoclosure -a $basearch --repofrompath=$arch,$DESTDIR$VERSION/Server/$arch/os --repoid=$arch > $DESTDIR/logs/Server.$arch.repoclosure.log"
  sg releng "repoclosure -a $basearch --repofrompath=$arch,$DESTDIR$VERSION/Cloud/$arch/os --repoid=$arch > $DESTDIR/logs/Cloud.$arch.repoclosure.log"
- rsync -avhH --exclude=work $DESTDIR $FINALDEST
 EOF
 
 done
