@@ -29,12 +29,12 @@ updatepath = {
     'rawhide': ''
 }
 
-for r in ['12', '13', '14', '15', '16', '17', '18', '19']: # 13, 14, ...
+for r in ['12', '13', '14', '15', '16', '17', '18', '19', '20']: # 13, 14, ...
     releasepath[r] = 'releases/%s/Everything/$basearch/os/' % r
     updatepath[r] = 'updates/%s/$basearch/' % r
 
 # Branched Fedora goes here
-branched = '20'
+branched = '21'
 releasepath['branched'] = 'development/%s/$basearch/os' % branched
 updatepath['branched'] = ''
 
