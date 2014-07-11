@@ -54,9 +54,9 @@ do
  umask 002
  mock -r fedora-rawhide-compose-$arch --init || exit 1
  mock -r fedora-rawhide-compose-$arch --shell "ln -s $DESTDIR/work /tmp" || exit 1
- mock -r fedora-rawhide-compose-$arch --shell "pungi -c $KICKSTARTS/fedora-install-workstation.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ -B -I --ver $VERSION --flavor Workstation" || exit 1
- mock -r fedora-rawhide-compose-$arch --shell "pungi -c $KICKSTARTS/fedora-install-server.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/  -B -I --ver $VERSION --flavor Server" || exit 1
- mock -r fedora-rawhide-compose-$arch --shell "pungi -c $KICKSTARTS/fedora-install-cloud.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ -B -I  --ver $VERSION --flavor Cloud" || exit 1
+ mock -r fedora-rawhide-compose-$arch --shell "pungi -c $KICKSTARTS/fedora-install-workstation.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ -B -I --ver $VERSION --flavor Workstation --name=Fedora-Workstation" || exit 1
+ mock -r fedora-rawhide-compose-$arch --shell "pungi -c $KICKSTARTS/fedora-install-server.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/  -B -I --ver $VERSION --flavor Server --name=Fedora-Server" || exit 1
+ mock -r fedora-rawhide-compose-$arch --shell "pungi -c $KICKSTARTS/fedora-install-cloud.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ -B -I  --ver $VERSION --flavor Cloud --name=Fedora-Cloud" || exit 1
  mock -r fedora-rawhide-compose-$arch --clean || exit 1
  sg releng "repoclosure -a $basearch --repofrompath=$arch,$DESTDIR$VERSION/Workstation/$arch/os --repoid=$arch > $DESTDIR/logs/Workstation.$arch.repoclosure.log"
  sg releng "repoclosure -a $basearch --repofrompath=$arch,$DESTDIR$VERSION/Server/$arch/os --repoid=$arch > $DESTDIR/logs/Server.$arch.repoclosure.log"
