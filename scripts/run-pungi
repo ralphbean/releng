@@ -33,6 +33,7 @@ pushd
 for arch in armhfp i386 x86_64
 do
  mock -r fedora-rawhide-compose-i386 --init || exit 1
+ mock -r fedora-rawhide-compose-i386 --shell "mkdir $DESTDIR && ln -s $DESTDIR/work /tmp" || exit 1
  mock -r fedora-rawhide-compose-i386 --shell "pungi -c $KICKSTARTS/fedora-install-workstation.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ --arch=$arch -G -C --ver $VERSION --flavor Workstation" || exit 1
  mock -r fedora-rawhide-compose-i386 --shell "pungi -c $KICKSTARTS/fedora-install-server.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ --arch=$arch -G -C --ver $VERSION --flavor Server" || exit 1
  mock -r fedora-rawhide-compose-i386 --shell "pungi -c $KICKSTARTS/fedora-install-cloud.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ --arch=$arch -G -C --ver $VERSION --flavor Cloud" || exit 1
@@ -53,7 +54,6 @@ do
  set -x
  umask 002
  mock -r fedora-rawhide-compose-$arch --init || exit 1
- mock -r fedora-rawhide-compose-$arch --shell "ln -s $DESTDIR/work /tmp" || exit 1
  mock -r fedora-rawhide-compose-$arch --shell "pungi -c $KICKSTARTS/fedora-install-workstation.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ -B --ver $VERSION --flavor Workstation --name=Fedora-Workstation" || exit 1
  mock -r fedora-rawhide-compose-$arch --shell "pungi -c $KICKSTARTS/fedora-install-server.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/  -B -I --ver $VERSION --flavor Server --name=Fedora-Server" || exit 1
  mock -r fedora-rawhide-compose-$arch --shell "pungi -c $KICKSTARTS/fedora-install-cloud.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ -B -I  --ver $VERSION --flavor Cloud --name=Fedora-Cloud" || exit 1
