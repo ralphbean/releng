@@ -22,7 +22,7 @@ for spin in $SPINS
 do
     declare -l lspin
     lspin=$spin
-    ksflatten fedora-arm-$lspin.ks -o fedora-arm-$lspin-$GITHASH.ks >& /dev/null
+    ksflatten -c fedora-arm-$lspin.ks -o fedora-arm-$lspin-$GITHASH.ks >& /dev/null
     for ARCH in $ARCHES
     do
        if [[ $ARCH == armv7hl ]]
