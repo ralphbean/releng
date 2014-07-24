@@ -122,7 +122,7 @@ mv $FINALDEST/$VERSION/Spins/i386/Fedora-Live-Xfce* $FINALDEST/$VERSION/Live/i38
 mv $FINALDEST/$VERSION/Spins/i386/Fedora-Live-SoaS* $FINALDEST/$VERSION/Live/i386/
 mv $FINALDEST/$VERSION/Spins/i386/Fedora-Live-LXDE* $FINALDEST/$VERSION/Live/i386/
 mv $FINALDEST/$VERSION/Spins/i386/Fedora-Live-MATE-Compiz* $FINALDEST/$VERSION/Live/i386/
-mv $FINALDEST/$VERSION/Spins/x86_64/Fedora-Live-Workstaton* $FINALDEST/$VERSION/Workstation/x86_64/iso/
+mv $FINALDEST/$VERSION/Spins/x86_64/Fedora-Live-Workstation* $FINALDEST/$VERSION/Workstation/x86_64/iso/
 mv $FINALDEST/$VERSION/Spins/x86_64/Fedora-Live-KDE* $FINALDEST/$VERSION/Live/x86_64/
 mv $FINALDEST/$VERSION/Spins/x86_64/Fedora-Live-Xfce* $FINALDEST/$VERSION/Live/x86_64/
 mv $FINALDEST/$VERSION/Spins/x86_64/Fedora-Live-SoaS* $FINALDEST/$VERSION/Live/x86_64/
