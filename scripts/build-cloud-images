@@ -15,15 +15,17 @@ GITHASH=$(git rev-parse --short HEAD)
 
 if [ "$VERSION" == "rawhide" ]; then
 TARGET=rawhide
+BRANCH=rawhide
 else
 TARGET=f$VERSION-candidate
+BRANCH=branched
 fi
 
 for spin in base bigdata atomic experimental
 do
     declare -l lspin
     lspin=$spin
-    url=http://kojipkgs.fedoraproject.org/mash/$VERSION-$BUILD/$VERSION/\$arch/os/
+    url=http://kojipkgs.fedoraproject.org/mash/$BRANCH-$BUILD/$VERSION/\$arch/os/
     kickstart=fedora-cloud-$lspin-$GITHASH.ks
     cp fedora-cloud-$spin.ks $kickstart
     ksflatten -c fedora-cloud-$spin.ks -o $kickstart >& /dev/null
