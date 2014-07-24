@@ -101,7 +101,7 @@ done
 
 
 pushd $FINALDEST/$VERSION/
-mkdir -p Images/armhfp Images/i386 Images/x86_64 Spins/i386 Spins/x86_64 Live/i386 Live/x86_64
+sg releng "mkdir -p Images/armhfp Images/i386 Images/x86_64 Spins/i386 Spins/x86_64 Live/i386 Live/x86_64"
 popd
 
 
