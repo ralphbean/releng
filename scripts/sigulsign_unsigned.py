@@ -105,6 +105,39 @@ class KojiHelper(object):
                 errors.append(build)
         return build_ids, errors
 
+    def get_rpms(self, build_ids):
+        """ Get dict of filenames -> RPM ID for a list of build IDs
+        """
+
+        res = {}
+        self.kojisession.multicall = True
+        for bID in build_ids:
+            self.kojisession.listRPMs(buildID=bID)
+        results = self.kojisession.multiCall()
+        for [rpms] in results:
+            for rpm in rpms:
+                filename = "{rpm[nvr]}.{rpm[arch]}.rpm".format(rpm=rpm)
+                res[filename] = rpm['id']
+        return res
+
+    def get_unsigned_rpms(self, rpms, keyid):
+        """ Get a list of unsigned rpms
+
+            :parameter:rpms: dict RPM filename -> rpm ID
+        """
+        unsigned = []
+        self.kojisession.multicall = True
+
+        rpm_filenames = rpms.keys()
+        for rpm in rpm_filenames:
+            kojisession.queryRPMSigs(rpm_id=rpms[rpm], sigkey=keyid)
+
+        results = kojisession.multiCall()
+        for ([result], rpm) in zip(results, rpm_filenames):
+            if not result:
+                unsigned.append(rpm)
+        return unsigned
+
 
 def exit(status):
     """End the program using status, report any errors"""
@@ -319,17 +352,9 @@ if __name__ == "__main__":
 
     build_ids.extend(cmd_build_ids)
 
-    # now get the rpms from each build
+    # now get the rpm filenames and ids from each build
     logging.info('Getting rpms from each build')
-    kojisession.multicall = True
-    for bID in build_ids:
-        kojisession.listRPMs(buildID=bID)
-    results = kojisession.multiCall()
-    # stuff all the rpms into our rpm list
-    for [rpms] in results:
-        for rpm in rpms:
-            rpmdict['%s.%s.rpm' % (rpm['nvr'], rpm['arch'])] = rpm['id']
-
+    rpmdict = kojihelper.get_rpms(build_ids)
     logging.info('Found %s rpms' % len(rpmdict))
 
     # Now do something with the rpms.
@@ -347,17 +372,9 @@ if __name__ == "__main__":
 
     # Get unsigned packages
     logging.info('Checking for unsigned rpms in koji')
-    kojisession.multicall = True
-    # Query for the specific key we're looking for, no results means
-    # that it isn't signed and thus add it to the unsigned list
-    for rpm in rpmdict.keys():
-        kojisession.queryRPMSigs(rpm_id=rpmdict[rpm], sigkey=KEYS[key]['id'])
-
-    results = kojisession.multiCall()
-    for ([result], rpm) in zip(results, rpmdict.keys()):
-        if not result:
-            logging.debug('%s is not signed with %s' % (rpm, key))
-            unsigned.append(rpm)
+    unsigned = kojihelper.get_unsigned_rpms(rpmdict, sigkey=KEYS[key]['id'])
+    for rpm in unsigned:
+        logging.debug('%s is not signed with %s' % (rpm, key))
 
     if opts.just_list:
         logging.info('Just listing rpms')
