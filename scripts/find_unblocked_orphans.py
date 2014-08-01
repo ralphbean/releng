@@ -464,7 +464,7 @@ def maintainer_info(affected_people):
     return info
 
 
-def package_info(packages):
+def package_info(packages, orphans=None, failed=None):
     info = ""
     sys.stderr.write('Calculating dependencies...')
     # Create yum object and depsolve out if requested.
@@ -484,6 +484,30 @@ def package_info(packages):
 
     info += "Affected (co)maintainers\n"
     info += maintainer_info(affected_people)
+    if orphans:
+        info += "\norphans: " + " ".join(orphans)
+        info += "\n"
+        orphans_breaking_deps = [o for o in orphans if
+                                 o in dep_map and dep_map[o]]
+        info += "orphans (depended on): " + " ".join(orphans_breaking_deps)
+        info += "\n"
+        orphans_not_breaking_deps = [o for o in orphans if
+                                     not o in dep_map or not dep_map[o]]
+        info += "orphans (not depended on): " + " ".join(
+            orphans_not_breaking_deps)
+        info += "\n"
+    if failed:
+        info += "\nFTBFS: " + " ".join(failed)
+        info += "\n"
+        ftbfs_breaking_deps = [o for o in failed if
+                               o in dep_map and dep_map[o]]
+        info += "FTBFS (depended on): " + " ".join(ftbfs_breaking_deps)
+        info += "\n"
+        ftbfs_not_breaking_deps = [o for o in failed if
+                                   not o in dep_map or not dep_map[o]]
+        info += "FTBFS (not depended on): " + " ".join(
+            ftbfs_not_breaking_deps)
+        info += "\n"
 
     addresses = ["{0}@fedoraproject.org".format(p)
                  for p in affected_people.keys() if p != ORPHAN_UID]
@@ -518,11 +542,11 @@ def main():
     del i
 
     sys.stderr.write('Getting builds from koji...')
-    unblocked = unblocked_packages(sorted((list(orphans) + failed)))
+    unblocked = unblocked_packages(sorted(list(set(list(orphans) + failed))))
     sys.stderr.write('done\n')
 
     print HEADER
-    info, addresses = package_info(unblocked)
+    info, addresses = package_info(unblocked, orphans=orphans, failed=failed)
     print info
     print FOOTER
 
