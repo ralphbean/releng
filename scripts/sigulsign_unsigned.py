@@ -153,20 +153,38 @@ def writeRPMs(status, batch=None):
     return status
 
 
-def validate_sigul_password(key, password):
-    """ Validate sigul password by trying to get the public key, which is an
-    authenticated operation
-    """
-    command = ['sigul', '--batch', 'get-public-key', key]
-    child = subprocess.Popen(command, stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
-    child.communicate(password + '\0')
-    ret = child.wait()
-    if ret == 0:
-        return True
-    else:
-        return False
+class SigulHelper(object):
+    def __init__(self, key=None, password=None, config_file=None):
+        self.key = key
+        self.password = password
+        self.config_file = config_file
+
+    def build_cmdline(self, *args):
+        cmdline = ['sigul', '--batch']
+        if self.config_file:
+            cmdline.extend(["--config-file", self.config_file])
+        cmdline.extend(args)
+        return cmdline
+
+    def run_command(self, command):
+        print "CMD: ", repr(command)
+        child = subprocess.Popen(command, stdin=subprocess.PIPE,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE)
+        child.communicate(self.password + '\0')
+        ret = child.wait()
+        return ret
+
+    def validate_password(self):
+        """ Validate sigul password by trying to get the public key, which is
+        an authenticated operation
+        """
+        command = self.build_cmdline('get-public-key', self.key)
+        ret = self.run_command(command)
+        if ret == 0:
+            return True
+        else:
+            return False
 
 if __name__ == "__main__":
     # Define our usage
@@ -196,6 +214,9 @@ if __name__ == "__main__":
     parser.add_option('--sigul-batch-size',
                       help='Amount of RPMs to sign in a sigul batch',
                       default=50, type="int")
+    parser.add_option('--sigul-config-file',
+                      help='Config file to use for sigul',
+                      default=None, type="str")
     # Get our options and arguments
     (opts, args) = parser.parse_args()
 
@@ -245,7 +266,9 @@ if __name__ == "__main__":
         else:
             passphrase = getpass.getpass(prompt='Passphrase for %s: ' % key)
 
-        if not validate_sigul_password(key, passphrase):
+        sigul_helper = SigulHelper(key=key, password=passphrase,
+                                   config_file=opts.sigul_config_file)
+        if not sigul_helper.validate_password():
             logging.error('Error validating passphrase for key %s' % key)
             sys.exit(1)
 
@@ -343,13 +366,11 @@ if __name__ == "__main__":
         sigul_cmd = "sign-rpms"
 
     if opts.arch:
-        # Now run the unsigned stuff through sigul
-        command = ['sigul', '--batch', sigul_cmd, '-k', opts.arch,
-                   '--store-in-koji', '--koji-only']
+        command = sigul_helper.build_cmdline(sigul_cmd, '-k', opts.arch,
+                                             '--store-in-koji', '--koji-only')
     else:
-        # Now run the unsigned stuff through sigul
-        command = ['sigul', '--batch', sigul_cmd, '--store-in-koji',
-                   '--koji-only']
+        command = sigul_helper.build_cmdline(sigul_cmd,
+                                             '--store-in-koji', '--koji-only')
     # See if this is a v3 key or not
     if KEYS[key]['v3']:
         command.append('--v3-signature')
@@ -358,13 +379,11 @@ if __name__ == "__main__":
     # run sigul
     def run_sigul(rpms, batchnr):
         global status
-        logging.debug('Running %s' % subprocess.list2cmdline(command + rpms))
         logging.info('Signing batch %s/%s with %s rpms' % (
             batchnr, (total + batchsize - 1) / batchsize, len(rpms))
         )
-        child = subprocess.Popen(command + rpms, stdin=subprocess.PIPE)
-        child.communicate(passphrase + '\0')
-        ret = child.wait()
+        logging.debug('Running %s' % subprocess.list2cmdline(command + rpms))
+        ret = sigul_helper.run_command(command + rpms)
         if ret != 0:
             logging.error('Error signing %s' % (rpms))
             for rpm in rpms:
