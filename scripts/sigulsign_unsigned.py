@@ -365,12 +365,11 @@ if __name__ == "__main__":
     else:
         sigul_cmd = "sign-rpms"
 
+    command = sigul_helper.build_cmdline(sigul_cmd, '--store-in-koji',
+                                         '--koji-only')
     if opts.arch:
-        command = sigul_helper.build_cmdline(sigul_cmd, '-k', opts.arch,
-                                             '--store-in-koji', '--koji-only')
-    else:
-        command = sigul_helper.build_cmdline(sigul_cmd,
-                                             '--store-in-koji', '--koji-only')
+        command.extend(['-k', opts.arch])
+
     # See if this is a v3 key or not
     if KEYS[key]['v3']:
         command.append('--v3-signature')
