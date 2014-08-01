@@ -219,11 +219,17 @@ def unblocked_packages(packages, tagID=TAG):
     listings = kojisession.multiCall()
 
     # Check the listings for unblocked packages.
-    for [pkg] in listings:
-        if not pkg[0]['blocked']:
-            package_name = pkg[0]['package_name']
-            people_queue.put(package_name)
-            unblocked.append(package_name)
+
+    for pkgname, result in zip(packages, listings):
+        if isinstance(result, list):
+            [pkg] = result
+            if not pkg[0]['blocked']:
+                package_name = pkg[0]['package_name']
+                people_queue.put(package_name)
+                unblocked.append(package_name)
+        else:
+            print "ERROR: {pkgname}: {error}".format(
+                pkgname=pkgname, error=result)
     return unblocked
 
 
