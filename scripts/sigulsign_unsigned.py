@@ -77,7 +77,7 @@ class KojiHelper(object):
                                    self.serverca)
 
     def listTagged(self, tag, inherit=False):
-        """ Return list of NVRs for a tag
+        """ Return list of SRPM NVRs for a tag
         """
         builds = [build['nvr'] for build in
                   self.kojisession.listTagged(tag, latest=True,
@@ -86,6 +86,9 @@ class KojiHelper(object):
         return builds
 
     def get_build_ids(self, nvrs):
+        """
+        Get build ids for a list of SRPM NVRs
+        """
         errors = []
 
         build_ids = []
