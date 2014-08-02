@@ -346,7 +346,7 @@ if __name__ == "__main__":
     parser.add_option('--batch-mode', action="store_true", default=False,
                       help='Read null-byte terminated password from stdin')
     parser.add_option('--arch',
-                      help='Architecture when siging secondary arches')
+                      help='Architecture when singing secondary arches')
     parser.add_option('--sigul-batch-size',
                       help='Amount of RPMs to sign in a sigul batch',
                       default=50, type="int")
