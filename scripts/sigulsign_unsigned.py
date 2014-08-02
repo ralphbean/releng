@@ -111,6 +111,9 @@ class KojiHelper(object):
 
         res = {}
         self.kojisession.multicall = True
+        if isinstance(build_ids, int):
+            build_ids = [build_ids]
+
         for bID in build_ids:
             self.kojisession.listRPMs(buildID=bID)
         results = self.kojisession.multiCall()
