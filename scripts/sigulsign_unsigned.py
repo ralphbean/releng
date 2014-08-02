@@ -33,7 +33,8 @@ SERVERCA = os.path.expanduser('~/.fedora-server-ca.cert')
 CLIENTCA = os.path.expanduser('~/.fedora-upload-ca.cert')
 CLIENTCERT = os.path.expanduser('~/.fedora.cert')
 # Setup a dict of our key names as sigul knows them to the actual key ID
-# that koji would use.  We should get this from sigul somehow.
+# that koji would use. This information can also be obtained using
+# SigulHelper() instances
 KEYS = {
     'fedora-12-sparc': {'id': 'b3eb779b', 'v3': True},
     'fedora-13-sparc': {'id': '5bf71b5e', 'v3': True},
@@ -273,13 +274,17 @@ def writeRPMs(status, batch=None):
 
 
 class SigulHelper(object):
-    def __init__(self, key=None, v3=True, password=None, config_file=None,
-                 arch=None):
+    def __init__(self, key, password, config_file=None, arch=None):
         self.key = key
-        self.v3 = v3
         self.password = password
         self.config_file = config_file
         self.arch = arch
+
+        command = self.build_cmdline('get-public-key', self.key)
+        ret, pubkey = self.run_command(command)[0:2]
+        if ret != 0:
+            raise ValueError("Invalid key or password")
+        self.keyid, self.v3 = get_key_info(pubkey)
 
     def build_cmdline(self, *args):
         cmdline = ['sigul', '--batch']
@@ -292,9 +297,9 @@ class SigulHelper(object):
         child = subprocess.Popen(command, stdin=subprocess.PIPE,
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
-        child.communicate(self.password + '\0')
+        stdout, stderr = child.communicate(self.password + '\0')
         ret = child.wait()
-        return ret
+        return ret, stdout, stderr
 
     def build_sign_cmdline(self, rpms, arch=None):
         if arch is None:
@@ -316,16 +321,6 @@ class SigulHelper(object):
 
         return command + rpms
 
-    def validate_password(self):
-        """ Validate sigul password by trying to get the public key, which is
-        an authenticated operation
-        """
-        command = self.build_cmdline('get-public-key', self.key)
-        ret = self.run_command(command)
-        if ret == 0:
-            return True
-        else:
-            return False
 
 if __name__ == "__main__":
     # Define our usage
@@ -407,11 +402,11 @@ if __name__ == "__main__":
         else:
             passphrase = getpass.getpass(prompt='Passphrase for %s: ' % key)
 
-        sigul_helper = SigulHelper(key=key, password=passphrase,
-                                   config_file=opts.sigul_config_file,
-                                   arch=opts.arch,
-                                   v3=KEYS[key]['v3'])
-        if not sigul_helper.validate_password():
+        try:
+            sigul_helper = SigulHelper(key, passphrase,
+                                       config_file=opts.sigul_config_file,
+                                       arch=opts.arch)
+        except ValueError:
             logging.error('Error validating passphrase for key %s' % key)
             sys.exit(1)
 
@@ -475,7 +470,7 @@ if __name__ == "__main__":
 
     # Get unsigned packages
     logging.info('Checking for unsigned rpms in koji')
-    unsigned = kojihelper.get_unsigned_rpms(rpmdict, KEYS[key]['id'])
+    unsigned = kojihelper.get_unsigned_rpms(rpmdict, sigul_helper.keyid)
     for rpm in unsigned:
         logging.debug('%s is not signed with %s' % (rpm, key))
 
@@ -495,7 +490,7 @@ if __name__ == "__main__":
         )
         command = sigul_helper.build_sign_cmdline(rpms)
         logging.debug('Running %s' % subprocess.list2cmdline(command))
-        ret = sigul_helper.run_command(command)
+        ret = sigul_helper.run_command(command)[0]
         if ret != 0:
             logging.error('Error signing %s' % (rpms))
             for rpm in rpms:
