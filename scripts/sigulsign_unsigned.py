@@ -10,13 +10,18 @@
 #
 # This program requires koji and sigul installed, as well as configured.
 
+from cStringIO import StringIO
 import os
 import optparse
 import sys
 import koji
 import getpass
+import shutil
 import subprocess
+import tempfile
 import logging
+
+import gpgme
 
 errors = {}
 
@@ -59,6 +64,77 @@ KEYS = {
     'epel-6': {'id': '0608b895', 'v3': True},
     'epel-7': {'id': '352c64e5', 'v3': True},
 }
+
+
+class GPGMEContext(object):
+    """ Use it like:
+
+        with GPGMEContext() as ctx:
+            #do_stuff(ctx)
+    """
+    config = """no-auto-check-trustdb
+trust-model direct
+no-expensive-trust-checks
+no-use-agent
+cipher-algo AES256
+digest-algo SHA512
+s2k-digest-algo SHA512
+cipher-algo AES256
+compress-algo zlib
+"""
+
+    def __init__(self, create_homedir=True):
+        self.tempdir = tempfile.gettempdir()
+        self.create_homedir = create_homedir
+
+        ctx = gpgme.Context()
+        gpg_homedir = None
+        if create_homedir:
+            gpg_homedir = tempfile.mkdtemp(prefix="temporary_gpg_homedir_")
+            # FIXME: Hardcoded gpg path
+            ctx.set_engine_info(gpgme.PROTOCOL_OpenPGP,
+                                "/usr/bin/gpg", gpg_homedir)
+
+            with open(os.path.join(gpg_homedir, 'gpg.conf'),
+                      'wb', 0755) as gpg_config_fp:
+                gpg_config_fp.write(self.config)
+
+        self.ctx = ctx
+        self.gpg_homedir = gpg_homedir
+
+    def __enter__(self):
+        return self.ctx
+
+    def __exit__(self, type_, value, traceback):
+        gpg_homedir = self.gpg_homedir
+        if self.create_homedir and \
+                os.path.abspath(gpg_homedir).startswith(self.tempdir):
+            shutil.rmtree(gpg_homedir, ignore_errors=True)
+
+
+def get_key_info(source, filename=False):
+    with GPGMEContext() as ctx:
+        if filename:
+            with open(source, "r") as ifile:
+                import_result = ctx.import_(ifile)
+        else:
+            ifile = StringIO(source)
+            import_result = ctx.import_(ifile)
+
+        if import_result.imported != 1:
+            raise ValueError(
+                "{0} does not contains exactly one GPG key".format(filename))
+
+        imported_fpr = import_result.imports[0][0]
+        key = ctx.get_key(imported_fpr)
+        first_subkey = key.subkeys[0]
+        keyid = first_subkey.keyid[-8:].lower()
+        if first_subkey.pubkey_algo == gpgme.PK_DSA:
+            v3 = False
+        else:
+            v3 = True
+
+    return keyid, v3
 
 
 class KojiHelper(object):
