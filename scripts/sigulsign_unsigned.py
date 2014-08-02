@@ -201,11 +201,12 @@ class KojiHelper(object):
         return res
 
     def get_unsigned_rpms(self, rpms, keyid):
-        """ Get a list of unsigned rpms
+        """ Reduce RPMs to RPMs that are not signed with keyid
 
             :parameter:rpms: dict RPM filename -> rpm ID
+            :returns: dict: RPM filename -> rpm ID
         """
-        unsigned = []
+        unsigned = {}
         self.kojisession.multicall = True
 
         rpm_filenames = rpms.keys()
@@ -215,7 +216,7 @@ class KojiHelper(object):
         results = self.kojisession.multiCall()
         for ([result], rpm) in zip(results, rpm_filenames):
             if not result:
-                unsigned.append(rpm)
+                unsigned[rpm] = rpms[rpm]
         return unsigned
 
 
@@ -470,7 +471,7 @@ if __name__ == "__main__":
 
     # Get unsigned packages
     logging.info('Checking for unsigned rpms in koji')
-    unsigned = kojihelper.get_unsigned_rpms(rpmdict, sigul_helper.keyid)
+    unsigned = list(kojihelper.get_unsigned_rpms(rpmdict, sigul_helper.keyid))
     for rpm in unsigned:
         logging.debug('%s is not signed with %s' % (rpm, key))
 
