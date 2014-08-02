@@ -173,9 +173,9 @@ class KojiHelper(object):
 
         for build in nvrs:
             # use strict for now to traceback on bad buildNVRs
-            kojisession.getBuild(build, strict=True)
+            self.kojisession.getBuild(build, strict=True)
 
-        for build, result in zip(nvrs, kojisession.multiCall()):
+        for build, result in zip(nvrs, self.kojisession.multiCall()):
             if isinstance(result, list):
                 build_ids.append(result[0]["id"])
             else:
@@ -210,9 +210,9 @@ class KojiHelper(object):
 
         rpm_filenames = rpms.keys()
         for rpm in rpm_filenames:
-            kojisession.queryRPMSigs(rpm_id=rpms[rpm], sigkey=keyid)
+            self.kojisession.queryRPMSigs(rpm_id=rpms[rpm], sigkey=keyid)
 
-        results = kojisession.multiCall()
+        results = self.kojisession.multiCall()
         for ([result], rpm) in zip(results, rpm_filenames):
             if not result:
                 unsigned.append(rpm)
@@ -313,7 +313,7 @@ class SigulHelper(object):
         command = self.build_cmdline(sigul_cmd, '--store-in-koji',
                                      '--koji-only')
         if arch:
-            command.extend(['-k', opts.arch])
+            command.extend(['-k', arch])
 
         if self.v3:
             command.append('--v3-signature')
