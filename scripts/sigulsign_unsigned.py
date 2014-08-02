@@ -197,10 +197,13 @@ def writeRPMs(status, batch=None):
 
 
 class SigulHelper(object):
-    def __init__(self, key=None, password=None, config_file=None):
+    def __init__(self, key=None, v3=True, password=None, config_file=None,
+                 arch=None):
         self.key = key
+        self.v3 = v3
         self.password = password
         self.config_file = config_file
+        self.arch = arch
 
     def build_cmdline(self, *args):
         cmdline = ['sigul', '--batch']
@@ -210,13 +213,32 @@ class SigulHelper(object):
         return cmdline
 
     def run_command(self, command):
-        print "CMD: ", repr(command)
         child = subprocess.Popen(command, stdin=subprocess.PIPE,
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
         child.communicate(self.password + '\0')
         ret = child.wait()
         return ret
+
+    def build_sign_cmdline(self, rpms, arch=None):
+        if arch is None:
+            arch = self.arch
+
+        if len(rpms) == 1:
+            sigul_cmd = "sign-rpm"
+        else:
+            sigul_cmd = "sign-rpms"
+
+        command = self.build_cmdline(sigul_cmd, '--store-in-koji',
+                                     '--koji-only')
+        if arch:
+            command.extend(['-k', opts.arch])
+
+        if self.v3:
+            command.append('--v3-signature')
+        command.append(self.key)
+
+        return command + rpms
 
     def validate_password(self):
         """ Validate sigul password by trying to get the public key, which is
@@ -310,7 +332,9 @@ if __name__ == "__main__":
             passphrase = getpass.getpass(prompt='Passphrase for %s: ' % key)
 
         sigul_helper = SigulHelper(key=key, password=passphrase,
-                                   config_file=opts.sigul_config_file)
+                                   config_file=opts.sigul_config_file,
+                                   arch=opts.arch,
+                                   v3=KEYS[key]['v3'])
         if not sigul_helper.validate_password():
             logging.error('Error validating passphrase for key %s' % key)
             sys.exit(1)
@@ -375,7 +399,7 @@ if __name__ == "__main__":
 
     # Get unsigned packages
     logging.info('Checking for unsigned rpms in koji')
-    unsigned = kojihelper.get_unsigned_rpms(rpmdict, sigkey=KEYS[key]['id'])
+    unsigned = kojihelper.get_unsigned_rpms(rpmdict, KEYS[key]['id'])
     for rpm in unsigned:
         logging.debug('%s is not signed with %s' % (rpm, key))
 
@@ -384,32 +408,18 @@ if __name__ == "__main__":
         print('\n'.join(unsigned))
         exit(status)
 
-    logging.debug('Found %s unsigned rpms' % len(unsigned))
-
-    batchsize = opts.sigul_batch_size
-    if batchsize == 1:
-        sigul_cmd = "sign-rpm"
-    else:
-        sigul_cmd = "sign-rpms"
-
-    command = sigul_helper.build_cmdline(sigul_cmd, '--store-in-koji',
-                                         '--koji-only')
-    if opts.arch:
-        command.extend(['-k', opts.arch])
-
-    # See if this is a v3 key or not
-    if KEYS[key]['v3']:
-        command.append('--v3-signature')
-    command.append(key)
-
     # run sigul
+    logging.debug('Found %s unsigned rpms' % len(unsigned))
+    batchsize = opts.sigul_batch_size
+
     def run_sigul(rpms, batchnr):
         global status
         logging.info('Signing batch %s/%s with %s rpms' % (
             batchnr, (total + batchsize - 1) / batchsize, len(rpms))
         )
-        logging.debug('Running %s' % subprocess.list2cmdline(command + rpms))
-        ret = sigul_helper.run_command(command + rpms)
+        command = sigul_helper.build_sign_cmdline(rpms)
+        logging.debug('Running %s' % subprocess.list2cmdline(command))
+        ret = sigul_helper.run_command(command)
         if ret != 0:
             logging.error('Error signing %s' % (rpms))
             for rpm in rpms:
