@@ -195,15 +195,25 @@ class SingleSigner(object):
             sign_duration = sign_end - sign_begin
             duration_per_rpm = sign_duration / len(unsigned)
             log_("debug", "Sigul took {duration:.1f}s "
-                "({duration_per_rpm:.2f}s per RPM)",
-                duration=sign_duration, duration_per_rpm=duration_per_rpm)
+                 "({duration_per_rpm:.2f}s per RPM)",
+                 duration=sign_duration, duration_per_rpm=duration_per_rpm)
 
             if ret is None:
                 log_("warning", "Sigul timed out signing {count} RPMS after"
                      "{timeout}s", count=len(unsigned), timeout=timeout)
             else:
                 log_("debug", "Sigul returned: {ret}", ret=ret)
-        # FIXME write RPMs in koji
+
+        errors = self.kojihelper.write_signed_rpms(signed,
+                                                   self.sigulhelper.keyid)
+        if errors:
+            log_("error", "Errors writing RPMS: {errors}", errors=errors)
+
+        if errors or unsigned:
+            log_("info", "Incomplete")
+        else:
+            log_("info", "All done")
+        return unsigned
 
 
 class AutoSigner(object):
