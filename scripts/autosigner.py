@@ -22,7 +22,6 @@ import getpass
 import logging
 import logging.handlers
 import os
-import Queue
 import struct
 import subprocess
 import sys
@@ -129,26 +128,6 @@ def remove_certificate(msg):
     msg["certificate"] = "REMOVED"
     msg["signature"] = "REMOVED"
     return msg
-
-
-def signing_worker(queues, sigul_passwords, primary=True):
-    kojihelpers = {}
-    if primary:
-        kojihelpers["primary"] = sigulsign.KojiHelper()
-    else:
-        for arch in secondary_instances:
-            kojihelpers[arch] = sigulsign.KojiHelper(arch=arch)
-
-    keys = list(queues)
-
-    for key in keys:
-        queue = queues[key]
-        unsigned_rpms = []
-        while not queue.empty():
-            try:
-                unsigned_rpms.append(queue.get(block=False))
-            except Queue.Empty:
-                break
 
 
 class SingleSigner(object):
