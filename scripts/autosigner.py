@@ -20,6 +20,7 @@ import argparse
 import fcntl
 import getpass
 import logging
+import logging.handlers
 import os
 import Queue
 import struct
@@ -50,15 +51,35 @@ TAG_INFO = {("f21", "f21-rebuild"): "fedora-21",
 secondary_instances = ["arm", "ppc", "s390"]
 
 
+class AutosignerSMTPHandler(logging.handlers.SMTPHandler):
+    def getSubject(self, record):
+        first_line = record.message.split("\n")[0]
+        fmt = "Autosigner: {0.levelname}: {first_line}"
+
+        return fmt.format(record, first_line=first_line)
+
+
 class SigningTask(object):
-    def __init__(self, build_id, instance, key):
+    def __init__(self, build_id, instance, key, msg_id=None):
         self.build_id = build_id
-        self.instance = instance
+        self.instance = str(instance)
         self.key = key
         self.unsigned = None
         self.error_count = 0
         self.last_attempt = 0
         self.created = time.time()
+        self.msg_id = msg_id
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        fmt = "SigningTask({0.build_id!r}, {0.instance!r}, {0.key!r}"
+        if self.msg_id:
+            fmt += ", msg_id={0.msg_id!r}"
+
+        fmt += ")"
+        return fmt.format(self)
 
 
 def terminal_size():
@@ -160,14 +181,14 @@ class SingleSigner(object):
             fmt = "{instance}/{build_id}/{key}: " + msg
             log_function(fmt.format(*args, **log_infos))
 
-        log_("info", "Start processing using key {key}")
+        log_("debug", "Start processing using key {key}")
 
         rpminfo = self.kojihelper.get_rpms(signing_task.build_id)
         if len(rpminfo) == 0:
             log_("error", "No RPMs found")
             return
         else:
-            log_("info", "Found {count} RPMs", count=len(rpminfo))
+            log_("debug", "Found {count} RPMs", count=len(rpminfo))
 
         log_("debug", " RPMs: {rpminfo}", rpminfo=", ".join(list(rpminfo)))
 
@@ -176,11 +197,11 @@ class SingleSigner(object):
         while True:
             unsigned = self.kojihelper.get_unsigned_rpms(
                 unsigned, self.sigulhelper.keyid)
-            log_("info", "Found {unsigned_count}/{all_count} unsigned RPMs",
+            log_("debug", "Found {unsigned_count}/{all_count} unsigned RPMs",
                  unsigned_count=len(unsigned), all_count=len(rpminfo))
 
             if len(unsigned) == 0:
-                log_("info", "Everything signed")
+                log_("debug", "Everything signed")
                 break
             elif list(unsigned) == list(old_unsigned):
                 log_("critical", "Sigul did not sign any RPMS")
@@ -188,7 +209,7 @@ class SingleSigner(object):
 
             signed = [rpm for rpm in old_unsigned if rpm not in unsigned]
             if old_unsigned:
-                log_("info", "Signed {count} RPMs", count=len(signed))
+                log_("debug", "Signed {count} RPMs", count=len(signed))
 
             old_unsigned = unsigned
 
@@ -209,7 +230,7 @@ class SingleSigner(object):
                  duration=sign_duration, duration_per_rpm=duration_per_rpm)
 
             if ret is None:
-                log_("warning", "Sigul timed out signing {count} RPMS after"
+                log_("warning", "Sigul timed out signing {count} RPMS after "
                      "{timeout}s", count=len(unsigned), timeout=timeout)
             else:
                 log_("debug", "Sigul returned: {ret}", ret=ret)
@@ -220,9 +241,11 @@ class SingleSigner(object):
             log_("error", "Errors writing RPMS: {errors}", errors=errors)
 
         if errors or unsigned:
-            log_("info", "Incomplete")
+            log_("warning", "Not completed, write errors: {errors}, "
+                 "unsigned: {unsigned}", errors=errors, unsigned=unsigned)
         else:
-            log_("info", "All done")
+            log_("info", "Completed: {rpms}", rpms=", ".join(
+                sorted(list(rpminfo))))
         signing_task.unsigned = unsigned
         return signing_task
 
@@ -277,6 +300,7 @@ class AutoSigner(object):
             signing_task = incomplete.pop(0)
             if force_check or \
                     signing_task.last_attempt > (now + waiting_time):
+                log.debug("Retrying %r", signing_task)
                 signing_success = self.sign(signing_task)
                 if not force_check and not signing_success:
                     while incomplete:
@@ -312,7 +336,8 @@ def parse_message(msg):
                 instance = msg["msg"]["instance"]
                 if instance in secondary_instances:
                     key += "-secondary"
-                return SigningTask(buildID, instance, key)
+                return SigningTask(buildID, instance, key,
+                                   msg_id=msg["msg_id"])
     return None
 
 
@@ -335,14 +360,49 @@ def run(sigul_passwords):
 
 def setup_logging():
     log.setLevel(logging.DEBUG)
-    console_logger = logging.StreamHandler()
-    console_logger.setLevel(logging.DEBUG)
+
     formatter = logging.Formatter(
         '%(asctime)s: %(levelname)s: %(message)s',
     )
+    # Log in UTC
     formatter.converter = time.gmtime
+
+    console_logger = logging.StreamHandler()
+    console_logger.setLevel(logging.DEBUG)
     console_logger.setFormatter(formatter)
     log.addHandler(console_logger)
+
+    # FIXME: Make this a config option
+    fedora_user = getpass.getuser()
+    mail_logger = AutosignerSMTPHandler(
+        "127.0.0.1", fedora_user, [fedora_user], "Autosigner log event")
+    mail_logger.setLevel(logging.WARNING)
+    mail_logger.setFormatter(formatter)
+    log.addHandler(mail_logger)
+
+    log_basedir = os.path.expanduser("~/autosigner-logs")
+    try:
+        os.makedirs(log_basedir, 0700)
+    except OSError, e:
+        # File exists
+        if e.errno == 17:
+            pass
+        else:
+            raise
+
+    debug_logfilename = os.path.join(log_basedir, "debug.log")
+    debug_logger = logging.handlers.TimedRotatingFileHandler(
+        debug_logfilename, when="midnight", backupCount=14, utc=True)
+    debug_logger.setFormatter(formatter)
+    debug_logger.setLevel(logging.DEBUG)
+    log.addHandler(debug_logger)
+
+    info_logfilename = os.path.join(log_basedir, "info.log")
+    info_logger = logging.handlers.TimedRotatingFileHandler(
+        info_logfilename, when="midnight", backupCount=14, utc=True)
+    info_logger.setFormatter(formatter)
+    info_logger.setLevel(logging.INFO)
+    log.addHandler(info_logger)
 
 
 if __name__ == "__main__":
@@ -372,7 +432,7 @@ if __name__ == "__main__":
         sigul_passwords = ask_key_passwords()
     auto_signer = AutoSigner(sigul_passwords)
 
-    log.debug("Start processing messages")
+    log.info("Start processing messages for %r", TAG_INFO)
     count = 0
     for name, endpoint, topic, msg in fedmsg.tail_messages(**config):
         try:
@@ -390,9 +450,10 @@ if __name__ == "__main__":
                 signing_task = parse_message(msg)
                 if signing_task:
                     print ""
-                    log.info("Got signing_task: %s", str(signing_task))
-                    log.info(fedmsg.encoding.pretty_dumps(
-                        remove_certificate(msg)))
+                    log.debug("NEW: %s", str(signing_task))
+                    log.debug("Processing message: %s",
+                              fedmsg.encoding.pretty_dumps(
+                                  remove_certificate(msg)))
                     if auto_signer.sign(signing_task):
                         auto_signer.retry(force_check=True)
             else:
