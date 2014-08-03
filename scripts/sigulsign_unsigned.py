@@ -219,6 +219,19 @@ class KojiHelper(object):
                 unsigned[rpm] = rpms[rpm]
         return unsigned
 
+    def write_signed_rpms(self, rpms, keyid):
+        self.kojisession.multicall = True
+        rpm_filenames = list(rpms)
+        for rpm in rpm_filenames:
+            self.kojisession.writeSignedRPM(rpm, keyid)
+        results = self.kojisession.multiCall()
+        errors = {}
+
+        for result, rpm in zip(results, rpm_filenames):
+            if isinstance(result, dict):
+                errors[rpm] = result
+        return errors
+
 
 def exit(status):
     """End the program using status, report any errors"""
@@ -233,7 +246,7 @@ def exit(status):
 
 
 # Throw out some functions
-def writeRPMs(status, batch=None):
+def writeRPMs(status, kojihelper, batch=None):
     """Use the global rpmdict to write out rpms within.
        Returns status, increased by one in case of failure"""
 
@@ -250,9 +263,6 @@ def writeRPMs(status, batch=None):
     written = 0
     rpmcount = len(rpms)
     while rpms:
-        # Use multicall for speed, but break it into chunks of 100
-        # so that there is some sense of progress
-        kojisession.multicall = True
         workset = rpms[0:100]
         rpms = rpms[100:]
 
@@ -260,17 +270,14 @@ def writeRPMs(status, batch=None):
             written += 1
             logging.debug('Writing out %s with %s, %s of %s',
                           rpm, key, written, rpmcount)
-            kojisession.writeSignedRPM(rpm, KEYS[key]['id'])
+        errors = kojihelper.write_signed_rpms(workset, KEYS[key]['id'])
 
-        # Get the results and check for any errors.
-        results = kojisession.multiCall()
-        for rpm, result in zip(workset, results):
-            if isinstance(result, dict):
-                logging.error('Error writing out %s' % rpm)
-                errors.setdefault('Writing', []).append(rpm)
-                if result['traceback']:
-                    logging.error('    ' + result['traceback'][-1])
-                status += 1
+        for rpm, result in errors.items():
+            logging.error('Error writing out %s' % rpm)
+            errors.setdefault('Writing', []).append(rpm)
+            if result['traceback']:
+                logging.error('    ' + result['traceback'][-1])
+            status += 1
     return status
 
 
@@ -464,7 +471,7 @@ if __name__ == "__main__":
     # mash isn't.
     if opts.just_write:
         logging.info('Just writing rpms')
-        exit(writeRPMs(status))
+        exit(writeRPMs(status, kojihelper))
 
     # Since we're not just writing things out, we need to figure out what needs
     # to be signed.
@@ -515,7 +522,7 @@ if __name__ == "__main__":
 
     # Now that we've signed things, time to write them out, if so desired.
     if not opts.just_sign:
-        exit(writeRPMs(status))
+        exit(writeRPMs(status, kojihelper))
 
     logging.info('All done.')
     sys.exit(status)
