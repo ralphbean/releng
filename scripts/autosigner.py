@@ -147,17 +147,17 @@ class SingleSigner(object):
                              key=self.key)
             log_infos.update(kwargs)
             log_function = getattr(log, level)
-            fmt = "{instance}/{build_id}: " + msg
+            fmt = "{instance}/{build_id}/{key}: " + msg
             log_function(fmt.format(*args, **log_infos))
 
         log_("info", "Start processing using key {key}")
         rpminfo = self.kojihelper.get_rpms(build_id)
         if len(rpminfo) == 0:
-            log_("error", "No built RPMs found")
+            log_("error", "No RPMs found")
             return
         else:
-            log_("info", "Found {count} built RPMs", count=len(rpminfo))
-        log_("debug", "Built RPMs: {rpminfo}", rpminfo=rpminfo)
+            log_("info", "Found {count} RPMs", count=len(rpminfo))
+        log_("debug", " RPMs: {rpminfo}", rpminfo=", ".join(list(rpminfo)))
 
         old_unsigned = {}
         unsigned = rpminfo
@@ -168,7 +168,7 @@ class SingleSigner(object):
                  unsigned_count=len(unsigned), all_count=len(rpminfo))
 
             if len(unsigned) == 0:
-                log_("info", "All signed")
+                log_("info", "Everything signed")
                 break
             elif list(unsigned) == list(old_unsigned):
                 log_("critical", "Sigul did not sign any RPMS")
