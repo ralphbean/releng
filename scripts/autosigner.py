@@ -215,7 +215,7 @@ class SingleSigner(object):
 
             command = self.sigulhelper.build_sign_cmdline(list(unsigned))
             timeout_command = TimeoutProcess(command)
-            timeout = 10 + len(unsigned)
+            timeout = 60 + len(unsigned)
 
             log_("debug", "Running {cmd!r} with {timeout}s timeout",
                  cmd=command, timeout=timeout)
