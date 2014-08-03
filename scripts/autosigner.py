@@ -50,7 +50,7 @@ TAG_INFO = {("f21", "f21-rebuild"): "fedora-21",
 secondary_instances = ["arm", "ppc", "s390"]
 
 
-class SigningEvent(object):
+class SigningTask(object):
     def __init__(self, build_id, instance, key):
         self.build_id = build_id
         self.instance = instance
@@ -148,12 +148,12 @@ class SingleSigner(object):
         self.sigulhelper = sigulsign.SigulHelper(key, password, arch=arch,
                                                  config_file=sigul_config)
 
-    def sign(self, build_id=None, signing_event=None):
-        if not signing_event and build_id:
-            signing_event = SigningEvent(build_id, self.instance, self.key)
+    def sign(self, build_id=None, signing_task=None):
+        if not signing_task and build_id:
+            signing_task = SigningTask(build_id, self.instance, self.key)
 
         def log_(level, msg, *args, **kwargs):
-            log_infos = dict(build_id=signing_event.build_id,
+            log_infos = dict(build_id=signing_task.build_id,
                              instance=self.instance, key=self.key)
             log_infos.update(kwargs)
             log_function = getattr(log, level)
@@ -162,7 +162,7 @@ class SingleSigner(object):
 
         log_("info", "Start processing using key {key}")
 
-        rpminfo = self.kojihelper.get_rpms(signing_event.build_id)
+        rpminfo = self.kojihelper.get_rpms(signing_task.build_id)
         if len(rpminfo) == 0:
             log_("error", "No RPMs found")
             return
@@ -223,8 +223,8 @@ class SingleSigner(object):
             log_("info", "Incomplete")
         else:
             log_("info", "All done")
-        signing_event.unsigned = unsigned
-        return signing_event
+        signing_task.unsigned = unsigned
+        return signing_task
 
 
 class AutoSigner(object):
@@ -234,28 +234,28 @@ class AutoSigner(object):
         self.signers = {}
         self.last_retry_attempt = 0
 
-    def sign(self, signing_event):
-        sigul_password = self.sigul_passwords.get(signing_event.key)
+    def sign(self, signing_task):
+        sigul_password = self.sigul_passwords.get(signing_task.key)
         if not sigul_password:
-            log.critical("Password missing for %s", signing_event)
+            log.critical("Password missing for %s", signing_task)
             return
 
-        signer_id = "{0.instance}_{0.key}".format(signing_event)
+        signer_id = "{0.instance}_{0.key}".format(signing_task)
 
         # Do not use self.signers.setdefault() to avoid creating the
         # SingleSigner if it is not needed
         if signer_id in self.signers:
             signer = self.signers[signer_id]
         else:
-            signer = SingleSigner(signing_event.instance, signing_event.key,
+            signer = SingleSigner(signing_task.instance, signing_task.key,
                                   sigul_password)
             self.signers[signer_id] = signer
 
-        signing_event = signer.sign(signing_event=signing_event)
-        if signing_event.unsigned:
-            signing_event.error_count += 1
-            signing_event.last_attempt = time.time()
-            self.incomplete.append(signing_event)
+        signing_task = signer.sign(signing_task=signing_task)
+        if signing_task.unsigned:
+            signing_task.error_count += 1
+            signing_task.last_attempt = time.time()
+            self.incomplete.append(signing_task)
             return False
         else:
             return True
@@ -274,29 +274,29 @@ class AutoSigner(object):
         incomplete = self.incomplete
         self.incomplete = []
         while incomplete:
-            signing_event = incomplete.pop(0)
+            signing_task = incomplete.pop(0)
             if force_check or \
-                    signing_event.last_attempt > (now + waiting_time):
-                signing_success = self.sign(signing_event)
+                    signing_task.last_attempt > (now + waiting_time):
+                signing_success = self.sign(signing_task)
                 if not force_check and not signing_success:
                     while incomplete:
                         self.incomplete.insert(0, incomplete.pop(0))
             else:
-                self.incomplete.append(signing_event)
+                self.incomplete.append(signing_task)
         self.last_retry_attempt = time.time()
 
         # command = ["./sigulsign_unsigned.py", "-vv", "--batch-mode",
         #            "--sigul-batch-size=1"]
-        # if signing_event.instance in secondary_instances:
+        # if signing_task.instance in secondary_instances:
         #     command.extend(
         #         [
-        #             "--arch", signing_event.instance,
+        #             "--arch", signing_task.instance,
         #             "--sigul-config-file",
         #             os.path.expanduser("~/.sigul/client-secondary.conf")])
-        # elif signing_event.instance != "primary":
+        # elif signing_task.instance != "primary":
         #     return -1
         #
-        # command.extend([signing_event.key, str(signing_event.build_id)])
+        # command.extend([signing_task.key, str(signing_task.build_id)])
         # log.info("Running", " ".join(command))
         # child = subprocess.Popen(command, stdin=subprocess.PIPE)
         # child.communicate(sigul_password + '\0')
@@ -312,7 +312,7 @@ def parse_message(msg):
                 instance = msg["msg"]["instance"]
                 if instance in secondary_instances:
                     key += "-secondary"
-                return SigningEvent(buildID, instance, key)
+                return SigningTask(buildID, instance, key)
     return None
 
 
@@ -387,13 +387,13 @@ if __name__ == "__main__":
             status = status[0:columns]
             sys.stderr.write(status)
             if topic.startswith(TOPIC_PREFIX + "buildsys.tag"):
-                signing_event = parse_message(msg)
-                if signing_event:
+                signing_task = parse_message(msg)
+                if signing_task:
                     print ""
-                    log.info("Got signing_event: %s", str(signing_event))
+                    log.info("Got signing_task: %s", str(signing_task))
                     log.info(fedmsg.encoding.pretty_dumps(
                         remove_certificate(msg)))
-                    if auto_signer.sign(signing_event):
+                    if auto_signer.sign(signing_task):
                         auto_signer.retry(force_check=True)
             else:
                 auto_signer.retry()
