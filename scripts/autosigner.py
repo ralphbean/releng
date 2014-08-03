@@ -18,15 +18,21 @@
 
 import argparse
 import collections
-import datetime
+import fcntl
 import getpass
 import logging
 import os
 import Queue
+import struct
 import subprocess
 import sys
+import termios
 import threading
+import time
 import traceback
+
+log = logging.getLogger(__name__)
+
 try:
     import simplejson as json
 except ImportError:
@@ -46,6 +52,19 @@ secondary_instances = ["arm", "ppc", "s390"]
 
 SigningEvent = collections.namedtuple("SigningEvent",
                                       "build_id, instance, key")
+
+
+def terminal_size():
+    def ioctl_GWINSZ(fd):
+        try:
+            placeholder = struct.pack('HHHH', 0, 0, 0, 0)
+            winsize = fcntl.ioctl(fd, termios.TIOCGWINSZ, placeholder)
+            return winsize
+        except:
+            return None
+    winsize = ioctl_GWINSZ(0) or ioctl_GWINSZ(1) or ioctl_GWINSZ(2)
+    rows, columns, xpixel, ypixel = struct.unpack('HHHH', winsize)
+    return rows, columns
 
 
 class TimeoutProcess(object):
@@ -75,18 +94,6 @@ class TimeoutProcess(object):
         if thread.is_alive():
             self.process.terminate()
         return None
-
-
-def print_info(*msg):
-    now = datetime.datetime.utcnow()
-    timestr = str(now) + "  0000"
-    print timestr, "INFO:", " ".join(msg)
-
-
-def log_error(*msg):
-    now = datetime.datetime.utcnow()
-    timestr = str(now) + "  0000"
-    logging.error(timestr, " ".join(msg))
 
 
 def remove_certificate(msg):
@@ -135,30 +142,68 @@ class SingleSigner(object):
                                                  config_file=sigul_config)
 
     def sign(self, build_id):
+        def log_(level, msg, *args, **kwargs):
+            log_infos = dict(build_id=build_id, instance=self.instance,
+                             key=self.key)
+            log_infos.update(kwargs)
+            log_function = getattr(log, level)
+            fmt = "{instance}/{build_id}: " + msg
+            log_function(fmt.format(*args, **log_infos))
+
+        log_("info", "Start processing using key {key}")
         rpminfo = self.kojihelper.get_rpms(build_id)
+        if len(rpminfo) == 0:
+            log_("error", "No built RPMs found")
+            return
+        else:
+            log_("info", "Found {count} built RPMs", count=len(rpminfo))
+        log_("debug", "Built RPMs: {rpminfo}", rpminfo=rpminfo)
+
         old_unsigned = {}
         unsigned = rpminfo
         while True:
             unsigned = self.kojihelper.get_unsigned_rpms(
                 unsigned, self.sigulhelper.keyid)
+            log_("info", "Found {unsigned_count}/{all_count} unsigned RPMs",
+                 unsigned_count=len(unsigned), all_count=len(rpminfo))
+
             if len(unsigned) == 0:
+                log_("info", "All signed")
                 break
             elif list(unsigned) == list(old_unsigned):
-                # FIXME Assume unfixable error
+                log_("critical", "Sigul did not sign any RPMS")
                 break
+
+            signed = [rpm for rpm in old_unsigned if rpm not in unsigned]
+            if old_unsigned:
+                log_("info", "Signed {count} RPMs", count=len(signed))
+
             old_unsigned = unsigned
 
             command = self.sigulhelper.build_sign_cmdline(list(unsigned))
             timeout_command = TimeoutProcess(command)
-            timeout = 30 + len(unsigned) * 3
+            timeout = 30 + len(unsigned) * 2
             if timeout > 300:
                 timeout = 300
+
+            log_("debug", "Running {cmd!r} with {timeout}s timeout",
+                 cmd=command, timeout=timeout)
+            sign_begin = time.time()
             ret = timeout_command.run(
                 timeout=timeout, stdindata=self.sigulhelper.password + "\0")
-            if ret == 0:
-                print_info(
-                    "Should have signed {unsigned} with key {key}".format(
-                        unsigned=unsigned, key=self.key))
+            sign_end = time.time()
+            sign_duration = sign_end - sign_begin
+            duration_per_rpm = sign_duration / len(unsigned)
+            log_("debug", "Sigul took {duration:.1f}s "
+                "({duration_per_rpm:.2f}s per RPM)",
+                duration=sign_duration, duration_per_rpm=duration_per_rpm)
+
+            if ret is None:
+                log_("warning", "Sigul timed out signing {count} RPMS after"
+                     "{timeout}s", count=len(unsigned), timeout=timeout)
+            else:
+                log_("debug", "Sigul returned: {ret}", ret=ret)
+        # FIXME write RPMs in koji
 
 
 class AutoSigner(object):
@@ -168,7 +213,8 @@ class AutoSigner(object):
     def sign(self, signing_event):
         sigul_password = self.sigul_passwords.get(signing_event.key)
         if not sigul_password:
-            log_error("Password missing for " + str(signing_event))
+            log.critical("Password missing for %s", signing_event)
+            return
 
         signer = SingleSigner(signing_event.instance,
                               signing_event.key,
@@ -188,7 +234,7 @@ class AutoSigner(object):
         #     return -1
 
         # command.extend([signing_event.key, str(signing_event.build_id)])
-        # print_info("Running", " ".join(command))
+        # log.info("Running", " ".join(command))
         # child = subprocess.Popen(command, stdin=subprocess.PIPE)
         # child.communicate(sigul_password + '\0')
         # ret = child.wait()
@@ -224,12 +270,25 @@ def run(sigul_passwords):
     command.communicate(input=json.dumps(sigul_passwords))
 
 
+def setup_logging():
+    log.setLevel(logging.DEBUG)
+    console_logger = logging.StreamHandler()
+    console_logger.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+        '%(asctime)s: %(levelname)s: %(message)s',
+    )
+    formatter.converter = time.gmtime
+    console_logger.setFormatter(formatter)
+    log.addHandler(console_logger)
+
+
 if __name__ == "__main__":
     argument_parser = argparse.ArgumentParser()
     argument_parser.add_argument(
         "--batch", help="Read JSON information with password keys from stdin",
         action="store_true", default=False)
     args = argument_parser.parse_args()
+    setup_logging()
 
     # Read in the config from /etc/fedmsg.d/
     config = fedmsg.config.load_config([], None)
@@ -250,6 +309,7 @@ if __name__ == "__main__":
         sigul_passwords = ask_key_passwords()
     auto_signer = AutoSigner(sigul_passwords)
 
+    log.debug("Start processing messages")
     count = 0
     for name, endpoint, topic, msg in fedmsg.tail_messages(**config):
         try:
@@ -260,18 +320,22 @@ if __name__ == "__main__":
                 u"\r\x1b[K{count} messages processed, last: {subtitle}".format(
                     count=count, subtitle=subtitle
                 ).encode("utf-8")
+            columns = terminal_size()[1]
+            status = status[0:columns]
             sys.stderr.write(status)
             if topic.startswith(TOPIC_PREFIX + "buildsys.tag"):
                 signing_event = parse_message(msg)
                 if signing_event:
                     print ""
-                    print_info("Got signing_event", str(signing_event))
-                    print_info(fedmsg.encoding.pretty_dumps(
+                    log.info("Got signing_event: %s", str(signing_event))
+                    log.info(fedmsg.encoding.pretty_dumps(
                         remove_certificate(msg)))
                     auto_signer.sign(signing_event)
         except Exception, e:
             try:
-                print "EXCEPTION", e
-                traceback.print_last()
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                tb = traceback.format_exception(exc_type, exc_value,
+                                                exc_traceback)
+                log.error("Exception: %s", tb)
             except Exception, ee:
-                print "EXCEPTION fallback", ee
+                log.error("Exception fallback %s", e)
