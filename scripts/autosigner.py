@@ -198,7 +198,7 @@ class SingleSigner(object):
                 log_("debug", "Signed {count} RPMs", count=len(signed))
 
                 if len(signed) == 0:
-                    log_("critical", "Sigul did not sign any RPMS")
+                    log_("warning", "Sigul did not sign any RPMS")
                     break
 
             old_unsigned = unsigned
@@ -232,7 +232,7 @@ class SingleSigner(object):
         errors = self.kojihelper.write_signed_rpms(signed,
                                                    self.sigulhelper.keyid)
         if errors:
-            log_("error", "Errors writing RPMS: {errors}", errors=errors)
+            log_("warning", "Errors writing RPMS: {errors}", errors=errors)
 
         if errors or unsigned:
             log_("warning", "Not completed, write errors: {errors}, "
@@ -371,7 +371,7 @@ def setup_logging():
     fedora_user = getpass.getuser()
     mail_logger = AutosignerSMTPHandler(
         "127.0.0.1", fedora_user, [fedora_user], "Autosigner log event")
-    mail_logger.setLevel(logging.WARNING)
+    mail_logger.setLevel(logging.ERROR)
     mail_logger.setFormatter(formatter)
     log.addHandler(mail_logger)
 
