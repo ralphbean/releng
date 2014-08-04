@@ -182,13 +182,14 @@ class SingleSigner(object):
             if len(unsigned) == 0:
                 log_("debug", "Everything signed")
                 break
-            elif list(unsigned) == list(old_unsigned):
-                log_("critical", "Sigul did not sign any RPMS")
-                break
 
             signed = [rpm for rpm in old_unsigned if rpm not in unsigned]
             if old_unsigned:
                 log_("debug", "Signed {count} RPMs", count=len(signed))
+
+                if len(signed) == 0:
+                    log_("critical", "Sigul did not sign any RPMS")
+                    break
 
             old_unsigned = unsigned
 
@@ -214,6 +215,9 @@ class SingleSigner(object):
             else:
                 log_("debug", "Sigul returned: {ret}", ret=ret)
 
+        signed = [rpm for rpm in rpminfo if rpm not in unsigned]
+        log_("debug", "Writing signed RPMS: {rpms}",
+             rpms=", ".join(list(signed)))
         errors = self.kojihelper.write_signed_rpms(signed,
                                                    self.sigulhelper.keyid)
         if errors:
