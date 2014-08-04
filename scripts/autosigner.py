@@ -17,6 +17,7 @@
 #}}}
 
 import argparse
+import datetime
 import fcntl
 import getpass
 import logging
@@ -59,7 +60,8 @@ class AutosignerSMTPHandler(logging.handlers.SMTPHandler):
 
 
 class SigningTask(object):
-    def __init__(self, build_id, instance, key, msg_id=None):
+    def __init__(self, build_id, instance, key, msg_id=None,
+                 msg_timestamp=None):
         self.build_id = build_id
         self.instance = str(instance)
         self.key = key
@@ -68,6 +70,11 @@ class SigningTask(object):
         self.last_attempt = 0
         self.created = time.time()
         self.msg_id = msg_id
+        if isinstance(msg_timestamp, int):
+            self.msg_timestamp = datetime.datetime.utcfromtimestamp(
+                msg_timestamp)
+        else:
+            self.msg_timestamp = msg_timestamp
 
     def __repr__(self):
         return self.__str__()
@@ -76,6 +83,9 @@ class SigningTask(object):
         fmt = "SigningTask({0.build_id!r}, {0.instance!r}, {0.key!r}"
         if self.msg_id:
             fmt += ", msg_id={0.msg_id!r}"
+
+        if self.msg_timestamp:
+            fmt += ", msg_timestamp={0.msg_timestamp}"
 
         fmt += ")"
         return fmt.format(self)
@@ -320,7 +330,8 @@ def parse_message(msg):
                 if instance in secondary_instances:
                     key += "-secondary"
                 return SigningTask(buildID, instance, key,
-                                   msg_id=msg["msg_id"])
+                                   msg_id=msg["msg_id"],
+                                   msg_timestamp=msg["timestamp"])
     return None
 
 
