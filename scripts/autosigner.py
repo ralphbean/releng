@@ -398,6 +398,8 @@ def setup_logging():
     info_logger.setLevel(logging.INFO)
     log.addHandler(info_logger)
 
+    return log_basedir
+
 
 if __name__ == "__main__":
     argument_parser = argparse.ArgumentParser()
@@ -405,7 +407,17 @@ if __name__ == "__main__":
         "--batch", help="Read JSON information with password keys from stdin",
         action="store_true", default=False)
     args = argument_parser.parse_args()
-    setup_logging()
+    log_basedir = setup_logging()
+
+    msg_id_formatter = logging.Formatter('%(message)s')
+    msg_id_logfilename = os.path.join(log_basedir, "msg_ids.log")
+    msg_id_logger = logging.handlers.TimedRotatingFileHandler(
+        msg_id_logfilename, when="midnight", backupCount=14, utc=True)
+    msg_id_logger.setFormatter(msg_id_formatter)
+    msg_id_logger.setLevel(logging.DEBUG)
+    msg_id_log = logging.getLogger(__name__ + "-msg_ids")
+    msg_id_log.addHandler(msg_id_logger)
+    msg_id_log.setLevel(logging.DEBUG)
 
     # Read in the config from /etc/fedmsg.d/
     config = fedmsg.config.load_config([], None)
@@ -445,6 +457,7 @@ if __name__ == "__main__":
                 if signing_task:
                     print ""
                     log.debug("NEW: %s", str(signing_task))
+                    msg_id_log.info(signing_task.msg_id)
                     log.debug("Processing message: %s",
                               fedmsg.encoding.pretty_dumps(
                                   remove_certificate(msg)))
