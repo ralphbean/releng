@@ -221,7 +221,8 @@ class SingleSigner(object):
 
             if ret is None:
                 log_("warning", "Sigul timed out signing {count} RPMS after "
-                     "{timeout}s", count=len(unsigned), timeout=timeout)
+                     "{timeout}s: {unsigned}", count=len(unsigned),
+                     timeout=timeout, unsigned=", ".join(unsigned))
             else:
                 log_("debug", "Sigul returned: {ret}", ret=ret)
 
