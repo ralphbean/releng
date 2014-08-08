@@ -20,24 +20,73 @@ import argparse
 import collections
 import datetime
 import getpass
+import logging
+import os
+import Queue
 import subprocess
 import sys
+import threading
 import traceback
+try:
+    import simplejson as json
+except ImportError:
+    import json
 
 import fedmsg
 import fedmsg.meta
+
+import sigulsign_unsigned as sigulsign
 
 TOPIC_PREFIX = u"org.fedoraproject.prod."
 
 TAG_INFO = {("f21", "f21-rebuild"): "fedora-21",
             ("f22", "f22-rebuild"): "fedora-22",
             }
+secondary_instances = ["arm", "ppc", "s390"]
+
+SigningEvent = collections.namedtuple("SigningEvent",
+                                      "build_id, instance, key")
+
+
+class TimeoutProcess(object):
+    def __init__(self, command):
+        self.command = command
+        self.process = None
+
+    def run(self, timeout=None, stdindata=None):
+        def target():
+            if stdindata:
+                stdin = subprocess.PIPE
+            else:
+                stdin = None
+            self.process = subprocess.Popen(self.command, stdin=stdin)
+            self.process.communicate(stdindata)
+
+        thread = threading.Thread(target=target)
+        thread.start()
+
+        thread.join(timeout)
+        if thread.is_alive():
+            self.process.kill()
+        else:
+            return self.process.returncode
+
+        thread.join(1)
+        if thread.is_alive():
+            self.process.terminate()
+        return None
 
 
 def print_info(*msg):
     now = datetime.datetime.utcnow()
     timestr = str(now) + "  0000"
     print timestr, "INFO:", " ".join(msg)
+
+
+def log_error(*msg):
+    now = datetime.datetime.utcnow()
+    timestr = str(now) + "  0000"
+    logging.error(timestr, " ".join(msg))
 
 
 def remove_certificate(msg):
@@ -47,30 +96,141 @@ def remove_certificate(msg):
     return msg
 
 
-def sign_build(buildID, key, password, instance="primary"):
-    if instance == "primary":
-        command = ["./sigulsign_unsigned.py", "-vv", "--batch-mode",
-                   "--sigul-batch-size=1", key, str(buildID)]
+def signing_worker(queues, sigul_passwords, primary=True):
+    kojihelpers = {}
+    if primary:
+        kojihelpers["primary"] = sigulsign.KojiHelper()
     else:
-        return -1
-    print_info("Running", " ".join(command))
-    child = subprocess.Popen(command, stdin=subprocess.PIPE)
-    child.communicate(password + '\0')
-    ret = child.wait()
-    return ret
+        for arch in secondary_instances:
+            kojihelpers[arch] = sigulsign.KojiHelper(arch=arch)
+
+    keys = list(queues)
+
+    for key in keys:
+        queue = queues[key]
+        unsigned_rpms = []
+        while not queue.empty():
+            try:
+                unsigned_rpms.append(queue.get(block=False))
+            except Queue.Empty:
+                break
 
 
-def extract_buildID(msg):
+class SingleSigner(object):
+    def __init__(self, instance, key, password):
+        self.instance = instance
+        self.key = key
+        self.key_id = sigulsign.KEYS
+        self.password = password
+
+        if self.instance == "primary":
+            arch = None
+            sigul_config = None
+        else:
+            arch = instance
+            sigul_config = os.path.expanduser("~/.sigul/client-secondary.conf")
+
+        self.kojihelper = sigulsign.KojiHelper(arch=arch)
+        self.sigulhelper = sigulsign.SigulHelper(key, password, arch=arch,
+                                                 config_file=sigul_config)
+
+    def sign(self, build_id):
+        rpminfo = self.kojihelper.get_rpms(build_id)
+        old_unsigned = {}
+        unsigned = rpminfo
+        while True:
+            unsigned = self.kojihelper.get_unsigned_rpms(
+                unsigned, self.sigulhelper.keyid)
+            if len(unsigned) == 0:
+                break
+            elif list(unsigned) == list(old_unsigned):
+                # FIXME Assume unfixable error
+                break
+            old_unsigned = unsigned
+
+            command = self.sigulhelper.build_sign_cmdline(list(unsigned))
+            timeout_command = TimeoutProcess(command)
+            timeout = 30 + len(unsigned) * 3
+            if timeout > 300:
+                timeout = 300
+            ret = timeout_command.run(
+                timeout=timeout, stdindata=self.sigulhelper.password + "\0")
+            if ret == 0:
+                print_info(
+                    "Should have signed {unsigned} with key {key}".format(
+                        unsigned=unsigned, key=self.key))
+
+
+class AutoSigner(object):
+    def __init__(self, sigul_passwords):
+        self.sigul_passwords = sigul_passwords
+
+    def sign(self, signing_event):
+        sigul_password = self.sigul_passwords.get(signing_event.key)
+        if not sigul_password:
+            log_error("Password missing for " + str(signing_event))
+
+        signer = SingleSigner(signing_event.instance,
+                              signing_event.key,
+                              sigul_password)
+        signer.sign(signing_event.build_id)
+
+
+        # command = ["./sigulsign_unsigned.py", "-vv", "--batch-mode",
+        #            "--sigul-batch-size=1"]
+        # if signing_event.instance in secondary_instances:
+        #     command.extend(
+        #         [
+        #             "--arch", signing_event.instance,
+        #             "--sigul-config-file",
+        #             os.path.expanduser("~/.sigul/client-secondary.conf")])
+        # elif signing_event.instance != "primary":
+        #     return -1
+
+        # command.extend([signing_event.key, str(signing_event.build_id)])
+        # print_info("Running", " ".join(command))
+        # child = subprocess.Popen(command, stdin=subprocess.PIPE)
+        # child.communicate(sigul_password + '\0')
+        # ret = child.wait()
+        # return ret
+
+
+def parse_message(msg):
     if msg["topic"] == TOPIC_PREFIX + "buildsys.tag":
         for tags, key in TAG_INFO.items():
             if msg["msg"]["tag"] in tags:
                 buildID = msg["msg"]["build_id"]
                 instance = msg["msg"]["instance"]
-            return buildID, instance, key
-    return None, None, None
+                if instance in secondary_instances:
+                    key += "-secondary"
+                return SigningEvent(buildID, instance, key)
+    return None
+
+
+def ask_key_passwords():
+    sigul_passwords = {}
+    for tags, key in TAG_INFO.items():
+        for k in ["", "-secondary"]:
+            k = key + k
+            sigul_password = getpass.getpass("Sigul {key} password: ".format(
+                key=k))
+            sigul_passwords[k] = sigul_password
+    return sigul_passwords
+
+
+def run(sigul_passwords):
+    command = subprocess.Popen(["./autosigner.py", "--batch"],
+                               stdin=subprocess.PIPE)
+    command.communicate(input=json.dumps(sigul_passwords))
 
 
 if __name__ == "__main__":
+    argument_parser = argparse.ArgumentParser()
+    argument_parser.add_argument(
+        "--batch", help="Read JSON information with password keys from stdin",
+        action="store_true", default=False)
+    args = argument_parser.parse_args()
+
     # Read in the config from /etc/fedmsg.d/
     config = fedmsg.config.load_config([], None)
 
@@ -84,12 +244,11 @@ if __name__ == "__main__":
     # and will disappear in future versions.
     config['timeout'] = 0
 
-    sigul_passwords = {}
-    for tags, key in TAG_INFO.items():
-        for k in ["", "-secondary"]:
-            k = key + k
-            sigul_password = getpass.getpass("Sigul {key} password: ".format(key=k))
-            sigul_passwords[key] = sigul_password
+    if args.batch:
+        sigul_passwords = json.load(sys.stdin)
+    else:
+        sigul_passwords = ask_key_passwords()
+    auto_signer = AutoSigner(sigul_passwords)
 
     count = 0
     for name, endpoint, topic, msg in fedmsg.tail_messages(**config):
@@ -103,13 +262,13 @@ if __name__ == "__main__":
                 ).encode("utf-8")
             sys.stderr.write(status)
             if topic.startswith(TOPIC_PREFIX + "buildsys.tag"):
-                buildID, instance, key = extract_buildID(msg)
-                if buildID:
+                signing_event = parse_message(msg)
+                if signing_event:
                     print ""
-                    print_info("Got buildID", str(buildID))
+                    print_info("Got signing_event", str(signing_event))
                     print_info(fedmsg.encoding.pretty_dumps(
                         remove_certificate(msg)))
-                    sign_build(buildID, key, sigul_password, instance=instance)
+                    auto_signer.sign(signing_event)
         except Exception, e:
             try:
                 print "EXCEPTION", e
