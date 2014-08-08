@@ -471,6 +471,6 @@ if __name__ == "__main__":
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 tb = traceback.format_exception(exc_type, exc_value,
                                                 exc_traceback)
-                log.error("Exception: %s", "".join(tb))
+                log.error("Exception: %s\nmessage was: %s", ("".join(tb), msg))
             except Exception, ee:
                 log.error("Exception fallback %s", e)
