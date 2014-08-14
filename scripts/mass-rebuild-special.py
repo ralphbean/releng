@@ -29,7 +29,7 @@ targets = ['f22-gcc-rebuild','f21-gcc-rebuild']
 branches = ['master', 'f21']
 enviro['CVS_RSH'] = 'ssh' # use ssh for cvs
 
-pkg_skip_list = ['shim', 'shim-signed', 'kernel', 'grub2']
+pkg_skip_list = ['shim', 'shim-signed', 'kernel', 'grub2', 'gcc', 'glibc']
 
 # Define functions
 
