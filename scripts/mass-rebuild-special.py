@@ -99,7 +99,7 @@ for pkg in pkgs:
     for build in builds:
         buildtarget = kojisession.getTaskInfo(build['task_id'],
                                    request=True)['request'][1]
-        if buildtarget == target or buildtarget in targets:
+        if buildtarget == targets[0] or buildtarget in targets:
             # We've already got an attempt made, skip.
             newbuild = True
             break
