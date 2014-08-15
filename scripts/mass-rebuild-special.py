@@ -179,7 +179,7 @@ for pkg in pkgs:
                          cwd=os.path.join(workdir, name)):
                 continue
         else:
-            gitmergecmd = ['git', 'merge' 'master']
+            gitmergecmd = ['git', 'merge', 'master']
             print "merging master into %s" % secondbuildtag
             if runme(gitmergecmd, 'git', name, enviro,
                          cwd=os.path.join(workdir, name)):
