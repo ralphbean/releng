@@ -20,7 +20,7 @@ import operator
 buildtag = 'f22' # tag to build from
 secondbuildtag = 'f21' # tag to build from
 targets = ['f22-candidate', 'rawhide', 'f22'] # tag to build from
-epoch = '2014-14-06 14:30:00.000000' # rebuild anything not built after this date
+epoch = '2014-06-14 14:30:00.000000' # rebuild anything not built after this date
 user = 'Fedora Release Engineering <rel-eng@lists.fedoraproject.org>'
 comment = '- Rebuilt for https://fedoraproject.org/wiki/Fedora_21_22_Mass_Rebuild'
 workdir = os.path.expanduser('~/massbuild')
