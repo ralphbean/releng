@@ -133,7 +133,7 @@ for pkg in pkgs:
         break
  
     gitcmd = ['git', 'rev-parse', 'origin/%s' % secondbuildtag ]
-    print 'getting git hash for %' % secondbuildtag
+    print 'getting git hash for %s' % secondbuildtag
     secondhash = runmeoutput(gitcmd, 'git', name, enviro, cwd=os.path.join(workdir, name))
     if secondhash == 0:
         sys.stderr.write('%s has no git hash.\n' % name)
