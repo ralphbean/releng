@@ -85,11 +85,11 @@ for pkg in pkgs:
 
     # some package we just dont want to ever rebuild
     if name in pkg_skip_list:
-        print 'Skipping %s, package is explicitely skipped'
+        print 'Skipping %s, package is explicitely skipped' % name
         continue
 
     if name not in pkglist:
-        print 'Skipping %s, package is not explicitely included'
+        print 'Skipping %s, package is not explicitely included' % name
         continue
     # Query to see if a build has already been attempted
     # this version requires newer koji:
