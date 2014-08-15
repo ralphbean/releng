@@ -147,8 +147,8 @@ for pkg in pkgs:
 
         if branch == secondbuildtag:
             # switch branch
-            fedpkgcmd = ['fedpkg', 'switch-branch', buildtag ]
-            print 'switching %s to %s' % (name, buildtag)
+            fedpkgcmd = ['fedpkg', 'switch-branch', secondbuildtag ]
+            print 'switching %s to %s' % (name, secondbuildtag)
             if runme(fedpkgcmd, 'fedpkg', name, enviro, cwd=os.path.join(workdir, name)):
                 continue
 
