@@ -37,10 +37,10 @@ for spin in base
 do
     declare -l lspin
     lspin=$spin
-    url=http://kojipkgs.fedoraproject.org/mash/$RELEASE-$BUILD/$VERSION/\$arch/os/
+    url=http://kojipkgs.fedoraproject.org/mash/$BRANCH-$BUILD/$VERSION/\$arch/os/
     kickstart=fedora-docker-$lspin-$GITHASH.ks
     ksflatten -c fedora-docker-$spin.ks -o $kickstart >& /dev/null
     echo "url --url=$url"|sed -e 's|$arch|$basearch|g' >> $kickstart
  #koji image-build fedora-cloud-$spin $VERSION --distro Fedora-20 $TARGET --ksurl=git://git.fedorahosted.org/git/spin-kickstarts.git?#$GITHASH --kickstart=fedora-cloud-$lspin.ks $url x86_64 i386 --format=qcow2 --format=raw --release=$VERSION --scratch --repo=$url --nowait --disk-size=3
- koji image-build fedora-docker-$spin $BUILD --distro Fedora-20 $TARGET  --kickstart=fedora-cloud-$lspin-$GITHASH.ks $url x86_64  --format=docker --release=$VERSION --scratch --repo=$url --nowait --disk-size=3
+ koji image-build fedora-docker-$spin $BUILD --distro Fedora-20 $TARGET  --kickstart=fedora-docker-$lspin-$GITHASH.ks $url x86_64  --format=docker --release=$VERSION --scratch --repo=$url --nowait --disk-size=3
 done
