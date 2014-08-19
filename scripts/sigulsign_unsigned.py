@@ -371,7 +371,7 @@ if __name__ == "__main__":
     else:  # options.verbose >= 2
         loglevel = logging.DEBUG
 
-    logging.basicConfig(format='%(levelname)s: %(message)s',
+    logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s',
                         level=loglevel)
 
     # Check to see if we got any arguments
