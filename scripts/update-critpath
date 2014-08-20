@@ -4,7 +4,8 @@
 # update_critpath - a commandline frontend for updating the critpath
 #
 # Copyright (C) 2014 Red Hat Inc
-# Copyright (C) 2014 Pierre-Yves Chibon, Chaoyi Zha, Toshio Kuratomi, Bill Nottingham
+# Copyright (C) 2014 Pierre-Yves Chibon, Chaoyi Zha, Toshio Kuratomi,
+#                    Bill Nottingham
 # Authors: Pierre-Yves Chibon <pingou@pingoured.fr>
            Chaoyi Zha <summermontreal@gmail.com>
            Bill Nottingham <notting@fedoraproject.org>
@@ -17,39 +18,30 @@
 # See http://www.gnu.org/copyleft/gpl.html  for the full text of the
 # license.
 #
-# To use update_critpath, you must place this script within the folder of packagedb-cli
-# It is a dependency, and you cannot run update_critpath wihtout packagedb-cli
-#
 # Critpath updating SOP:
 # http://fedoraproject.org/wiki/Update_Critpath_SOP
 #
 # How to use:
-# python update-critpath critpath <branch> <critpath.txt> <status (True/False)>
+#  $ python update-critpath <critpath.txt> <branch>
 # for example
-# python update-critpath critpath f20 critpath.txt True
+#  $ python update-critpath critpath.txt f20
 #
 """
 
-from fedora.client import (AccountSystem, AppError, ServerError)
-from bugzilla.rhbugzilla import RHBugzilla
-from pkgdb2client import PkgDB, PkgDBException, __version__
+from pkgdb2client import PkgDB, PkgDBException
 import pkgdb2client
 import argparse
 import logging
-import koji
 
-
-KOJI_HUB = 'http://koji.fedoraproject.org/kojihub'
-RH_BZ_API = 'https://bugzilla.redhat.com/xmlrpc.cgi'
 
 pkgdbclient = PkgDB('https://admin.fedoraproject.org/pkgdb',
                     login_callback=pkgdb2client.ask_password)
-fasclient = AccountSystem('https://admin.fedoraproject.org/accounts')
 
 # Initial simple logging stuff
 logging.basicConfig()
 PKGDBLOG = logging.getLogger("pkgdb2client")
-LOG = logging.getLogger("pkgdb-cli")
+LOG = logging.getLogger("update_critpath")
+
 
 def _get_active_branch(packagename=None):
     ''' Return a list of the active branch for a specific package or simply
@@ -76,65 +68,79 @@ def setup_parser():
     '''
     Set up argparse
     '''
-    parser = argparse.ArgumentParser(prog="pkgdb-cli")
+    parser = argparse.ArgumentParser(prog="update_critpath")
     # General connection options
     parser.add_argument('--user', dest="username",
                         help="FAS username")
     parser.add_argument('--password', dest="password",
                         help="FAS password (if not provided, will be asked "
                         "later)")
-    parser.add_argument('--nocolor', action='store_true',
-                        help="Removes color from output")
-    parser.add_argument('--verbose', action='store_true',
-                        help="Gives more info about what's going on")
     parser.add_argument('--debug', action='store_true',
                         help="Outputs bunches of debugging info")
     parser.add_argument('--test', action='store_true',
                         help="Uses a test instance instead of the real pkgdb.")
-    parser.add_argument('--version', action='version',
-                        version='pkgdb-cli %s' % (__version__))
 
-    parser.add_argument(
-        'branch', default='master', nargs="?",
-        help="Branch of the package to add to critpath "
-        "(default: 'master', can be: 'all')")
     parser.add_argument(
         'txtlist',
         help="Filename containing list of packages to critpath")
     parser.add_argument(
-        'status', default=True,
-        help="To add or remove from critpath "
-        "(default: 'True', can be: 'False'")
-    parser.set_defaults(func=do_critpath)
-
+        'branch', default='master',
+        help="Branch of the package to add to critpath (default: 'master')")
 
     return parser
 
-def do_critpath(args):
-    ''' Change critpath status on package in PkgDB
 
+def list_critpath(branches):
+    ''' Return the list of packages flagged as critpatch in the specified
+    branches.
+
+    :arg branches: one or more branches used to restrict the list of packages
+        returned.
+    :type branches: str or list
+    :return: a list of package names
+    :rtype: list
     '''
+    if isinstance(branches, basestring):
+        branches = [branches]
 
-    branch = args.branch
-    critpath = args.status
-    txtlist = args.txtlist
-    lpackages = []
-    try:
-        with open(txtlist) as f:
-            lpackages = f.readlines() # Read each line of txtlist into a list
-    except:
-        print "Error: File {0} not found.".format(txtlist)
+    args = {
+        'branches': branches,
+        'format': 'json',
+    }
+    output = pkgdbclient.handle_api_call('/critpath', params=args)
 
-    for package in lpackages:
-        # Loop through each entry, and update the critpath appropriately
-        spackage = package.strip()
-        pkgdbclient.update_critpath(
-            spackage,
-            branch = branch,
-            critpath = critpath)
-        print "Setting {spackage}'s critpath status to {critpath}...".format(spackage=spackage, critpath=critpath)
-    print "Done."
+    pkgs = set()
+    if output:
+        for branch in branches:
+            if branch in output['pkgs']:
+                pkgs.update(output['pkgs'][branch])
 
+    return pkgs
+
+
+def update_critpath(current_critpath, new_critpath, branch):
+    ''' Change critpath status of packages in PkgDB
+
+    :arg current_critpath: a set listing all the packages that currently have
+        the critpath package
+    '''
+    # Remove the critpath flag to the package that should not have it
+
+    new_no = current_critpath - new_critpath
+    for pkg in new_no:
+        try:
+            pkgdbclient.update_critpath(pkg, branch, False)
+        except PkgDBException, err:
+            LOG.debug('PkgDBException')
+            print '{0}: {1}'.format(pkg, err)
+
+    new_yes = new_critpath - current_critpath
+    for pkg in new_yes:
+        try:
+            pkgdbclient.update_critpath(pkg, branch, True)
+        except PkgDBException, err:
+            LOG.debug('PkgDBException')
+            print '{0}: {1}'.format(pkg, err)
 
 
 def main():
@@ -151,15 +157,10 @@ def main():
     if arg.debug:
         LOG.setLevel(logging.DEBUG)
         PKGDBLOG.setLevel(logging.DEBUG)
-    elif arg.verbose:
-        LOG.setLevel(logging.INFO)
 
     if arg.test:
-        global fasclient, pkgdbclient
+        global pkgdbclient
         print "Testing environment"
-        fasclient = AccountSystem(
-            'https://admin.stg.fedoraproject.org/accounts',
-            insecure=True)
         pkgdbclient = PkgDB(
             'https://admin.stg.fedoraproject.org/pkgdb',
             login_callback=pkgdb2client.ask_password,
@@ -172,36 +173,21 @@ def main():
     if arg.username:
         pkgdbclient.username = arg.username
 
+    current_critpath = list_critpath(arg.branch)
+    new_critpath = []
+    with open(arg.txtlist) as f:
+        for line in f.readlines():
+            new_critpath.append(line.strip())
+
     try:
-        arg.func(arg)
+        update_critpath(set(current_critpath), set(new_critpath), arg.branch)
     except KeyboardInterrupt:
         print "\nInterrupted by user."
         return_code = 1
-    except ServerError, err:
-        LOG.debug('ServerError')
-        print '{0}'.format(err)
-        return_code = 3
-    except ActionError, err:
-        # Note: If this error is raised, the most probable cause is "Nothing to update" (already critpathed), or some of the values are wrong
-        LOG.debug('ActionError')
-        print '{0}'.format(err.message)
-        return_code = 7
-    except AppError, err:
-        LOG.debug('AppError')
-        print '{0}: {1}'.format(err.name, err.message)
-        return_code = 4
-    except PkgDBException, err:
-        LOG.debug('PkgDBException')
-        print '{0}'.format(err)
-        return_code = 8
-    except ValueError, err:
-        print 'Error: {0}'.format(err)
-        print 'Did you log in?'
-        return_code = 6
     except Exception, err:
         print 'Error: {0}'.format(err)
         logging.exception("Generic error catched:")
-        return_code = 5
+        return_code = 2
 
     return return_code
 
