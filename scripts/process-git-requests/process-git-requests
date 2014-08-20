@@ -183,6 +183,14 @@ def add_package(pkgdb, request, bug):
                     ['watchcommits', 'watchbugzilla', 'approveacls', 'commit'],
                     'Approved',
                     i)
+            # Set CC user
+            for i in request.get('cc_list', []):
+                pkgdb.update_acl(
+                    str(request['pkg']),
+                    request['branches'],
+                    ['watchcommits', 'watchbugzilla'],
+                    'Approved',
+                    i)
         except AuthError, e:
             if sys.stdin.isatty():
                 if retry >= config['pkgdb.retries']:
