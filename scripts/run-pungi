@@ -101,17 +101,17 @@ done
 
 
 pushd $FINALDEST/$VERSION/
-sg releng "mkdir -p Images/armhfp Images/i386 Images/x86_64 Spins/i386 Spins/x86_64 Live/i386 Live/x86_64"
+sg releng "mkdir -p Images/armhfp Cloud/Images/i386 Cloud/Images/x86_64 Spins/i386 Spins/x86_64 Live/i386 Live/x86_64"
 popd
 
 
 USER=$(whoami)
 # stage images
 sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora*armhfp-$SHORTVERSION-$SHORTCOMPOSE-sda.raw.xz $FINALDEST/$VERSION/Images/armhfp/"
-sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-i386*$VERSION-$DATE-sda.raw.xz $FINALDEST/$VERSION/Images/i386/"
-sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-i386*$VERSION-$DATE-sda.qcow2 $FINALDEST/$VERSION/Images/i386/"
-sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-x86_64*$VERSION-$DATE-sda.raw.xz $FINALDEST/$VERSION/Images/x86_64/"
-sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-x86_64*$VERSION-$DATE-sda.qcow2 $FINALDEST/$VERSION/Images/x86_64/"
+sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-i386*$VERSION-$DATE-sda.raw.xz $FINALDEST/$VERSION/Cloud/Images/i386/"
+sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-i386*$VERSION-$DATE-sda.qcow2 $FINALDEST/$VERSION/Cloud/Images/i386/"
+sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-x86_64*$VERSION-$DATE-sda.raw.xz $FINALDEST/$VERSION/Cloud/Images/x86_64/"
+sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-x86_64*$VERSION-$DATE-sda.qcow2 $FINALDEST/$VERSION/Cloud/Images/x86_64/"
 
 sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task*/*i686*$SHORTVERSION-$SHORTCOMPOSE.iso $FINALDEST/$VERSION/Spins/i386/"
 sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task*/*x86_64*$SHORTVERSION-$SHORTCOMPOSE.iso $FINALDEST/$VERSION/Spins/x86_64/"
@@ -136,8 +136,12 @@ for arch in i386 x86_64; do pushd $arch; sha256sum -b *iso>  Fedora-$type-$arch-
 popd
 done
 
+pushd $FINALDEST/$VERSIONi/Cloud/Images
+for arch in i386 x86_64; do pushd $arch; sha256sum -b *qcow2 *raw.xz>  Fedora-Cloud-Images-$arch-$VERSION-CHECKSUM; popd; done
+popd
+
 pushd $FINALDEST/$VERSION/Images
-for arch in armhfp i386 x86_64; do pushd $arch; sha256sum -b *qcow2 *raw.xz>  Fedora-Images-$arch-$VERSION-CHECKSUM; popd; done
+for arch in armhfp; do pushd $arch; sha256sum -b *qcow2 *raw.xz>  Fedora-Images-$arch-$VERSION-CHECKSUM; popd; done
 popd
 
 # stage the composed tree to final locateion
