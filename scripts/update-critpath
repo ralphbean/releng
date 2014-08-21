@@ -127,20 +127,24 @@ def update_critpath(current_critpath, new_critpath, branch):
     # Remove the critpath flag to the package that should not have it
 
     new_no = current_critpath - new_critpath
-    for pkg in new_no:
+    if new_no:
         try:
-            pkgdbclient.update_critpath(pkg, branch, False)
+            pkgdbclient.update_critpath(new_no, branch, False)
         except PkgDBException, err:
             LOG.debug('PkgDBException')
-            print '{0}: {1}'.format(pkg, err)
+            print '{0}'.format(err)
+    else:
+        print 'No packages to which the critpath flag should be removed'
 
     new_yes = new_critpath - current_critpath
-    for pkg in new_yes:
+    if new_yes:
         try:
-            pkgdbclient.update_critpath(pkg, branch, True)
+            pkgdbclient.update_critpath(new_yes, branch, True)
         except PkgDBException, err:
             LOG.debug('PkgDBException')
-            print '{0}: {1}'.format(pkg, err)
+            print '{0}'.format(err)
+    else:
+        print 'No packages to which the critpath flag should be added'
 
 
 def main():
