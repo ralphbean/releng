@@ -1,7 +1,7 @@
 #!/usr/bin/python -tt
 #
 # Copyright (C) 2013 Red Hat Inc,
-# SPDX-License-Identifier:	GPL-2.0+
+# SPDX-License-Identifier:  GPL-2.0+
 #
 # Authors: Will Woods <wwoods@redhat.com>
 #          Seth Vidal <skvidal@fedoraproject.org>
@@ -16,7 +16,11 @@ from rpmUtils.arch import getBaseArch
 # Set some constants
 # Old definition
 #critpath_groups = ['@core','@critical-path-base','@critical-path-gnome']
-critpath_groups = ['@core', '@critical-path-apps', '@critical-path-base', '@critical-path-gnome', '@critical-path-kde', '@critical-path-lxde', '@critical-path-xfce' ]
+critpath_groups = [
+    '@core', '@critical-path-apps', '@critical-path-base',
+    '@critical-path-gnome', '@critical-path-kde', '@critical-path-lxde',
+    '@critical-path-xfce'
+]
 base_arches = ('armhfp', 'i386', 'x86_64')
 known_arches = base_arches + ('armv7hl','i586','i686')
 fedora_baseurl = 'http://dl.fedoraproject.org/pub/fedora/linux/'
@@ -63,7 +67,7 @@ def resolve_deps(pkg, base):
         for prov in po.provides:
             provides_cache[prov] = po.name
 
-    return deps        
+    return deps
 
 def expand_critpath(my, start_list):
     name_list = []
@@ -165,7 +169,7 @@ if __name__ == '__main__':
     if opt.url != fedora_baseurl:
         releasepath[release] = releasepath[release].replace('development/','')
     print "Using URL %s" % (opt.url + releasepath[release])
-    
+
     # Do the critpath expansion for each arch
     critpath = set()
     for arch in check_arches:
@@ -183,7 +187,7 @@ if __name__ == '__main__':
         if cachedir.startswith("/tmp/"):
             shutil.rmtree(cachedir)
         print
-    # Write full list 
+    # Write full list
     f = open(opt.output,"w")
     for packagename in sorted(critpath):
         f.write(packagename + "\n")
