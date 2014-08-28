@@ -58,9 +58,10 @@ class AutosignerSMTPHandler(logging.handlers.SMTPHandler):
 
 
 class SigningTask(object):
-    def __init__(self, build_id, instance, key, msg_id=None,
+    def __init__(self, build_id, tag, instance, key, msg_id=None,
                  msg_timestamp=None):
         self.build_id = build_id
+        self.tag = tag
         self.instance = str(instance)
         self.key = key
         self.unsigned = None
@@ -78,7 +79,8 @@ class SigningTask(object):
         return self.__str__()
 
     def __str__(self):
-        fmt = "SigningTask({0.build_id!r}, {0.instance!r}, {0.key!r}"
+        fmt = "SigningTask({0.build_id!r}, {0.tag!r}, {0.instance!r}, "\
+              "{0.key!r}"
         if self.msg_id:
             fmt += ", msg_id={0.msg_id!r}"
 
@@ -156,13 +158,17 @@ class SingleSigner(object):
         self.sigulhelper = sigulsign.SigulHelper(key, password, arch=arch,
                                                  config_file=sigul_config)
 
-    def sign(self, build_id=None, signing_task=None):
-        if not signing_task and build_id:
-            signing_task = SigningTask(build_id, self.instance, self.key)
+    def sign(self, build_id=None, tag=None, signing_task=None):
+        if not signing_task and build_id is not None:
+            if tag is not None:
+                signing_task = SigningTask(build_id, tag, self.instance,
+                                           self.key)
+            else:
+                raise ValueError("tag must be specified")
 
         def log_(level, msg, *args, **kwargs):
             log_infos = dict(build_id=signing_task.build_id,
-                             instance=self.instance, key=self.key)
+                             instance=self.instance, key=self.key,)
             log_infos.update(kwargs)
             log_function = getattr(log, level)
             fmt = "{instance}/{build_id}/{key}: " + msg
@@ -170,10 +176,16 @@ class SingleSigner(object):
 
         log_("debug", "Start processing using key {key}")
 
+        # Verify fedmsg data
+        if not self.kojihelper.check_build_is_tagged(signing_task.build_id,
+                                                     signing_task.tag):
+            log_("error", "Build not in expected tag")
+            return None
+
         rpminfo = self.kojihelper.get_rpms(signing_task.build_id)
         if len(rpminfo) == 0:
             log_("error", "No RPMs found")
-            return
+            return None
         else:
             log_("debug", "Found {count} RPMs", count=len(rpminfo))
 
@@ -327,12 +339,13 @@ class AutoSigner(object):
 def parse_message(msg):
     if msg["topic"] == TOPIC_PREFIX + "buildsys.tag":
         for tags, key in TAG_INFO.items():
-            if msg["msg"]["tag"] in tags:
+            msg_tag = msg["msg"]["tag"]
+            if msg_tag in tags:
                 buildID = msg["msg"]["build_id"]
                 instance = msg["msg"]["instance"]
                 if instance in secondary_instances:
                     key += "-secondary"
-                return SigningTask(buildID, instance, key,
+                return SigningTask(buildID, msg_tag, instance, key,
                                    msg_id=msg["msg_id"],
                                    msg_timestamp=msg["timestamp"])
     return None

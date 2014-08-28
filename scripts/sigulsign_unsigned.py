@@ -234,6 +234,16 @@ class KojiHelper(object):
                 raise ValueError("Unexpected Koji result: " + repr(result))
         return errors
 
+    def check_build_is_tagged(self, build_id, tag):
+        build = self.kojisession.getBuild(build_id)
+        if build:
+            package_name = build["name"]
+            builds = self.kojisession.listTagged(tag, package=package_name)
+            build_ids = [b["build_id"] for b in builds]
+            if build_id in build_ids:
+                return True
+        return False
+
 
 def exit(status):
     """End the program using status, report any errors"""
