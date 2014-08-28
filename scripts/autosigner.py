@@ -45,9 +45,7 @@ import sigulsign_unsigned as sigulsign
 
 TOPIC_PREFIX = u"org.fedoraproject.prod."
 
-TAG_INFO = {("f21", "f21-rebuild"): "fedora-21",
-            ("f22", "f22-rebuild"): "fedora-22",
-            }
+TAG_INFO = {("f22",): "fedora-22",}
 secondary_instances = ["arm", "ppc", "s390"]
 
 
