@@ -230,6 +230,8 @@ class KojiHelper(object):
         for result, rpm in zip(results, rpm_filenames):
             if isinstance(result, dict):
                 errors[rpm] = result
+            elif result != [None]:
+                raise ValueError("Unexpected Koji result: " + repr(result))
         return errors
 
 
