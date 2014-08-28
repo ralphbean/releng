@@ -177,7 +177,11 @@ class SingleSigner(object):
         else:
             log_("debug", "Found {count} RPMs", count=len(rpminfo))
 
-        log_("debug", " RPMs: {rpminfo}", rpminfo=", ".join(list(rpminfo)))
+        rpm_log_list = ", ".join(list(rpminfo)[0:10])
+        if len(list(rpminfo)) > 10:
+            rpm_log_list += ", ..."
+
+        log_("debug", " RPMs: {rpminfo}", rpminfo=rpm_log_list)
 
         old_unsigned = {}
         unsigned = rpminfo
