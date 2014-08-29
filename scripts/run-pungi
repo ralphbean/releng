@@ -43,9 +43,9 @@ popd
 for arch in armhfp i386 x86_64
 do
  mock -r fedora-branched-compose-i386 --init || exit 1
- mock -r fedora-branched-compose-i386 --shell "pungi -c $KICKSTARTS/fedora-install-workstation.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ --arch=$arch -G -C --ver $VERSION --workdirbase=/tmp/work --flavor Workstation" || exit 1
- mock -r fedora-branched-compose-i386 --shell "pungi -c $KICKSTARTS/fedora-install-server.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ --arch=$arch -G -C --ver $VERSION --workdirbase=/tmp/work --flavor Server" || exit 1
- mock -r fedora-branched-compose-i386 --shell "pungi -c $KICKSTARTS/fedora-install-cloud.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ --arch=$arch -G -C --ver $VERSION --workdirbase=/tmp/work --flavor Cloud" || exit 1
+ mock -r fedora-branched-compose-i386 --shell "pungi -c $KICKSTARTS/fedora-install-workstation.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ --arch=$arch -G -C --ver $VERSION --workdirbase=/tmp/work --flavor Workstation --name=Fedora-Workstation" || exit 1
+ mock -r fedora-branched-compose-i386 --shell "pungi -c $KICKSTARTS/fedora-install-server.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ --arch=$arch -G -C --ver $VERSION --workdirbase=/tmp/work --flavor Server --name=Fedora-Server" || exit 1
+ mock -r fedora-branched-compose-i386 --shell "pungi -c $KICKSTARTS/fedora-install-cloud.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ --arch=$arch -G -C --ver $VERSION --workdirbase=/tmp/work --flavor Cloud --name=Fedora-Cloud" || exit 1
  mock -r fedora-branched-compose-i386 --clean || exit 1
 done
 
@@ -66,9 +66,9 @@ do
  set -x
  umask 002
  mock -r fedora-branched-compose-$arch --init || exit 1
- mock -r fedora-branched-compose-$arch --shell "pungi -c $KICKSTARTS/fedora-install-workstation.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ -B -I --no-dvd --ver $VERSION --workdirbase=/tmp/work --flavor Workstation --name=Workstation"
- mock -r fedora-branched-compose-$arch --shell "pungi -c $KICKSTARTS/fedora-install-server.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/  -B -I --ver $VERSION --workdirbase=/tmp/work --flavor Server --name=Server"
- mock -r fedora-branched-compose-$arch --shell "pungi -c $KICKSTARTS/fedora-install-cloud.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ -B -I --no-dvd  --ver $VERSION --workdirbase=/tmp/work --flavor Cloud --name=Cloud"
+ mock -r fedora-branched-compose-$arch --shell "pungi -c $KICKSTARTS/fedora-install-workstation.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ -B -I --no-dvd --ver $VERSION --workdirbase=/tmp/work --flavor Workstation --name=Fedora-Workstation"
+ mock -r fedora-branched-compose-$arch --shell "pungi -c $KICKSTARTS/fedora-install-server.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/  -B -I --ver $VERSION --workdirbase=/tmp/work --flavor Server --name=Fedora-Server"
+ mock -r fedora-branched-compose-$arch --shell "pungi -c $KICKSTARTS/fedora-install-cloud.ks --destdir $DESTDIR --cachedir /srv/pungi/cache/ -B -I --no-dvd  --ver $VERSION --workdirbase=/tmp/work --flavor Cloud --name=Fedora-Cloud"
  mock -r fedora-branched-compose-$arch --clean || exit 1
  sg releng "repoclosure -a $basearch --repofrompath=$arch,$DESTDIR$VERSION/Workstation/$arch/os --repoid=$arch > $DESTDIR/logs/Workstation.$arch.repoclosure.log"
  sg releng "repoclosure -a $basearch --repofrompath=$arch,$DESTDIR$VERSION/Server/$arch/os --repoid=$arch > $DESTDIR/logs/Server.$arch.repoclosure.log"
