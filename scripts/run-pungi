@@ -7,7 +7,7 @@
 VERSION=$1
 COMPOSE=$2
 DATE=$3
-BRANCH=$(echo $VERSION|sed -e 's|-.*||g')
+BRANCH=$(echo $VERSION|sed -e 's|_.*||g')
 DESTDIR=/srv/pungi/$VERSION$COMPOSE/
 FINALDEST=/mnt/fedora_koji/compose/$VERSION$COMPOSE/
 KICKSTARTS=/srv/pungi/spin-kickstarts/
@@ -17,8 +17,8 @@ ATOMICDEST=/srv/pungi/atomic/
 SHORTCOMPOSE=$(echo $COMPOSE|sed -e 's|-RC||g')
 SHORTVERSION=$VERSION
 [ -z "$COMPOSE" ] && {
-        SHORTVERSION=$(echo $VERSION|sed -e 's|-T.*||')
-        SHORTCOMPOSE=$(echo $VERSION|sed -e 's|.*-||g')
+        SHORTVERSION=$(echo $VERSION|sed -e 's|_T.*||')
+        SHORTCOMPOSE=$(echo $VERSION|sed -e 's|.*_||g')
 }
 
 FULLPATH=$(pwd)
@@ -27,8 +27,8 @@ git reset --hard
 git pull --rebase
 sed -i -e 's|repo --name=fedora .*$|repo --name=fedora --baseurl=http://kojipkgs.fedoraproject.org/mash/branched/$basearch/os/\nrepo --name=bleed --baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/$basearch|g' fedora-install*.ks
 sed -i -e 's|repo --name=fedora-source .*$|repo --name=fedora-source  --baseurl=http://kojipkgs.fedoraproject.org/mash/branched/source/SRPMS/\nrepo --name=bleed-source --baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/SRPMS|g' fedora-install*.ks
-#$FULLPATH/build-livecds "$SHORTVERSION" "$SHORTCOMPOSE" "$BRANCH"
-#$FULLPATH/build-arm-images "$SHORTVERSION" "$SHORTCOMPOSE" "$BRANCH"
+$FULLPATH/build-livecds "$SHORTVERSION" "$SHORTCOMPOSE" "$BRANCH"
+$FULLPATH/build-arm-images "$SHORTVERSION" "$SHORTCOMPOSE" "$BRANCH"
 pushd
 
 pushd $ATOMIC
@@ -101,7 +101,7 @@ done
 
 
 pushd $FINALDEST/$VERSION/
-sg releng "mkdir -p Images/armhfp Cloud/Images/i386 Cloud/Images/x86_64 Spins/i386 Spins/x86_64 Live/i386 Live/x86_64 Docker/x86_64"
+sg releng "mkdir -p Images/armhfp Cloud/Images/i386 Cloud/Images/x86_64 Spins/i386 Spins/x86_64 Live/i386 Live/x86_64 Docker/x86_64 Workstation/armhfp/Images/"
 popd
 
 
@@ -130,6 +130,8 @@ mv $FINALDEST/$VERSION/Spins/x86_64/Fedora-Live-SoaS* $FINALDEST/$VERSION/Live/x
 mv $FINALDEST/$VERSION/Spins/x86_64/Fedora-Live-LXDE* $FINALDEST/$VERSION/Live/x86_64/
 mv $FINALDEST/$VERSION/Spins/x86_64/Fedora-Live-MATE-Compiz* $FINALDEST/$VERSION/Live/x86_64/
 
+mv $FINALDEST/$VERSION/Images/armhfp/Fedora-Workstation* $FINALDEST/$VERSION/Workstation/armhfp/Images/
+
 for type in Spins Live
 do
 pushd $FINALDEST/$VERSION/$type/
@@ -137,8 +139,16 @@ for arch in i386 x86_64; do pushd $arch; sha256sum -b *iso>  Fedora-$type-$arch-
 popd
 done
 
-pushd $FINALDEST/$VERSIONi/Cloud/Images
+pushd $FINALDEST/$VERSION/Cloud/Images
 for arch in i386 x86_64; do pushd $arch; sha256sum -b *qcow2 *raw.xz>  Fedora-Cloud-Images-$arch-$VERSION-CHECKSUM; popd; done
+popd
+
+pushd $FINALDEST/$VERSION/Workstation/armhfp/Images
+sha256sum -b  *raw.xz>  Fedora-Workstation-Images-armhfp-$VERSION-CHECKSUM
+popd
+
+pushd $FINALDEST/$VERSION/Workstation/
+for arch in i386 x86_64; do pushd $arch/iso/; sha256sum -b  Fedora-Live-Workstation*iso>>  Fedora-Workstation-$VERSION-$arch-CHECKSUM; popd; done
 popd
 
 pushd $FINALDEST/$VERSION/Images
