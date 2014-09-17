@@ -138,6 +138,39 @@ def get_key_info(source, filename=False):
     return keyid, v3
 
 
+def get_gpg_agent_passphrase(cache_id, ask=False, error_message="X", prompt="X",
+                   description=None):
+    gpg_agent = subprocess.Popen(["gpg-connect-agent"], stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE)
+
+    cmdline = ["GET_PASSPHRASE"]
+    if not ask:
+        cmdline.append("--no-ask")
+
+    if not description:
+        description = "Please enter password for " + cache_id
+        description = description.replace(" ", "+")
+
+    cmdline.append(cache_id)
+    cmdline.append(error_message)
+    cmdline.append(prompt)
+    cmdline.append(description)
+    cmdline.append("\n")
+    cmdline = " ".join(cmdline)
+
+    response, error = gpg_agent.communicate(cmdline)
+    if gpg_agent.returncode != 0:
+         raise RuntimeError("gpg-agent-connect error: {}:{}".format(
+             gpg_agent.returncode, error))
+    elif not response.startswith("OK"):
+        raise RuntimeError("gpg-agent-connect error message: {}".format(
+            response))
+    else:
+        passphrase = response[3:-1].decode("hex")
+        return passphrase
+    return None
+
+
 class KojiHelper(object):
     def __init__(self, arch=None):
         if arch:
@@ -230,7 +263,19 @@ class KojiHelper(object):
         for result, rpm in zip(results, rpm_filenames):
             if isinstance(result, dict):
                 errors[rpm] = result
+            elif result != [None]:
+                raise ValueError("Unexpected Koji result: " + repr(result))
         return errors
+
+    def check_build_is_tagged(self, build_id, tag):
+        build = self.kojisession.getBuild(build_id)
+        if build:
+            package_name = build["name"]
+            builds = self.kojisession.listTagged(tag, package=package_name)
+            build_ids = [b["build_id"] for b in builds]
+            if build_id in build_ids:
+                return True
+        return False
 
 
 def exit(status):
@@ -282,9 +327,32 @@ def writeRPMs(status, kojihelper, batch=None):
 
 
 class SigulHelper(object):
-    def __init__(self, key, password, config_file=None, arch=None):
+    def __init__(self, key, password=None, config_file=None, arch=None,
+                 ask_with_agent=False, ask=False):
+        """ If password is None, ask for it
+
+        """
         self.key = key
-        self.password = password
+
+        if password is None:
+            try:
+                import fedora_cert
+                fas_username = fedora_cert.read_user_cert()
+            except:
+                fas_username = getpass.getuser()
+
+            cache_id = "sigul:{}:{}".format(fas_username, key)
+            try:
+                self.password = get_gpg_agent_passphrase(cache_id, ask=ask_with_agent)
+            except:
+                self.password = None
+
+            if self.password is None and ask and not ask_with_agent:
+                self.password = getpass.getpass(prompt='Passphrase for %s: ' % key)
+        else:
+            self.password = password
+        if self.password is None:
+            raise ValueError("Missing password")
         self.config_file = config_file
         self.arch = arch
 
@@ -361,6 +429,9 @@ if __name__ == "__main__":
     parser.add_option('--sigul-config-file',
                       help='Config file to use for sigul',
                       default=None, type="str")
+    parser.add_option('--gpg-agent',
+                      help='Use GPG Agent to ask for password',
+                      default=False, action='store_true')
     # Get our options and arguments
     (opts, args) = parser.parse_args()
 
@@ -408,12 +479,14 @@ if __name__ == "__main__":
                 else:
                     passphrase += pwchar
         else:
-            passphrase = getpass.getpass(prompt='Passphrase for %s: ' % key)
+            # let SigulHelper ask
+            passphrase = None
 
         try:
             sigul_helper = SigulHelper(key, passphrase,
                                        config_file=opts.sigul_config_file,
-                                       arch=opts.arch)
+                                       arch=opts.arch, ask=True,
+                                       ask_with_agent=opts.gpg_agent)
         except ValueError:
             logging.error('Error validating passphrase for key %s' % key)
             sys.exit(1)

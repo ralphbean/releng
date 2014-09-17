@@ -8,6 +8,7 @@
 # Authors:
 #     Till Maas <opensource@till.name>
 #
+import argparse
 import operator
 
 import koji
@@ -24,7 +25,17 @@ epoch = f19_rebuild_start
 kojihub = 'http://koji.fedoraproject.org/kojihub'
 kojisession = koji.ClientSession(kojihub)
 
-all_koji_pkgs = kojisession.listPackages(branched_tag, inherited=True)
+parser = argparse.ArgumentParser()
+parser.add_argument("packages", nargs="*", metavar="package",
+                    help="if specified, only check whether the specified "
+                         "packages were not rebuild")
+
+args = parser.parse_args()
+
+if args.packages:
+    all_koji_pkgs = args.packages
+else:
+    all_koji_pkgs = kojisession.listPackages(branched_tag, inherited=True)
 
 unblocked = sorted([pkg for pkg in all_koji_pkgs if not pkg['blocked']],
                    key=operator.itemgetter('package_name'))
