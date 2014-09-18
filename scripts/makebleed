@@ -5,6 +5,8 @@
 
 PKGS="$1"
 
+pushd ~/bleed/
+
 for pkg in $PKGS
 do
   sg releng "koji download-build --key=95a43f54 $pkg"
@@ -21,3 +23,4 @@ done
 
 sg releng "rsync -avhH --delete ~/bleed/ /mnt/fedora_koji/koji/mash/bleed/"
 
+popd
