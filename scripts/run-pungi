@@ -14,7 +14,7 @@ KICKSTARTS=/srv/pungi/spin-kickstarts/
 ATOMIC=/srv/pungi/fedora-atomic/
 ATOMICDEST=/srv/pungi/atomic/
 
-SHORTCOMPOSE=$(echo $COMPOSE|sed -e 's|-RC||g')
+SHORTCOMPOSE=$(echo $COMPOSE|sed -e 's|_RC||g')
 SHORTVERSION=$VERSION
 [ -z "$COMPOSE" ] && {
         SHORTVERSION=$(echo $VERSION|sed -e 's|_T.*||')
