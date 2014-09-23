@@ -183,13 +183,15 @@ echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fe
     --topic branched.image.start \
     --json-input
 
-cd ../
+pushd ../
 git clone git://git.fedorahosted.org/git/spin-kickstarts/
-cd spin-kickstarts
+pushd spin-kickstarts
 git checkout f$BRANCHED
 ../releng/scripts/build-livecds $BRANCHED $DATE $BRANCHED
 ../releng/scripts/build-arm-images $BRANCHED $DATE $BRANCHED
 ../releng/scripts/build-cloud-images $BRANCHED $DATE $BRANCHED
+popd
+popd
 
 # Emit a message using bodhi's cert (since we should be running as "masher").
 echo "{\"log\": \"done\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
@@ -198,6 +200,17 @@ echo "{\"log\": \"done\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fed
     --topic branched.image.complete \
     --json-input
 }
+for koji in arm ppc s390
+do
+  if [ "$koji" = "arm" ]; then
+     arches=aarch64
+  elif [ "$koji" = "ppc" ]; then
+     arches=ppc64,ppc64le
+  elif [ "$koji" = "s390" ]; then
+     arches=s390,s390x
+  fi
+  scripts/srpm-excluded-arch.py -a $arches --path /mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH/source/SRPMS/*/ >/mnt/koji/mash/branched-$DATE/logs/excludearch-$koji.log
+done
 
 # Emit a message using bodhi's cert (since we should be running as "masher").
 echo "{\"log\": \"done\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
