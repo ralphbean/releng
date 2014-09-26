@@ -1,0 +1,59 @@
+#! /bin/sh
+#
+# Copyright (C) 2014 Red Hat, Inc.
+# SPDX-License-Identifier:      GPL-2.0+
+#
+# Authors:
+#	Dan Horák <dan@danny.cz>
+#
+# script to build re-bootstrap pkgs for eg. glibc ABI changes and
+# prepare substitution list for koji-shadow
+#
+# usage: rebuild [-d] [-b num] <pkg>
+# where:	-d	dry run, won't send the prepared srpm to koji
+#		-b num	how far in the git history we need to go
+#		pkg	package to build
+#
+# example: ./rebuild -b 2 perl-Sub-Identify
+#
+
+back=1
+dryrun=0
+
+TEMP=`getopt -o db: --long dry-run,back: -n 'rebuild' -- "$@"`
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
+
+while true ; do
+        case "$1" in
+                -d|--dry-run) dryrun=1 ; shift ;;
+                -b|--back) back=$2 ; shift 2 ;;
+                --) shift ; break ;;
+                *) echo "Internal error!" ; exit 1 ;;
+        esac
+done
+#echo "Remaining arguments:"
+for arg do pkg=$arg ; done
+
+echo "dryrun=$dryrun back=$back arg=$arg"
+#exit 0
+
+set -x
+
+[ -d $pkg ] && exit 2
+
+fedpkg co $pkg || exit 3
+pushd $pkg
+git checkout f21
+git reset --hard HEAD~$back
+old=$(fedpkg verrel)
+rpmdev-bumpspec -s dh. -c "rebuilt for glibc ABI change" $pkg.spec
+new=$(fedpkg verrel)
+fedpkg srpm
+[ $dryrun -eq 0 ] && s390-koji build --nowait f21-glibc $new.src.rpm
+
+popd
+
+[ $dryrun -eq 0 ] && { echo "pkg=$pkg old=$old new=$new" | tee -a subst-list ; }
