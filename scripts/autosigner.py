@@ -49,7 +49,7 @@ TAG_INFO = {("f22",): "fedora-22",}
 secondary_instances = ["arm", "ppc", "s390"]
 
 
-class AutosignerSMTPHandler(logging.handlers.SMTPHandler):
+class SubjectSMTPHandler(logging.handlers.SMTPHandler):
     def getSubject(self, record):
         first_line = record.message.split("\n")[0]
         fmt = "Autosigner: {0.levelname}: {first_line}"
@@ -384,7 +384,7 @@ def setup_logging():
 
     # FIXME: Make this a config option
     fedora_user = getpass.getuser()
-    mail_logger = AutosignerSMTPHandler(
+    mail_logger = SubjectSMTPHandler(
         "127.0.0.1", fedora_user, [fedora_user], "Autosigner log event")
     mail_logger.setLevel(logging.ERROR)
     mail_logger.setFormatter(formatter)
