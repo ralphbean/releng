@@ -45,14 +45,17 @@ import sigulsign_unsigned as sigulsign
 
 TOPIC_PREFIX = u"org.fedoraproject.prod."
 
-TAG_INFO = {("f22",): "fedora-22",}
+TAG_INFO = {("f22", ): "fedora-22", }
 secondary_instances = ["arm", "ppc", "s390"]
 
 
 class SubjectSMTPHandler(logging.handlers.SMTPHandler):
+
+    subject_prefix = ""
+
     def getSubject(self, record):
         first_line = record.message.split("\n")[0]
-        fmt = "Autosigner: {0.levelname}: {first_line}"
+        fmt = self.subject_prefix + "{0.levelname}: {first_line}"
 
         return fmt.format(record, first_line=first_line)
 
@@ -386,6 +389,7 @@ def setup_logging():
     fedora_user = getpass.getuser()
     mail_logger = SubjectSMTPHandler(
         "127.0.0.1", fedora_user, [fedora_user], "Autosigner log event")
+    mail_logger.subject_prefix = "Autosigner: "
     mail_logger.setLevel(logging.ERROR)
     mail_logger.setFormatter(formatter)
     log.addHandler(mail_logger)
