@@ -72,6 +72,9 @@ echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fe
     --topic branched.start \
     --json-input
 
+log "blocking retired packages"
+./block_retired.py
+
 log "git clone of comps started"
 pushd $TMPDIR
 git clone git://git.fedorahosted.org/comps.git && {
