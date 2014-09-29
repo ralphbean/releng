@@ -64,13 +64,20 @@ function log()
 	echo "$(date --utc) build${DIST}: ${message}" >> "${logfile}"
 }
 
+function send_fedmsg()
+{
+	topic="${1}"
+	log="${2}"
+	# Emit a message using bodhi's cert (since we should be running as "masher").
+	echo "{\"log\": \"${log}\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
+		--cert-prefix bodhi \
+		--modname compose \
+		--topic "${DIST}.${topic}" \
+		--json-input
+}
+
 log "started"
-# Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
-    --cert-prefix bodhi \
-    --modname compose \
-    --topic branched.start \
-    --json-input
+send_fedmsg start start
 
 log "blocking retired packages"
 ./block_retired.py
@@ -88,7 +95,9 @@ log "git clone of comps finished"
 
 [ -f $logdir/comps-f$BRANCHED.xml ] || exit 1
 
+log "mock init"
 mock -r $MOCKCONFIG --uniqueext=$DATE --init
+log "mock install base packages"
 mock -r $MOCKCONFIG --uniqueext=$DATE --no-clean --install koji yum createrepo cvs make intltool findutils mash yum-utils rsync repoview hardlink
 # until we move to bodhi lets not be strict about the gpg keys
 mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "sed -i -e 's|strict_keys = True|strict_keys = False|g' /etc/mash/branched.mash"
@@ -103,23 +112,13 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "sed -i -e 's|strict_keys = True|
 log "mock setup /etc/hosts"
 mock -r $MOCKCONFIG --uniqueext=$DATE --copyin /etc/hosts /etc/hosts >/dev/null 2>&1 # this reports to fail, but actually works
 
-# Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
-    --cert-prefix bodhi \
-    --modname compose \
-    --topic branched.mash.start \
-    --json-input
+send_fedmsg start mash.start
 
 log "starting mash"
 # Drop privs here so that we run as the masher UID
 mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash $MASHOPTS -p $TREEPREFIX/development/$BRANCHED -o /mnt/koji/mash/branched-$DATE --compsfile $logdir/comps-f$BRANCHED.xml $BRANCHED$EXPANDARCH > $logdir/mash.log 2>&1" || exit 1
 
-# Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{\"log\": \"done\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
-    --cert-prefix bodhi \
-    --modname compose \
-    --topic branched.mash.complete \
-    --json-input
+send_fedmsg done mash.complete
 
 log "finished mash"
 log "starting hardlink"
@@ -134,12 +133,7 @@ log "finished repodiff"
 mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic $DEPOPTS /mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH >$logdir/depcheck" &
 
 
-# Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
-    --cert-prefix bodhi \
-    --modname compose \
-    --topic branched.pungify.start \
-    --json-input
+send_fedmsg start pungify.start
 
 log "starting critppath generation"
 #only run critpath on primary arch
@@ -156,12 +150,7 @@ for basearch in armhfp i386 x86_64 ; do
 wait
 log "finished pungify"
 
-# Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{\"log\": \"done\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
-    --cert-prefix bodhi \
-    --modname compose \
-    --topic branched.pungify.complete \
-    --json-input
+send_fedmsg done pungify.complete
 
 log "starting build_composeinfo"
 echo "Running build_composeinfo"
@@ -184,12 +173,7 @@ echo "Compose finished at $(date --utc)" >> $logdir/finish
 echo >> $logdir/finish
 log "finished compose"
 
-# Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
-    --cert-prefix bodhi \
-    --modname compose \
-    --topic branched.rsync.start \
-    --json-input
+send_fedmsg start rsync.start
 
 # data
 $RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --link-dest=$TREEPREFIX/development/rawhide/ --exclude repodata/ /mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH/ $DESTPATH
@@ -200,12 +184,7 @@ if [ "$?" = "0" ]; then
    export mail=0
 fi
 
-# Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{\"log\": \"done\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
-    --cert-prefix bodhi \
-    --modname compose \
-    --topic branched.rsync.complete \
-    --json-input
+send_fedmsg done rsync.complete
 
 log "starting sending email report"
 if [ "$mail" = "0" ]; then
@@ -214,12 +193,7 @@ fi
 log "finished sending email report"
 
 [ -z "$ARCH" ] && {
-# Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
-    --cert-prefix bodhi \
-    --modname compose \
-    --topic branched.image.start \
-    --json-input
+send_fedmsg start image.start
 
 log "started checking out spin-kickstarts"
 pushd ../
@@ -235,12 +209,7 @@ log "finished starting building live/arm/cloud images"
 popd
 popd
 
-# Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{\"log\": \"done\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
-    --cert-prefix bodhi \
-    --modname compose \
-    --topic branched.image.complete \
-    --json-input
+send_fedmsg done image.complete
 }
 
 for koji in arm ppc s390
@@ -255,11 +224,6 @@ do
   scripts/srpm-excluded-arch.py -a $arches --path /mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH/source/SRPMS/*/ >$logdir/excludearch-$koji.log
 done
 
-# Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{\"log\": \"done\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
-    --cert-prefix bodhi \
-    --modname compose \
-    --topic branched.complete \
-    --json-input
+send_fedmsg done complete
 
 exit 0
