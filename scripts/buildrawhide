@@ -47,8 +47,8 @@ scriptname="${0##*/}
 	exit 1
 }
 
-TMPDIR=`mktemp -d /tmp/rawhide.$DATE.XXXX`
-logdir="/mnt/koji/mash/rawhide-$DATE/logs"
+TMPDIR=`mktemp -d /tmp/${DIST}.$DATE.XXXX`
+logdir="/mnt/koji/mash/${DIST}-$DATE/logs"
 mkdir -p "${logdir}"
 
 
@@ -56,12 +56,12 @@ echo "Compose started at $(date --utc)" > "$logdir/start"
 
 
 
-logfile="${logdir}/buildrawhide.log"
+logfile="${logdir}/build${DIST}.log"
 touch "${logfile}"
 function log()
 {
 	message="${1}"
-	echo "$(date --utc) buildrawhide: ${message}" >> "${logfile}"
+	echo "$(date --utc) build${DIST}: ${message}" >> "${logfile}"
 }
 
 log "started"
