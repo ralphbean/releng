@@ -38,7 +38,7 @@ MOCKCONFIG=fedora-rawhide-compose-ppc64
 }
  
 RSYNC_OPTS="-rlptDHhv --delay-updates"
-DESTPATH="$TREEPREFIX/development/rawhide/"
+DESTPATH="$TREEPREFIX/development/$BRANCHED/"
 
 
 [ -z "$DATE" ] && {
@@ -53,7 +53,7 @@ echo "Compose started at $(date --utc) > /mnt/koji/mash/rawhide-$DATE/logs/start
 touch /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
 echo "$(date --utc) buildrawhide: started" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{\"log\": \"start\", \"branch\": \"rawhide\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
+echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic rawhide.start \
@@ -81,7 +81,7 @@ echo "$(date --utc) buildrawhide: mock setup /etc/hosts" >> /mnt/koji/mash/rawhi
 mock -r $MOCKCONFIG --uniqueext=$DATE --copyin /etc/hosts /etc/hosts >/dev/null 2>&1 # this reports to fail, but actually works
 
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{\"log\": \"start\", \"branch\": \"rawhide\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
+echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic rawhide.mash.start \
