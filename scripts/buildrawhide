@@ -80,7 +80,7 @@ log "started"
 send_fedmsg start start
 
 log "blocking retired packages"
-./block_retired.py
+./scripts/block_retired.py
 
 log "git clone of comps started"
 pushd $TMPDIR
