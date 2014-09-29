@@ -40,9 +40,10 @@ MOCKCONFIG=fedora-rawhide-compose-ppc64
 RSYNC_OPTS="-rlptDHhv --delay-updates"
 DESTPATH="$TREEPREFIX/development/$BRANCHED/"
 
-
+# basepath of $0
+scriptname="${0##*/}
 [ -z "$DATE" ] && {
-	echo "usage: buildrawhide <date>"
+	echo "usage: ${scriptname} <date>"
 	exit 1
 }
 
