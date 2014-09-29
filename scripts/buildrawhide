@@ -219,7 +219,7 @@ do
   elif [ "$koji" = "s390" ]; then
      arches=s390,s390x
   fi
-  scripts/srpm-excluded-arch.py -a $arches --path /mnt/koji/mash/rawhide-$DATE/$BRANCHED$EXPANDARCH/source/SRPMS/*/ >$logdir/excludearch-$koji.log
+  scripts/srpm-excluded-arch.py -a $arches --path /mnt/koji/mash/rawhide-$DATE/$BRANCHED$EXPANDARCH/source/SRPMS/\*/ >$logdir/excludearch-$koji.log
 done
 
 send_fedmsg done complete
