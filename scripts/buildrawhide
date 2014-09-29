@@ -47,11 +47,23 @@ DESTPATH="$TREEPREFIX/development/$BRANCHED/"
 }
 
 TMPDIR=`mktemp -d /tmp/rawhide.$DATE.XXXX`
-mkdir -p /mnt/koji/mash/rawhide-$DATE/logs
-echo "Compose started at $(date --utc) > /mnt/koji/mash/rawhide-$DATE/logs/start"
+logdir="/mnt/koji/mash/rawhide-$DATE/logs"
+mkdir -p "${logdir}"
 
-touch /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
-echo "$(date --utc) buildrawhide: started" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+
+echo "Compose started at $(date --utc)" > "$logdir/start"
+
+
+
+logfile="${logdir}/buildrawhide.log"
+touch "${logfile}"
+function log()
+{
+	message="${1}"
+	echo "$(date --utc) buildrawhide: ${message}" >> "${logfile}"
+}
+
+log "started"
 # Emit a message using bodhi's cert (since we should be running as "masher").
 echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
     --cert-prefix bodhi \
@@ -59,25 +71,25 @@ echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fe
     --topic rawhide.start \
     --json-input
 
-echo "$(date --utc) buildrawhide: git clone of comps started" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+log "git clone of comps started"
 pushd $TMPDIR
 git clone git://git.fedorahosted.org/comps.git && {
 	pushd comps
 	make comps-rawhide
-	cp comps-rawhide.xml /mnt/koji/mash/rawhide-$DATE/logs/
+	cp comps-rawhide.xml $logdir/
 	popd
 }
 popd
-echo "$(date --utc) buildrawhide: git clone of comps finished" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+log "git clone of comps finished"
 
-[ -f /mnt/koji/mash/rawhide-$DATE/logs/comps-rawhide.xml ] || exit 1
+[ -f $logdir/comps-rawhide.xml ] || exit 1
 
-echo "$(date --utc) buildrawhide: mock init" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+log "mock init"
 mock -r $MOCKCONFIG --uniqueext=$DATE --init
-echo "$(date --utc) buildrawhide: mock install base packages" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+log "mock install base packages"
 mock -r $MOCKCONFIG --uniqueext=$DATE --no-clean --install koji yum createrepo cvs make intltool findutils mash yum-utils rsync repoview hardlink
 # Copy in the hosts file so that we get the right address for koji
-echo "$(date --utc) buildrawhide: mock setup /etc/hosts" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+log "mock setup /etc/hosts"
 mock -r $MOCKCONFIG --uniqueext=$DATE --copyin /etc/hosts /etc/hosts >/dev/null 2>&1 # this reports to fail, but actually works
 
 # Emit a message using bodhi's cert (since we should be running as "masher").
@@ -87,9 +99,9 @@ echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fe
     --topic rawhide.mash.start \
     --json-input
 
-echo "$(date --utc) buildrawhide: starting mash" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+log "starting mash"
 # Drop privs here so that we run as the masher UID
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash $MASHOPTS -p $TREEPREFIX/development/rawhide -o /mnt/koji/mash/rawhide-$DATE --compsfile /mnt/koji/mash/rawhide-$DATE/logs/comps-rawhide.xml rawhide$EXPANDARCH > /mnt/koji/mash/rawhide-$DATE/logs/mash.log 2>&1" || exit 1
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash $MASHOPTS -p $TREEPREFIX/development/rawhide -o /mnt/koji/mash/rawhide-$DATE --compsfile $logdir/comps-rawhide.xml rawhide$EXPANDARCH > $logdir/mash.log 2>&1" || exit 1
 
 # Emit a message using bodhi's cert (since we should be running as "masher").
 echo "{\"log\": \"done\", \"branch\": \"rawhide\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
@@ -98,20 +110,20 @@ echo "{\"log\": \"done\", \"branch\": \"rawhide\", \"arch\": \"$ARCH\"}" | fedms
     --topic rawhide.mash.complete \
     --json-input
 
-echo "$(date --utc) buildrawhide: finished mash" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
-echo "$(date --utc) buildrawhide: starting hardlink" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+log "finished mash"
+log "starting hardlink"
 # hardlink the noarch deltarpms between x86_64 and i386 
 mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "hardlink -v -c /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/*/os/drpms/"
-echo "$(date --utc) buildrawhide: finished hardlink" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+log "finished hardlink"
 
-echo "$(date --utc) buildrawhide: starting repodiff" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+log "starting repodiff"
 mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "rm -f /var/lib/rpm/__db*"
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -s -q --new=file:///mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/source/SRPMS --old=file://$TREEPREFIX/development/rawhide/source/SRPMS > /mnt/koji/mash/rawhide-$DATE/logs/repodiff"
-echo "$(date --utc) buildrawhide: finished repodiff" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -s -q --new=file:///mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/source/SRPMS --old=file://$TREEPREFIX/development/rawhide/source/SRPMS > $logdir/repodiff"
+log "finished repodiff"
 
-echo "$(date --utc) buildrawhide: starting spam-o-matic" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic $DEPOPTS /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH >/mnt/koji/mash/rawhide-$DATE/logs/depcheck" &
-echo "$(date --utc) buildrawhide: finished spam-o-matic" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+log "starting spam-o-matic"
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic $DEPOPTS /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH >$logdir/depcheck" &
+log "finished spam-o-matic"
 
 # Emit a message using bodhi's cert (since we should be running as "masher").
 echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
@@ -120,20 +132,20 @@ echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fe
     --topic rawhide.pungify.start \
     --json-input
 
-echo "$(date --utc) buildrawhide: starting critppath generation" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+log "starting critppath generation"
 #only run critpath on primary arch
 [ -z "$ARCH" ] && {
 ./scripts/critpath.py --url file:///mnt/koji/mash/$DIST-$DATE/$BRANCHED/ -o /mnt/koji/mash/$DIST-$DATE/logs/critpath.txt branched &> /mnt/koji/mash/$DIST-$DATE/logs/critpath.log
-echo "$(date --utc) buildrawhide: finished critppath generation" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+log "finished critppath generation"
 
-echo "$(date --utc) buildrawhide: starting pungify" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+log "starting pungify"
 for basearch in armhfp i386 x86_64 ; do
     HOST=$(koji list-hosts --quiet --enabled --ready --arch=$basearch  --channel compose | sed 's|/| |g' | sort -g -k4 -k5r | awk -F ' ' '{ print $1 ; exit }')
     ./scripts/pungify $DATE $BRANCHED $basearch $HOST $DIST > /mnt/koji/mash/$DIST-$DATE/logs/pungify-$basearch.log 2>&1 &
     done
 }
 wait
-echo "$(date --utc) buildrawhide: finished pungify" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+log "finished pungify"
 
 # Emit a message using bodhi's cert (since we should be running as "masher").
 echo "{\"log\": \"done\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
@@ -142,27 +154,27 @@ echo "{\"log\": \"done\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fed
     --topic rawhide.pungify.complete \
     --json-input
 
-echo "$(date --utc) buildrawhide: starting build_composeinfo" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+log "starting build_composeinfo"
 echo "Running build_composeinfo"
 ./scripts/build_composeinfo --name Fedora-${BRANCHED}-${DATE} /mnt/koji/mash/$DIST-$DATE/$BRANCHED/
 
 wait
-echo "$(date --utc) buildrawhide: finished build_composeinfo" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
-echo "$(date --utc) buildrawhide: starting mock clean" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+log "finished build_composeinfo"
+log "starting mock clean"
 mock -r $MOCKCONFIG --uniqueext=$DATE --clean
-echo "$(date --utc) buildrawhide: finished mock clean" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+log "finished mock clean"
 
 [ -n "$NOSYNC" ] && exit $rc
 
-echo "$(date --utc) buildrawhide: started linking finished tree" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+log "started linking finished tree"
 # Create a rawhide link in /mnt/koji/mash, deltas et al depend on this
 rm /mnt/koji/mash/$DIST
 ln -s /mnt/koji/mash/$DIST-$DATE/$BRANCHED$EXPANDARCH/ /mnt/koji/mash/$DIST
-echo "$(date --utc) buildrawhide: finished linking finished tree" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+log "finished linking finished tree"
 
-echo "Compose finished at $(date --utc)" >> /mnt/koji/mash/rawhide-$DATE/logs/finish
-echo >> /mnt/koji/mash/rawhide-$DATE/logs/finish
-echo "$(date --utc) buildrawhide: finished compose" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+echo "Compose finished at $(date --utc)" >> $logdir/finish
+echo >> $logdir/finish
+log "finished compose"
 
 # Emit a message using bodhi's cert (since we should be running as "masher").
 echo "{\"log\": \"start\", \"branch\": \"rawhide\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
@@ -171,12 +183,12 @@ echo "{\"log\": \"start\", \"branch\": \"rawhide\", \"arch\": \"$ARCH\"}" | fedm
     --topic rawhide.rsync.start \
     --json-input
 
-echo "$(date --utc) buildrawhide: started rawhide compose sync" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+log "started rawhide compose sync"
 # data
 $RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --exclude repodata/ /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/ $DESTPATH
 # repodata & cleanup
 $RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --delete --delete-after /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/ $DESTPATH
-echo "$(date --utc) buildrawhide: finished rawhide compose sync" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+log "finished rawhide compose sync"
 
 if [ "$?" = "0" ]; then
    export mail=0
@@ -189,13 +201,13 @@ echo "{\"log\": \"done\", \"branch\": \"rawhide\", \"arch\": \"$ARCH\"}" | fedms
     --topic rawhide.rsync.complete \
     --json-input
 
-echo "$(date --utc) buildrawhide: starting sending rawhide email report" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+log "starting sending rawhide email report"
 if [ "$mail" = "0" ]; then
     for tomail in "$(echo $TOMAIL)" ; do
-         cat /mnt/koji/mash/rawhide-$DATE/logs/start /mnt/koji/mash/rawhide-$DATE/logs/depcheck /mnt/koji/mash/rawhide-$DATE/logs/repodiff /mnt/koji/mash/rawhide-$DATE/logs/finish |  mutt -e "set from=\"$FROM\"" -e 'set envelope_from=yes' -s "$SUBJECT" $tomail
+         cat $logdir/start $logdir/depcheck $logdir/repodiff $logdir/finish |  mutt -e "set from=\"$FROM\"" -e 'set envelope_from=yes' -s "$SUBJECT" $tomail
     done
 fi
-echo "$(date --utc) buildrawhide: finished sending rawhide email report" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+log "finished sending rawhide email report"
 
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
@@ -205,17 +217,17 @@ echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fe
     --topic rawhide.image.start \
     --json-input
 
-echo "$(date --utc) buildrawhide: started checking out spin-kickstarts" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+log "started checking out spin-kickstarts"
 pushd ../
 git clone git://git.fedorahosted.org/git/spin-kickstarts/
 pushd spin-kickstarts
 #git checkout f$BRANCHED
-echo "$(date --utc) buildrawhide: finished checking out spin-kickstarts" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
-echo "$(date --utc) buildrawhide: started building live/arm/cloud images" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+log "finished checking out spin-kickstarts"
+log "started building live/arm/cloud images"
 ../releng/scripts/build-livecds $BRANCHED $DATE $BRANCHED
 ../releng/scripts/build-arm-images $BRANCHED $DATE $BRANCHED
 ../releng/scripts/build-cloud-images $BRANCHED $DATE $BRANCHED
-echo "$(date --utc) buildrawhide: finished starting building live/arm/cloud images" >> /mnt/koji/mash/rawhide-$DATE/logs/buildrawhide.log
+log "finished starting building live/arm/cloud images"
 popd
 popd
 
@@ -236,7 +248,7 @@ do
   elif [ "$koji" = "s390" ]; then
      arches=s390,s390x
   fi
-  scripts/srpm-excluded-arch.py -a $arches --path /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/source/SRPMS/*/ >/mnt/koji/mash/rawhide-$DATE/logs/excludearch-$koji.log
+  scripts/srpm-excluded-arch.py -a $arches --path /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/source/SRPMS/*/ >$logdir/excludearch-$koji.log
 done
 
 
