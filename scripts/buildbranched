@@ -9,6 +9,7 @@ DATE=$1
 ARCH=$2
 
 BRANCHED="21"
+DIST=branched
 
 TREEPREFIX="/pub/fedora/linux"
 MASHDIR="/mnt/koji/mash/branched-$DATE"
@@ -39,7 +40,6 @@ MOCKCONFIG=fedora-branched-compose-ppc64
 RSYNC_OPTS="-rlptDHhv --delay-updates"
 DESTPATH="$TREEPREFIX/development/$BRANCHED/"
 
-DIST=branched
 
 [ -z "$DATE" ] && {
 	echo "usage: buildbranched <date>"
