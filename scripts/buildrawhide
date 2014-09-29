@@ -105,7 +105,7 @@ log "starting mash"
 mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash $MASHOPTS -p $TREEPREFIX/development/rawhide -o /mnt/koji/mash/rawhide-$DATE --compsfile $logdir/comps-rawhide.xml rawhide$EXPANDARCH > $logdir/mash.log 2>&1" || exit 1
 
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{\"log\": \"done\", \"branch\": \"rawhide\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
+echo "{\"log\": \"done\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic rawhide.mash.complete \
@@ -142,7 +142,7 @@ log "finished critppath generation"
 log "starting pungify"
 for basearch in armhfp i386 x86_64 ; do
     HOST=$(koji list-hosts --quiet --enabled --ready --arch=$basearch  --channel compose | sed 's|/| |g' | sort -g -k4 -k5r | awk -F ' ' '{ print $1 ; exit }')
-    ./scripts/pungify $DATE $BRANCHED $basearch $HOST $DIST > /mnt/koji/mash/$DIST-$DATE/logs/pungify-$basearch.log 2>&1 &
+    ./scripts/pungify $DATE $BRANCHED $basearch $HOST $DIST > $logdir/pungify-$basearch.log 2>&1 &
     done
 }
 wait
@@ -178,7 +178,7 @@ echo >> $logdir/finish
 log "finished compose"
 
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{\"log\": \"start\", \"branch\": \"rawhide\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
+echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic rawhide.rsync.start \
@@ -196,19 +196,19 @@ if [ "$?" = "0" ]; then
 fi
 
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{\"log\": \"done\", \"branch\": \"rawhide\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
+echo "{\"log\": \"done\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic rawhide.rsync.complete \
     --json-input
 
-log "starting sending rawhide email report"
+log "starting sending email report"
 if [ "$mail" = "0" ]; then
     for tomail in "$(echo $TOMAIL)" ; do
          cat $logdir/start $logdir/depcheck $logdir/repodiff $logdir/finish |  mutt -e "set from=\"$FROM\"" -e 'set envelope_from=yes' -s "$SUBJECT" $tomail
     done
 fi
-log "finished sending rawhide email report"
+log "finished sending email report"
 
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
@@ -249,12 +249,11 @@ do
   elif [ "$koji" = "s390" ]; then
      arches=s390,s390x
   fi
-  scripts/srpm-excluded-arch.py -a $arches --path /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/source/SRPMS/*/ >$logdir/excludearch-$koji.log
+  scripts/srpm-excluded-arch.py -a $arches --path /mnt/koji/mash/rawhide-$DATE/$BRANCHED$EXPANDARCH/source/SRPMS/*/ >$logdir/excludearch-$koji.log
 done
 
-
 # Emit a message using bodhi's cert (since we should be running as "masher").
-echo "{\"log\": \"done\", \"branch\": \"rawhide\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
+echo "{\"log\": \"done\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
     --cert-prefix bodhi \
     --modname compose \
     --topic rawhide.complete \

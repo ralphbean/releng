@@ -40,17 +40,31 @@ MOCKCONFIG=fedora-branched-compose-ppc64
 RSYNC_OPTS="-rlptDHhv --delay-updates"
 DESTPATH="$TREEPREFIX/development/$BRANCHED/"
 
-
+# basepath of $0
+scriptname="${0##*/}
 [ -z "$DATE" ] && {
-	echo "usage: buildbranched <date>"
+	echo "usage: ${scriptname} <date>"
 	exit 1
 }
 
-TMPDIR=`mktemp -d /tmp/branched.$DATE.XXXX`
-mkdir -p /mnt/koji/mash/branched-$DATE/logs
-echo "Compose started at `date --utc`" > /mnt/koji/mash/branched-$DATE/logs/start
-echo >> /mnt/koji/mash/branched-$DATE/logs/start
+TMPDIR=`mktemp -d /tmp/${DIST}.$DATE.XXXX`
+logdir="/mnt/koji/mash/${DIST}-$DATE/logs"
+mkdir -p "${logdir}"
 
+
+echo "Compose started at $(date --utc)" > "$logdir/start"
+
+
+
+logfile="${logdir}/build${DIST}.log"
+touch "${logfile}"
+function log()
+{
+	message="${1}"
+	echo "$(date --utc) build${DIST}: ${message}" >> "${logfile}"
+}
+
+log "started"
 # Emit a message using bodhi's cert (since we should be running as "masher").
 echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
     --cert-prefix bodhi \
@@ -58,16 +72,18 @@ echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fe
     --topic branched.start \
     --json-input
 
+log "git clone of comps started"
 pushd $TMPDIR
 git clone git://git.fedorahosted.org/comps.git && {
 	pushd comps
 	make comps-f$BRANCHED.xml
-	cp comps-f$BRANCHED.xml /mnt/koji/mash/branched-$DATE/logs/
+	cp comps-f$BRANCHED.xml $logdir/
 	popd
 }
 popd
+log "git clone of comps finished"
 
-[ -f /mnt/koji/mash/branched-$DATE/logs/comps-f$BRANCHED.xml ] || exit 1
+[ -f $logdir/comps-f$BRANCHED.xml ] || exit 1
 
 mock -r $MOCKCONFIG --uniqueext=$DATE --init
 mock -r $MOCKCONFIG --uniqueext=$DATE --no-clean --install koji yum createrepo cvs make intltool findutils mash yum-utils rsync repoview hardlink
@@ -81,6 +97,7 @@ mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "sed -i -e 's|strict_keys = True|
 }
 
 # Copy in the hosts file so that we get the right address for koji
+log "mock setup /etc/hosts"
 mock -r $MOCKCONFIG --uniqueext=$DATE --copyin /etc/hosts /etc/hosts >/dev/null 2>&1 # this reports to fail, but actually works
 
 # Emit a message using bodhi's cert (since we should be running as "masher").
@@ -90,8 +107,9 @@ echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fe
     --topic branched.mash.start \
     --json-input
 
+log "starting mash"
 # Drop privs here so that we run as the masher UID
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash $MASHOPTS -p $TREEPREFIX/development/$BRANCHED -o /mnt/koji/mash/branched-$DATE --compsfile /mnt/koji/mash/branched-$DATE/logs/comps-f$BRANCHED.xml $BRANCHED$EXPANDARCH > /mnt/koji/mash/branched-$DATE/logs/mash.log 2>&1" || exit 1
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash $MASHOPTS -p $TREEPREFIX/development/$BRANCHED -o /mnt/koji/mash/branched-$DATE --compsfile $logdir/comps-f$BRANCHED.xml $BRANCHED$EXPANDARCH > $logdir/mash.log 2>&1" || exit 1
 
 # Emit a message using bodhi's cert (since we should be running as "masher").
 echo "{\"log\": \"done\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
@@ -100,13 +118,17 @@ echo "{\"log\": \"done\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fed
     --topic branched.mash.complete \
     --json-input
 
+log "finished mash"
+log "starting hardlink"
 # hardlink the noarch deltarpms between x86_64 and i386 
 mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "hardlink -v -c /mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH"
+log "finished hardlink"
 
+log "starting repodiff"
 mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "rm -f /var/lib/rpm/__db*"
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -s -q --new=file:///mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH/source/SRPMS --old=file://$TREEPREFIX/development/$BRANCHED/source/SRPMS > /mnt/koji/mash/branched-$DATE/logs/repodiff"
-
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic $DEPOPTS /mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH >/mnt/koji/mash/branched-$DATE/logs/depcheck" &
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -s -q --new=file:///mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH/source/SRPMS --old=file://$TREEPREFIX/development/$BRANCHED/source/SRPMS > $logdir/repodiff"
+log "finished repodiff"
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic $DEPOPTS /mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH >$logdir/depcheck" &
 
 
 # Emit a message using bodhi's cert (since we should be running as "masher").
@@ -116,16 +138,20 @@ echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fe
     --topic branched.pungify.start \
     --json-input
 
+log "starting critppath generation"
 #only run critpath on primary arch
 [ -z "$ARCH" ] && {
-./scripts/critpath.py --url file:///mnt/koji/mash/branched-$DATE/ -o /mnt/koji/mash/branched-$DATE/logs/critpath.txt branched &> /mnt/koji/mash/branched-$DATE/logs/critpath.log
+./scripts/critpath.py --url file:///mnt/koji/mash/$DIST-$DATE/$BRANCHED/ -o /mnt/koji/mash/$DIST-$DATE/logs/critpath.txt branched &> /mnt/koji/mash/$DIST-$DATE/logs/critpath.log
+log "finished critppath generation"
 
+log "starting pungify"
 for basearch in armhfp i386 x86_64 ; do
     HOST=$(koji list-hosts --quiet --enabled --ready --arch=$basearch  --channel compose | sed 's|/| |g' | sort -g -k4 -k5r | awk -F ' ' '{ print $1 ; exit }')
-    ./scripts/pungify $DATE $BRANCHED $basearch $HOST $DIST > /mnt/koji/mash/branched-$DATE/logs/pungify-$basearch.log 2>&1 &
+    ./scripts/pungify $DATE $BRANCHED $basearch $HOST $DIST > $logdir/pungify-$basearch.log 2>&1 &
     done
 }
 wait
+log "finished pungify"
 
 # Emit a message using bodhi's cert (since we should be running as "masher").
 echo "{\"log\": \"done\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
@@ -134,19 +160,26 @@ echo "{\"log\": \"done\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fed
     --topic branched.pungify.complete \
     --json-input
 
+log "starting build_composeinfo"
 echo "Running build_composeinfo"
-./scripts/build_composeinfo --name Fedora-${BRANCHED}-${DATE} /mnt/koji/mash/branched-$DATE/$BRANCHED/
+./scripts/build_composeinfo --name Fedora-${BRANCHED}-${DATE} /mnt/koji/mash/$DIST-$DATE/$BRANCHED/
 
+log "finished build_composeinfo"
+log "starting mock clean"
 mock -r $MOCKCONFIG --uniqueext=$DATE --clean
+log "finished mock clean"
 
 [ -n "$NOSYNC" ] && exit $rc
 
-# Create a branched link in /mnt/koji/mash, deltas et al depend on this
-rm /mnt/koji/mash/branched
-ln -s /mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH/ /mnt/koji/mash/branched
+log "started linking finished tree"
+# Create a rawhide link in /mnt/koji/mash, deltas et al depend on this
+rm /mnt/koji/mash/$DIST
+ln -s /mnt/koji/mash/$DIST-$DATE/$BRANCHED$EXPANDARCH/ /mnt/koji/mash/$DIST
+log "finished linking finished tree"
 
-echo "Compose finished at `date --utc`" > /mnt/koji/mash/branched-$DATE/logs/finish
-echo >> /mnt/koji/mash/branched-$DATE/logs/finish
+echo "Compose finished at $(date --utc)" >> $logdir/finish
+echo >> $logdir/finish
+log "finished compose"
 
 # Emit a message using bodhi's cert (since we should be running as "masher").
 echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
@@ -171,9 +204,11 @@ echo "{\"log\": \"done\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fed
     --topic branched.rsync.complete \
     --json-input
 
+log "starting sending email report"
 if [ "$mail" = "0" ]; then
-    cat /mnt/koji/mash/branched-$DATE/logs/start /mnt/koji/mash/branched-$DATE/logs/depcheck /mnt/koji/mash/branched-$DATE/logs/repodiff /mnt/koji/mash/branched-$DATE/logs/finish |  mutt -e "set from=\"$FROM\"" -e 'set envelope_from=yes' -s "$SUBJECT" $MAIL
+    cat $logdir/start $logdir/depcheck $logdir/repodiff $logdir/finish |  mutt -e "set from=\"$FROM\"" -e 'set envelope_from=yes' -s "$SUBJECT" $MAIL
 fi
+log "finished sending email report"
 
 [ -z "$ARCH" ] && {
 # Emit a message using bodhi's cert (since we should be running as "masher").
@@ -183,13 +218,17 @@ echo "{\"log\": \"start\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fe
     --topic branched.image.start \
     --json-input
 
+log "started checking out spin-kickstarts"
 pushd ../
 git clone git://git.fedorahosted.org/git/spin-kickstarts/
 pushd spin-kickstarts
 git checkout f$BRANCHED
+log "finished checking out spin-kickstarts"
+log "started building live/arm/cloud images"
 ../releng/scripts/build-livecds $BRANCHED $DATE $BRANCHED
 ../releng/scripts/build-arm-images $BRANCHED $DATE $BRANCHED
 ../releng/scripts/build-cloud-images $BRANCHED $DATE $BRANCHED
+log "finished starting building live/arm/cloud images"
 popd
 popd
 
@@ -200,6 +239,7 @@ echo "{\"log\": \"done\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fed
     --topic branched.image.complete \
     --json-input
 }
+
 for koji in arm ppc s390
 do
   if [ "$koji" = "arm" ]; then
@@ -209,7 +249,7 @@ do
   elif [ "$koji" = "s390" ]; then
      arches=s390,s390x
   fi
-  scripts/srpm-excluded-arch.py -a $arches --path /mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH/source/SRPMS/*/ >/mnt/koji/mash/branched-$DATE/logs/excludearch-$koji.log
+  scripts/srpm-excluded-arch.py -a $arches --path /mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH/source/SRPMS/*/ >$logdir/excludearch-$koji.log
 done
 
 # Emit a message using bodhi's cert (since we should be running as "masher").
