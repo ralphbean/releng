@@ -17,7 +17,7 @@ EXPANDARCH=""
 DEPOPTS="--treename F-$BRANCHED"
 MASHOPTS=""
 MOCKCONFIG=fedora-branched-compose-i386
-MAIL="devel@lists.fedoraproject.org,test@lists.fedoraproject.org"
+TOMAIL="devel@lists.fedoraproject.org test@lists.fedoraproject.org"
 SUBJECT='F-'$BRANCHED' Branched report: '$DATE' changes'
 FROM="Fedora Branched Report <rawhide@fedoraproject.org>"
 RSYNCPREFIX="sudo -u ftpsync"
@@ -26,9 +26,9 @@ TREEPREFIX="/mnt/koji/tree"
 EXPANDARCH="-$ARCH"
 DEPOPTS="--treename F-$BRANCHED --nomail"
 MASHOPTS="-c /etc/mash/mash.$ARCH.conf"
-MAIL="secondary@lists.fedoraproject.org,$ARCH@lists.fedoraproject.org"
+TOMAIL="secondary@lists.fedoraproject.org $ARCH@lists.fedoraproject.org"
 SUBJECT=$ARCH' F-'$BRANCHED' Branched report: '$DATE' changes'
-FROM=$ARCH' Fedora Branched Report <rawhide@fedoraproject.org>'
+FROM="${ARCH} Fedora Branched Report <rawhide@fedoraproject.org>"
 RSYNCPREFIX=""
 }
 
@@ -130,8 +130,10 @@ log "starting repodiff"
 mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "rm -f /var/lib/rpm/__db*"
 mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -s -q --new=file:///mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH/source/SRPMS --old=file://$TREEPREFIX/development/$BRANCHED/source/SRPMS > $logdir/repodiff"
 log "finished repodiff"
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic $DEPOPTS /mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH >$logdir/depcheck" &
 
+log "starting spam-o-matic"
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic $DEPOPTS /mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH >$logdir/depcheck" &
+log "finished spam-o-matic"
 
 send_fedmsg start pungify.start
 
@@ -175,10 +177,12 @@ log "finished compose"
 
 send_fedmsg start rsync.start
 
+log "started compose sync"
 # data
 $RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --link-dest=$TREEPREFIX/development/rawhide/ --exclude repodata/ /mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH/ $DESTPATH
 # repodata & cleanup
 $RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --link-dest=$TREEPREFIX/development/rawhide/ --delete --delete-after /mnt/koji/mash/branched-$DATE/$BRANCHED$EXPANDARCH/ $DESTPATH
+log "finished compose sync"
 
 if [ "$?" = "0" ]; then
    export mail=0
@@ -188,7 +192,10 @@ send_fedmsg done rsync.complete
 
 log "starting sending email report"
 if [ "$mail" = "0" ]; then
-    cat $logdir/start $logdir/depcheck $logdir/repodiff $logdir/finish |  mutt -e "set from=\"$FROM\"" -e 'set envelope_from=yes' -s "$SUBJECT" $MAIL
+    for tomail in "$(echo $TOMAIL)" ; do
+        cat $logdir/start $logdir/depcheck $logdir/repodiff $logdir/finish | \
+             mutt -e "set from=\"$FROM\"" -e 'set envelope_from=yes' -s "$SUBJECT" $tomail
+    done
 fi
 log "finished sending email report"
 

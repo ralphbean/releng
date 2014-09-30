@@ -28,7 +28,7 @@ DEPOPTS="--nomail"
 MASHOPTS="-c /etc/mash/mash.$ARCH.conf"
 TOMAIL="secondary@lists.fedoraproject.org $ARCH@lists.fedoraproject.org"
 SUBJECT=$ARCH' rawhide report: '$DATE' changes'
-FROM="$(echo $ARCH) Fedora Rawhide Report <rawhide@fedoraproject.org>"
+FROM="${ARCH} Fedora Rawhide Report <rawhide@fedoraproject.org>"
 RSYNCPREFIX=""
 }
 
@@ -169,12 +169,12 @@ log "finished compose"
 
 send_fedmsg start rsync.start
 
-log "started rawhide compose sync"
+log "started compose sync"
 # data
 $RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --exclude repodata/ /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/ $DESTPATH
 # repodata & cleanup
 $RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --delete --delete-after /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/ $DESTPATH
-log "finished rawhide compose sync"
+log "finished compose sync"
 
 if [ "$?" = "0" ]; then
    export mail=0
@@ -185,7 +185,8 @@ send_fedmsg done rsync.complete
 log "starting sending email report"
 if [ "$mail" = "0" ]; then
     for tomail in "$(echo $TOMAIL)" ; do
-         cat $logdir/start $logdir/depcheck $logdir/repodiff $logdir/finish | mutt -e "set from=\"$FROM\"" -e 'set envelope_from=yes' -s "$SUBJECT" $tomail
+        cat $logdir/start $logdir/depcheck $logdir/repodiff $logdir/finish | \
+             mutt -e "set from=\"$FROM\"" -e 'set envelope_from=yes' -s "$SUBJECT" $tomail
     done
 fi
 log "finished sending email report"
