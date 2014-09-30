@@ -86,7 +86,7 @@ log "blocking retired packages"
 
 log "git clone of comps started"
 pushd $TMPDIR
-git clone git://git.fedorahosted.org/comps.git && {
+git clone https://git.fedorahosted.org/git/comps.git && {
     pushd comps
     make "${COMPSFILE}"
     cp "${COMPSFILE}" $logdir/
@@ -199,7 +199,7 @@ send_fedmsg start image.start
 
 log "started checking out spin-kickstarts"
 pushd ../
-git clone git://git.fedorahosted.org/git/spin-kickstarts/
+git clone https://git.fedorahosted.org/git/spin-kickstarts.git
 pushd spin-kickstarts
 #git checkout f$BRANCHED
 log "finished checking out spin-kickstarts"
