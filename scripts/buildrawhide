@@ -41,7 +41,7 @@ RSYNC_OPTS="-rlptDHhv --delay-updates"
 DESTPATH="$TREEPREFIX/development/$BRANCHED/"
 
 # basepath of $0
-scriptname="${0##*/}
+scriptname="${0##*/}"
 [ -z "$DATE" ] && {
 	echo "usage: ${scriptname} <date>"
 	exit 1
