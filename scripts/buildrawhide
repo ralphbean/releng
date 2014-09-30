@@ -11,6 +11,7 @@ ARCH=$2
 BRANCHED=rawhide
 DIST=rawhide
 COMPSFILE=comps-rawhide.xml
+SPIN_KICKSTARTS_BRANCH="master"
 
 TREEPREFIX="/pub/fedora/linux"
 RSYNC_EXTRA_OPTS=
@@ -201,7 +202,7 @@ log "started checking out spin-kickstarts"
 pushd ../
 git clone https://git.fedorahosted.org/git/spin-kickstarts.git
 pushd spin-kickstarts
-#git checkout f$BRANCHED
+git checkout "${SPIN_KICKSTARTS_BRANCH}"
 log "finished checking out spin-kickstarts"
 log "started building live/arm/cloud images"
 ../releng/scripts/build-livecds $BRANCHED $DATE $BRANCHED
