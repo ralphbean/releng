@@ -12,7 +12,7 @@ BRANCHED=rawhide
 DIST=rawhide
 
 TREEPREFIX="/pub/fedora/linux"
-MASHDIR="/mnt/koji/mash/rawhide-$DATE"
+MASHDIR="/mnt/koji/mash/${DIST}-$DATE"
 EXPANDARCH=""
 DEPOPTS=""
 MASHOPTS=""
@@ -107,23 +107,23 @@ send_fedmsg start mash.start
 
 log "starting mash"
 # Drop privs here so that we run as the masher UID
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash $MASHOPTS -p $TREEPREFIX/development/rawhide -o /mnt/koji/mash/rawhide-$DATE --compsfile $logdir/comps-rawhide.xml rawhide$EXPANDARCH > $logdir/mash.log 2>&1" || exit 1
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash $MASHOPTS -p $TREEPREFIX/development/rawhide -o ${MASHDIR} --compsfile $logdir/comps-rawhide.xml rawhide$EXPANDARCH > $logdir/mash.log 2>&1" || exit 1
 
 send_fedmsg done mash.complete
 
 log "finished mash"
 log "starting hardlink"
 # hardlink the noarch deltarpms between x86_64 and i386 
-mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "hardlink -v -c /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/*/os/drpms/"
+mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "hardlink -v -c ${MASHDIR}/rawhide$EXPANDARCH/*/os/drpms/"
 log "finished hardlink"
 
 log "starting repodiff"
 mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "rm -f /var/lib/rpm/__db*"
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -s -q --new=file:///mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/source/SRPMS --old=file://$TREEPREFIX/development/rawhide/source/SRPMS > $logdir/repodiff"
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -s -q --new=file://${MASHDIR}/rawhide$EXPANDARCH/source/SRPMS --old=file://$TREEPREFIX/development/rawhide/source/SRPMS > $logdir/repodiff"
 log "finished repodiff"
 
 log "starting spam-o-matic"
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic $DEPOPTS /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH >$logdir/depcheck" &
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic $DEPOPTS ${MASHDIR}/rawhide$EXPANDARCH >$logdir/depcheck" &
 log "finished spam-o-matic"
 
 send_fedmsg start pungify.start
@@ -171,9 +171,9 @@ send_fedmsg start rsync.start
 
 log "started compose sync"
 # data
-$RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --exclude repodata/ /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/ $DESTPATH
+$RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --exclude repodata/ ${MASHDIR}/rawhide$EXPANDARCH/ $DESTPATH
 # repodata & cleanup
-$RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --delete --delete-after /mnt/koji/mash/rawhide-$DATE/rawhide$EXPANDARCH/ $DESTPATH
+$RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --delete --delete-after ${MASHDIR}/rawhide$EXPANDARCH/ $DESTPATH
 log "finished compose sync"
 
 if [ "$?" = "0" ]; then
@@ -220,7 +220,7 @@ do
   elif [ "$koji" = "s390" ]; then
      arches=s390,s390x
   fi
-  scripts/srpm-excluded-arch.py -a $arches --path /mnt/koji/mash/rawhide-$DATE/$BRANCHED$EXPANDARCH/source/SRPMS/\*/ >$logdir/excludearch-$koji.log
+  scripts/srpm-excluded-arch.py -a $arches --path ${MASHDIR}/$BRANCHED$EXPANDARCH/source/SRPMS/\*/ >$logdir/excludearch-$koji.log
 done
 
 send_fedmsg done complete
