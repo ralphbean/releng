@@ -13,6 +13,7 @@ DIST=branched
 COMPSFILE="comps-f${BRANCHED}.xml"
 
 TREEPREFIX="/pub/fedora/linux"
+RSYNC_EXTRA_OPTS="--link-dest=$TREEPREFIX/development/rawhide/"
 MASHDIR="/mnt/koji/mash/${DIST}-$DATE"
 EXPANDARCH=""
 DEPOPTS="--treename F-$BRANCHED"
@@ -181,9 +182,9 @@ send_fedmsg start rsync.start
 
 log "started compose sync"
 # data
-$RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --link-dest=$TREEPREFIX/development/rawhide/ --exclude repodata/ ${MASHDIR}/$BRANCHED$EXPANDARCH/ $DESTPATH
+$RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS $RSYNC_EXTRA_OPTS --exclude repodata/ ${MASHDIR}/$BRANCHED$EXPANDARCH/ $DESTPATH
 # repodata & cleanup
-$RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --link-dest=$TREEPREFIX/development/rawhide/ --delete --delete-after ${MASHDIR}/$BRANCHED$EXPANDARCH/ $DESTPATH
+$RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS $RSYNC_EXTRA_OPTS --delete --delete-after ${MASHDIR}/$BRANCHED$EXPANDARCH/ $DESTPATH
 log "finished compose sync"
 
 if [ "$?" = "0" ]; then

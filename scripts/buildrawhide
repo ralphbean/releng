@@ -13,6 +13,7 @@ DIST=rawhide
 COMPSFILE=comps-rawhide.xml
 
 TREEPREFIX="/pub/fedora/linux"
+RSYNC_EXTRA_OPTS=
 MASHDIR="/mnt/koji/mash/${DIST}-$DATE"
 EXPANDARCH=""
 DEPOPTS=""
@@ -116,7 +117,7 @@ send_fedmsg done mash.complete
 log "finished mash"
 log "starting hardlink"
 # hardlink the noarch deltarpms between x86_64 and i386 
-mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "hardlink -v -c ${MASHDIR}/rawhide$EXPANDARCH/*/os/drpms/"
+mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "hardlink -v -c ${MASHDIR}/$BRANCHED$EXPANDARCH/*/os/drpms/"
 log "finished hardlink"
 
 log "starting repodiff"
@@ -173,9 +174,9 @@ send_fedmsg start rsync.start
 
 log "started compose sync"
 # data
-$RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --exclude repodata/ ${MASHDIR}/rawhide$EXPANDARCH/ $DESTPATH
+$RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS $RSYNC_EXTRA_OPTS --exclude repodata/ ${MASHDIR}/$BRANCHED$EXPANDARCH/ $DESTPATH
 # repodata & cleanup
-$RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --delete --delete-after ${MASHDIR}/rawhide$EXPANDARCH/ $DESTPATH
+$RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS $RSYNC_EXTRA_OPTS --delete --delete-after ${MASHDIR}/$BRANCHED$EXPANDARCH/ $DESTPATH
 log "finished compose sync"
 
 if [ "$?" = "0" ]; then
