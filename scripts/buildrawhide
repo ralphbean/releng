@@ -17,7 +17,7 @@ MASHDIR="/mnt/koji/mash/${DIST}-$DATE"
 EXPANDARCH=""
 DEPOPTS=""
 MASHOPTS=""
-MOCKCONFIG=fedora-rawhide-compose-i386
+MOCKCONFIG="fedora-${DIST}-compose-i386"
 TOMAIL="devel@lists.fedoraproject.org test@lists.fedoraproject.org"
 SUBJECT='rawhide report: '$DATE' changes'
 FROM="Fedora Rawhide Report <rawhide@fedoraproject.org>"
@@ -25,16 +25,16 @@ RSYNCPREFIX="sudo -u ftpsync"
 [ -n "$ARCH" ] && {
 TREEPREFIX="/mnt/koji/tree"
 EXPANDARCH="-$ARCH"
-DEPOPTS="--nomail"
+DEPOPTS="%{DEPOPTS} --nomail"
 MASHOPTS="-c /etc/mash/mash.$ARCH.conf"
 TOMAIL="secondary@lists.fedoraproject.org $ARCH@lists.fedoraproject.org"
-SUBJECT=$ARCH' rawhide report: '$DATE' changes'
-FROM="${ARCH} Fedora Rawhide Report <rawhide@fedoraproject.org>"
+SUBJECT="${ARCH} ${SUBJECT}"
+FROM="${ARCH} ${FROM}"
 RSYNCPREFIX=""
 }
 
 [ "$ARCH" == "ppc" ] && {
-MOCKCONFIG=fedora-rawhide-compose-ppc64
+MOCKCONFIG="fedora-${DIST}-compose-ppc64"
 
 }
  

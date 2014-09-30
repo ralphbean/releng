@@ -17,7 +17,7 @@ MASHDIR="/mnt/koji/mash/${DIST}-$DATE"
 EXPANDARCH=""
 DEPOPTS="--treename F-$BRANCHED"
 MASHOPTS=""
-MOCKCONFIG=fedora-branched-compose-i386
+MOCKCONFIG="fedora-${DIST}-compose-i386"
 TOMAIL="devel@lists.fedoraproject.org test@lists.fedoraproject.org"
 SUBJECT='F-'$BRANCHED' Branched report: '$DATE' changes'
 FROM="Fedora Branched Report <rawhide@fedoraproject.org>"
@@ -25,16 +25,16 @@ RSYNCPREFIX="sudo -u ftpsync"
 [ -n "$ARCH" ] && {
 TREEPREFIX="/mnt/koji/tree"
 EXPANDARCH="-$ARCH"
-DEPOPTS="--treename F-$BRANCHED --nomail"
+DEPOPTS="%{DEPOPTS} --nomail"
 MASHOPTS="-c /etc/mash/mash.$ARCH.conf"
 TOMAIL="secondary@lists.fedoraproject.org $ARCH@lists.fedoraproject.org"
-SUBJECT=$ARCH' F-'$BRANCHED' Branched report: '$DATE' changes'
-FROM="${ARCH} Fedora Branched Report <rawhide@fedoraproject.org>"
+SUBJECT="${ARCH} ${SUBJECT}"
+FROM="${ARCH} ${FROM}"
 RSYNCPREFIX=""
 }
 
 [ "$ARCH" == "ppc" ] && {
-MOCKCONFIG=fedora-branched-compose-ppc64
+MOCKCONFIG="fedora-${DIST}-compose-ppc64"
 
 }
  
