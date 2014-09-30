@@ -66,8 +66,8 @@ function log()
 
 function send_fedmsg()
 {
-	topic="${1}"
-	log="${2}"
+	log="${1}"
+	topic="${2}"
 	# Emit a message using bodhi's cert (since we should be running as "masher").
 	echo "{\"log\": \"${log}\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
 		--cert-prefix bodhi \
