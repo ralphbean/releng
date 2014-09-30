@@ -10,6 +10,7 @@ ARCH=$2
 
 BRANCHED="21"
 DIST=branched
+COMPSFILE="comps-f${BRANCHED}.xml"
 
 TREEPREFIX="/pub/fedora/linux"
 MASHDIR="/mnt/koji/mash/${DIST}-$DATE"
@@ -86,14 +87,14 @@ log "git clone of comps started"
 pushd $TMPDIR
 git clone git://git.fedorahosted.org/comps.git && {
     pushd comps
-    make comps-f$BRANCHED.xml
-    cp comps-f$BRANCHED.xml $logdir/
+    make "${COMPSFILE}"
+    cp "${COMPSFILE}" $logdir/
     popd
 }
 popd
 log "git clone of comps finished"
 
-[ -f $logdir/comps-f$BRANCHED.xml ] || exit 1
+[ -f "$logdir/${COMPSFILE}" ] || exit 1
 
 log "mock init"
 mock -r $MOCKCONFIG --uniqueext=$DATE --init
@@ -116,7 +117,8 @@ send_fedmsg start mash.start
 
 log "starting mash"
 # Drop privs here so that we run as the masher UID
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash $MASHOPTS -p $TREEPREFIX/development/$BRANCHED -o ${MASHDIR} --compsfile $logdir/comps-f$BRANCHED.xml $BRANCHED$EXPANDARCH > $logdir/mash.log 2>&1" || exit 1
+mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash $MASHOPTS -p $TREEPREFIX/development/$BRANCHED -o ${MASHDIR} --compsfile $logdir/"${COMPSFILE}" $BRANCHED$EXPANDARCH > $logdir/mash.log 2>&1" || exit 1
+    "mash $MASHOPTS -p $TREEPREFIX/development/$BRANCHED -o ${MASHDIR} --compsfile $logdir/${COMPSFILE} $BRANCHED$EXPANDARCH > $logdir/mash.log 2>&1" || exit 1
 
 send_fedmsg done mash.complete
 
