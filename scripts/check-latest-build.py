@@ -74,18 +74,17 @@ num = len(latest_builds)
 log.debug("latest builds=%d", num)
 log.debug(str(latest_builds))
 
-for build in latest_builds:
-    latest_evr = (str(build['epoch']), build['version'], build['release'])
+for latest in latest_builds:
+    latest_evr = (str(latest['epoch']), latest['version'], latest['release'])
     if args.verbose is True:
-        print("pkg = %s" % build['package_name'])
+        print("pkg = %s" % latest['package_name'])
 
-    builds = kojisession.listTagged(args.tag, package=build['package_name'])
+    builds = kojisession.listTagged(args.tag, package=latest['package_name'])
     for b in builds:
         evr = (str(b['epoch']), b['version'], b['release'])
         res = _rpmvercmp(latest_evr, evr)
         if res == -1:
-            print("\tlatest is %s, but higher exists - %s" % (build['nvr'],
-                                                              b['nvr']))
+            print("\t%s < %s" % (latest['nvr'], b['nvr']))
             if args.fix is True:
                 cmd = ["koji", "untag-build", args.tag, b['nvr']]
                 print("running: " + " ".join(cmd))
