@@ -185,7 +185,7 @@ send_fedmsg done rsync.complete
 log "starting sending email report"
 if [ "$mail" = "0" ]; then
     for tomail in "$(echo $TOMAIL)" ; do
-         cat $logdir/start $logdir/depcheck $logdir/repodiff $logdir/finish |  mutt -e "set from=\"$FROM\"" -e 'set envelope_from=yes' -s "$SUBJECT" $tomail
+         cat $logdir/start $logdir/depcheck $logdir/repodiff $logdir/finish | mutt -e "set from=\"$FROM\"" -e 'set envelope_from=yes' -s "$SUBJECT" $tomail
     done
 fi
 log "finished sending email report"
