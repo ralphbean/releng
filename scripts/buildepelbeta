@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright (C) 2013 Red Hat Inc.
-# SPDX-License-Identifier:	GPL-2.0+
+# SPDX-License-Identifier:  GPL-2.0+
 
 # runs currently on relepel01.phx2.fedoraproject.org
 
@@ -12,8 +12,8 @@ MOCKCONFIG=rhel-compose-x86_64
 
 
 [ -z "$DATE" ] && {
-	echo "usage: buildepelbeta <date>"
-	exit 1
+    echo "usage: buildepelbeta <date>"
+    exit 1
 }
 
 TMPDIR=`mktemp -d /tmp/epel.$DATE.XXXX`
@@ -29,10 +29,10 @@ echo "start" | fedmsg-logger \
 
 pushd $TMPDIR
 git clone git://git.fedorahosted.org/comps.git && {
-	pushd comps
-	make comps-epel7.xml
-	cp comps-epel7.xml /mnt/koji/mash/epel-$DATE/logs/
-	popd
+    pushd comps
+    make comps-epel7.xml
+    cp comps-epel7.xml /mnt/koji/mash/epel-$DATE/logs/
+    popd
 }
 popd
 
