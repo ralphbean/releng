@@ -116,10 +116,6 @@ def write_cache(data, filename, cachedir='~/.cache'):
         pickle.dump(data, pickle_file)
 
 
-people_queue = Queue()
-people_dict = get_cache("orphans-people.pickle", default={})
-
-
 def get_people(package, branch=RAWHIDE_RELEASE["branch"]):
     def associated(pkginfo, exclude=None):
         """
@@ -141,15 +137,6 @@ def get_people(package, branch=RAWHIDE_RELEASE["branch"]):
     people_ = [pkginfo["point_of_contact"]]
     people_.extend(associated(pkginfo, exclude=people_))
     return people_
-
-
-def people_worker(tag):
-    while True:
-        package = people_queue.get()
-        if package not in people_dict:
-            people_ = get_people(package, tag)
-            people_dict[package] = people_
-        people_queue.task_done()
 
 
 def setup_yum(repo=RAWHIDE_RELEASE["repo"],
@@ -209,7 +196,6 @@ def unblocked_packages(packages, tagID=RAWHIDE_RELEASE["tag"]):
             [pkg] = result
             if not pkg[0]['blocked']:
                 package_name = pkg[0]['package_name']
-                people_queue.put(package_name)
                 unblocked.append(package_name)
         else:
             print "ERROR: {pkgname}: {error}".format(
@@ -218,10 +204,16 @@ def unblocked_packages(packages, tagID=RAWHIDE_RELEASE["tag"]):
 
 
 class DepChecker(object):
-    def __init__(self, yumbase):
+    def __init__(self, release):
         self._src_by_bin = None
         self._bin_by_src = None
+        self.release = release
+        yumbase = setup_yum(repo=RELEASES[release]["repo"],
+                            source_repo=RELEASES[release]["source_repo"])
         self.yumbase = yumbase
+        self.people_queue = Queue()
+        self.people_cache = "orphans-people-{}.pickle".format(release)
+        self.people_dict = get_cache(self.people_cache, default={})
 
     def create_mapping(self):
         src_by_bin = {}  # Dict of source pkg objects by binary package objects
@@ -327,10 +319,27 @@ class DepChecker(object):
                         prov)
         return OrderedDict(sorted(dependent_packages.items()))
 
+    def people_worker(self):
+        branch = RELEASES[self.release]["branch"]
+        while True:
+            package = self.people_queue.get()
+            if package not in self.people_dict:
+                people_ = get_people(package, branch)
+                self.people_dict[package] = people_
+            self.people_queue.task_done()
+
     def recursive_deps(self, packages, max_deps=20):
+        # Start threads to get information about (co)maintainers for packages
+        for i in range(0, 2):
+            people_thread = Thread(target=self.people_worker)
+            people_thread.daemon = True
+            people_thread.start()
+        # keep pylint silent
+        del i
         # get a list of all rpm_pkgs that are to be removed
         rpm_pkg_names = []
         for name in packages:
+            self.people_queue.put(name)
             # Empty list if pkg is only for a different arch
             bin_pkgs = self.by_src.get(name, [])
             rpm_pkg_names.extend([p.name for p in bin_pkgs])
@@ -370,7 +379,7 @@ class DepChecker(object):
                             ).setdefault(pkg, set()).add(dep)
 
                     for srpm_name in new_srpm_names:
-                        people_queue.put(srpm_name)
+                        self.people_queue.put(srpm_name)
 
                     ignore.extend(new_names)
                     if allow_more:
@@ -385,6 +394,11 @@ class DepChecker(object):
                 sys.stderr.write("More than {0} broken deps for package"
                                  "'{1}', dependency check not"
                                  " completed\n".format(max_deps, name))
+
+        sys.stderr.write("Waiting for (co)maintainer information...")
+        self.people_queue.join()
+        sys.stderr.write("done\n")
+        write_cache(self.people_dict, self.people_cache)
         return dep_map
 
     # This function was stolen from pungi
@@ -405,7 +419,7 @@ class DepChecker(object):
             sys.exit(1)
 
 
-def maintainer_table(packages):
+def maintainer_table(packages, people_dict):
     affected_people = {}
 
     if with_texttable:
@@ -432,7 +446,7 @@ def maintainer_table(packages):
     return table, affected_people
 
 
-def dependency_info(dep_map, affected_people):
+def dependency_info(dep_map, affected_people, people_dict):
     info = ""
     for package_name, subdict in dep_map.items():
         if subdict:
@@ -463,12 +477,8 @@ def maintainer_info(affected_people):
 
 
 def package_info(packages, release, orphans=None, failed=None):
-    sys.stderr.write("Setting up yum...")
-    yumbase = setup_yum(repo=RELEASES[release]["repo"],
-                        source_repo=RELEASES[release]["source_repo"])
-    sys.stderr.write("done\n")
     sys.stderr.write("Setting up dependency checker...")
-    depchecker = DepChecker(yumbase)
+    depchecker = DepChecker(release)
     sys.stderr.write("done\n")
     info = ""
     sys.stderr.write('Calculating dependencies...')
@@ -477,15 +487,10 @@ def package_info(packages, release, orphans=None, failed=None):
     dep_map = depchecker.recursive_deps(packages)
     sys.stderr.write('done\n')
 
-    sys.stderr.write("Waiting for (co)maintainer information...")
-    people_queue.join()
-    sys.stderr.write("done\n")
-    write_cache(people_dict, "orphans-people.pickle")
-
-    table, affected_people = maintainer_table(packages)
+    table, affected_people = maintainer_table(packages, depchecker.people_dict)
     info += table
     info += "\nThe following packages require above mentioned packages:\n"
-    info += dependency_info(dep_map, affected_people)
+    info += dependency_info(dep_map, affected_people, depchecker.people_dict)
 
     info += "Affected (co)maintainers\n"
     info += maintainer_info(affected_people)
@@ -537,15 +542,6 @@ def main(release="rawhide"):
         sys.stderr.write('Contacting pkgdb for list of orphans...')
         orphans = orphan_packages()
         sys.stderr.write('done\n')
-
-    # Start threads to get information about (co)maintainers for packages
-    for i in range(0, 2):
-        people_thread = Thread(target=people_worker,
-                               args=(RELEASES[release]["tag"],))
-        people_thread.daemon = True
-        people_thread.start()
-    # keep pylint silent
-    del i
 
     sys.stderr.write('Getting builds from koji...')
     unblocked = unblocked_packages(sorted(list(set(list(orphans) + failed))))
