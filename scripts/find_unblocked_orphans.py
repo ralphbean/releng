@@ -497,7 +497,7 @@ def package_info(packages, release, orphans=None, failed=None):
         info += "orphans (depended on): " + " ".join(orphans_breaking_deps)
         info += "\n"
         orphans_not_breaking_deps = [o for o in orphans if
-                                     not o in dep_map or not dep_map[o]]
+                                     o not in dep_map or not dep_map[o]]
         info += "orphans (not depended on): " + " ".join(
             orphans_not_breaking_deps)
         info += "\n"
@@ -509,7 +509,7 @@ def package_info(packages, release, orphans=None, failed=None):
         info += "FTBFS (depended on): " + " ".join(ftbfs_breaking_deps)
         info += "\n"
         ftbfs_not_breaking_deps = [o for o in failed if
-                                   not o in dep_map or not dep_map[o]]
+                                   o not in dep_map or not dep_map[o]]
         info += "FTBFS (not depended on): " + " ".join(
             ftbfs_not_breaking_deps)
         info += "\n"
