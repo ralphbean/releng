@@ -120,7 +120,7 @@ people_queue = Queue()
 people_dict = get_cache("orphans-people.pickle", default={})
 
 
-def get_people(package, branch=RAWHIDE_RELEASE["tag"]):
+def get_people(package, branch=RAWHIDE_RELEASE["branch"]):
     def associated(pkginfo, exclude=None):
         """
 
