@@ -162,14 +162,15 @@ def setup_yum(repo=RAWHIDE_RELEASE["repo"],
     return yb
 
 
-def orphan_packages(cache_filename='orphans.pickle'):
+def orphan_packages(branch=RAWHIDE_RELEASE["branch"]):
+    cache_filename = 'orphans-{}.pickle'.format(branch)
     orphans = get_cache(cache_filename, default={})
 
     if orphans:
         return orphans
     else:
-        pkgdbresponse = pkgdb.get_packages("", orphaned=True,
-                                           branches="master", page="all")
+        pkgdbresponse = pkgdb.get_packages(
+            "", orphaned=True, branches=branch, page="all")
         pkgs = pkgdbresponse["packages"]
         for p in pkgs:
             orphans[p["name"]] = p
@@ -540,7 +541,7 @@ def main(release="rawhide"):
     else:
         # list of orphans on the devel branch from pkgdb
         sys.stderr.write('Contacting pkgdb for list of orphans...')
-        orphans = orphan_packages()
+        orphans = orphan_packages(RELEASES[release]["branch"])
         sys.stderr.write('done\n')
 
     sys.stderr.write('Getting builds from koji...')
