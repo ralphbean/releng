@@ -30,24 +30,29 @@ try:
 except ImportError:
     with_texttable = False
 
-# Set some variables
-# Some of these could arguably be passed in as args.
-# If this is pre-branch, these repos should be rawhide; otherwise,
-# they should be branched.
-DEFAULT_REPO = 'http://kojipkgs.fedoraproject.org/mash/rawhide/i386/os'
-DEFAULT_SOURCE_REPO = \
-    'http://kojipkgs.fedoraproject.org/mash/rawhide/source/SRPMS'
-TAG = 'f21'  # tag to check in koji
 
-# pre-branch, this should be master'. Post-branch, it will be something like
-# fXY
-RAWHIDE_BRANCHNAME = 'master'  # pkgdb name for the devel branch
+RAWHIDE_RELEASE = dict(
+    repo='https://kojipkgs.fedoraproject.org/mash/rawhide/i386/os',
+    source_repo='https://kojipkgs.fedoraproject.org/mash/rawhide/source/SRPMS',
+    tag='f22',
+    branch='master')
+
+BRANCHED_RELEASE = dict(
+    repo='https://kojipkgs.fedoraproject.org/mash/branched/i386/os',
+    source_repo='https://kojipkgs.fedoraproject.org/mash/branched/source/SRPMS',
+    tag='f21',
+    branch='f21')
+
+RELEASES = {
+    "rawhide": RAWHIDE_RELEASE,
+    "branched": BRANCHED_RELEASE,
+}
 
 # pkgdb uid for orphan
 ORPHAN_UID = 'orphan'
 
 HEADER = """The following packages are orphaned or did not build for two
-releases and will be retired when Fedora ({0}) is branched, unless someone
+releases and will be retired when Fedora ({}) is branched, unless someone
 adopts them. If you know for sure that the package should be retired, please do
 so now with a proper reason:
 https://fedoraproject.org/wiki/How_to_remove_a_package_at_end_of_life
@@ -57,7 +62,7 @@ occur not earlier than 2014-07-08. The packages will be retired shortly before.
 
 Note: If you received this mail directly you (co)maintain one of the affected
 packages or a package that depends on one.
-""".format(TAG.upper())
+"""
 
 FOOTER = """The script creating this output is run and developed by Fedora
 Release Engineering. Please report issues at its trac instance:
@@ -115,7 +120,7 @@ people_queue = Queue()
 people_dict = get_cache("orphans-people.pickle", default={})
 
 
-def get_people(package, branch=RAWHIDE_BRANCHNAME):
+def get_people(package, branch=RAWHIDE_RELEASE["tag"]):
     def associated(pkginfo, exclude=None):
         """
 
@@ -138,16 +143,17 @@ def get_people(package, branch=RAWHIDE_BRANCHNAME):
     return people_
 
 
-def people_worker():
+def people_worker(tag):
     while True:
         package = people_queue.get()
         if package not in people_dict:
-            people_ = get_people(package)
+            people_ = get_people(package, tag)
             people_dict[package] = people_
         people_queue.task_done()
 
 
-def setup_yum(repo=DEFAULT_REPO, source_repo=DEFAULT_SOURCE_REPO):
+def setup_yum(repo=RAWHIDE_RELEASE["repo"],
+              source_repo=RAWHIDE_RELEASE["source_repo"]):
     """ Setup YumBase with two repos
     This code was mostly stolen from
     http://yum.baseurl.org/wiki/YumCodeSnippet/SetupArbitraryRepo
@@ -168,28 +174,6 @@ def setup_yum(repo=DEFAULT_REPO, source_repo=DEFAULT_SOURCE_REPO):
     yb.arch.archlist.append('src')
     return yb
 
-sys.stderr.write("Setting up yum...")
-yb = setup_yum()
-sys.stderr.write("done\n")
-
-
-# This function was stolen from pungi
-def SRPM(package):
-    """Given a package object, get a package object for the
-    corresponding source rpm. Requires yum still configured
-    and a valid package object."""
-    srpm = package.sourcerpm.split('.src.rpm')[0]
-    (sname, sver, srel) = srpm.rsplit('-', 2)
-    try:
-        srpmpo = yb.pkgSack.searchNevra(name=sname,
-                                        ver=sver,
-                                        rel=srel,
-                                        arch='src')[0]
-        return srpmpo
-    except IndexError:
-        print >> sys.stderr, "Error: Cannot find a source rpm for %s" % srpm
-        sys.exit(1)
-
 
 def orphan_packages(cache_filename='orphans.pickle'):
     orphans = get_cache(cache_filename, default={})
@@ -209,7 +193,7 @@ def orphan_packages(cache_filename='orphans.pickle'):
         return orphans
 
 
-def unblocked_packages(packages, tagID=TAG):
+def unblocked_packages(packages, tagID=RAWHIDE_RELEASE["tag"]):
     unblocked = []
     kojisession = koji.ClientSession('https://koji.fedoraproject.org/kojihub')
 
@@ -233,21 +217,22 @@ def unblocked_packages(packages, tagID=TAG):
     return unblocked
 
 
-class BinSrcMapper(object):
-    def __init__(self):
+class DepChecker(object):
+    def __init__(self, yumbase):
         self._src_by_bin = None
         self._bin_by_src = None
+        self.yumbase = yumbase
 
     def create_mapping(self):
         src_by_bin = {}  # Dict of source pkg objects by binary package objects
         bin_by_src = {}  # Dict of binary pkgobjects by srpm name
-        all_packages = yb.pkgSack.returnPackages()
+        all_packages = self.yumbase.pkgSack.returnPackages()
 
         # Populate the dicts
         for rpm_package in all_packages:
             if rpm_package.arch == 'src':
                 continue
-            srpm = SRPM(rpm_package)
+            srpm = self.SRPM(rpm_package)
             src_by_bin[rpm_package] = srpm
             if srpm.name in bin_by_src:
                 bin_by_src[srpm.name].append(rpm_package)
@@ -269,142 +254,155 @@ class BinSrcMapper(object):
             self.create_mapping()
         return self._src_by_bin
 
-sys.stderr.write("Setting up packager mapper...")
-package_mapper = BinSrcMapper()
-sys.stderr.write("done\n")
+    def find_dependent_packages(self, srpmname, ignore):
+        """ Return packages depending on packages built from SRPM ``srpmname``
+            that are built from different SRPMS not specified in ``ignore``.
 
+            :param ignore: list of SRPMs of packages that will not be returned
+                as dependent packages.
+            :type ignore: list() of str()
 
-def find_dependent_packages(srpmname, ignore):
-    """ Return packages depending on packages built from SRPM ``srpmname``
-        that are built from different SRPMS not specified in ``ignore``.
+            :returns: OrderedDict dependent_package: list of requires only
+                provided by package ``srpmname`` {dep_pkg: [prov, ...]}
+        """
+        # Some of this code was stolen from repoquery
+        dependent_packages = {}
 
-        :param ignore: list of SRPMs of packages that will not be returned as
-            dependent packages.
-        :type ignore: list() of str()
+        # Handle packags not found in the repo
+        try:
+            rpms = self.by_src[srpmname]
+        except KeyError:
+            # If we don't have a package in the repo, there is nothing to do
+            sys.stderr.write("Package {0} not found in repo\n".format(srpmname))
+            rpms = []
 
-        :returns: OrderedDict dependent_package: list of requires only provided
-                  by package ``srpmname``
-                  {dep_pkg: [prov, ...]}
-    """
-    # Some of this code was stolen from repoquery
-    dependent_packages = {}
+        # provides of all packages built from ``srpmname``
+        provides = []
+        for pkg in rpms:
+            # add all the provides from the package as strings
+            string_provides = [yum.misc.prco_tuple_to_string(prov)
+                               for prov in pkg.provides]
+            provides.extend(string_provides)
 
-    # Handle packags not found in the repo
-    try:
-        rpms = package_mapper.by_src[srpmname]
-    except KeyError:
-        # If we don't have a package in the repo, there is nothing to do
-        sys.stderr.write("Package {0} not found in repo\n".format(srpmname))
-        rpms = []
+            # add all files as provides
+            # pkg.files is a dict with keys like "file" and "dir"
+            # values are a list of file/dir paths
+            for paths in pkg.files.itervalues():
+                # sometimes paths start with "//" instead of "/"
+                # normalise "//" to "/":
+                # os.path.normpath("//") == "//", but
+                # os.path.normpath("///") == "/"
+                file_provides = [os.path.normpath('//%s' % fn)
+                                 for fn in paths]
+                provides.extend(file_provides)
 
-    # provides of all packages built from ``srpmname``
-    provides = []
-    for pkg in rpms:
-        # add all the provides from the package as strings
-        string_provides = [yum.misc.prco_tuple_to_string(prov)
-                           for prov in pkg.provides]
-        provides.extend(string_provides)
+        # Zip through the provides and find what's needed
+        for prov in provides:
+            # check only base provide, ignore specific versions
+            # "foo = 1.fc20" -> "foo"
+            base_provide = prov.split()[0]
 
-        # add all files as provides
-        # pkg.files is a dict with keys like "file" and "dir"
-        # values are a list of file/dir paths
-        for paths in pkg.files.itervalues():
-            # sometimes paths start with "//" instead of "/"
-            # normalise "//" to "/":
-            # os.path.normpath("//") == "//", but
-            # os.path.normpath("///") == "/"
-            file_provides = [os.path.normpath('//%s' % fn)
-                             for fn in paths]
-            provides.extend(file_provides)
+            # Elide provide if also provided by another package
+            for pkg in self.yumbase.pkgSack.searchProvides(base_provide):
+                # FIXME: might miss broken dependencies in case the other
+                # provider depends on a to-be-removed package as well
+                if pkg.sourcerpm.rsplit('-', 2)[0] not in ignore:
+                    break
+            else:
+                for dependent_pkg in self.yumbase.pkgSack.searchRequires(
+                        base_provide):
+                    # skip if the dependent rpm package belongs to the
+                    # to-be-removed Fedora package
+                    if dependent_pkg in self.by_src[srpmname]:
+                        continue
 
-    # Zip through the provides and find what's needed
-    for prov in provides:
-        # check only base provide, ignore specific versions
-        # "foo = 1.fc20" -> "foo"
-        base_provide = prov.split()[0]
+                    # skip if the dependent rpm package is also a
+                    # package that should be removed
+                    if dependent_pkg.name in ignore:
+                        continue
 
-        # Elide provide if also provided by another package
-        for pkg in yb.pkgSack.searchProvides(base_provide):
-            # FIXME: might miss broken dependencies in case the other provider
-            # depends on a to-be-removed package as well
-            if pkg.sourcerpm.rsplit('-', 2)[0] not in ignore:
-                break
-        else:
-            for dependent_pkg in yb.pkgSack.searchRequires(base_provide):
-                # skip if the dependent rpm package belongs to the
-                # to-be-removed Fedora package
-                if dependent_pkg in package_mapper.by_src[srpmname]:
-                    continue
+                    # use setdefault to either create an entry for the
+                    # dependent package or add the required prov
+                    dependent_packages.setdefault(dependent_pkg, set()).add(
+                        prov)
+        return OrderedDict(sorted(dependent_packages.items()))
 
-                # skip if the dependent rpm package is also a
-                # package that should be removed
-                if dependent_pkg.name in ignore:
-                    continue
+    def recursive_deps(self, packages, max_deps=20):
+        # get a list of all rpm_pkgs that are to be removed
+        rpm_pkg_names = []
+        for name in packages:
+            # Empty list if pkg is only for a different arch
+            bin_pkgs = self.by_src.get(name, [])
+            rpm_pkg_names.extend([p.name for p in bin_pkgs])
 
-                # use setdefault to either create an entry for the
-                # dependent package or add the required prov
-                dependent_packages.setdefault(dependent_pkg, set()).add(prov)
-    return OrderedDict(sorted(dependent_packages.items()))
+        # dict for all dependent package for each to-be-removed package
+        dep_map = OrderedDict()
+        for name in packages:
+            ignore = rpm_pkg_names
+            dep_map[name] = OrderedDict()
+            to_check = [name]
+            allow_more = True
+            seen = []
+            while True:
+                sys.stderr.write("to_check: {0}\n".format(repr(to_check)))
+                check_next = to_check.pop()
+                seen.append(check_next)
+                dependent_packages = self.find_dependent_packages(check_next,
+                                                                  ignore)
+                if dependent_packages:
+                    new_names = []
+                    new_srpm_names = set()
+                    for pkg, dependencies in dependent_packages.items():
+                        if pkg.arch != "src":
+                            srpm_name = self.by_bin[pkg].name
+                        else:
+                            srpm_name = pkg.name
+                        if srpm_name not in to_check and \
+                                srpm_name not in new_names and \
+                                srpm_name not in seen:
+                            new_names.append(srpm_name)
+                        new_srpm_names.add(srpm_name)
 
+                        for dep in dependencies:
+                            dep_map[name].setdefault(
+                                srpm_name,
+                                OrderedDict()
+                            ).setdefault(pkg, set()).add(dep)
 
-def recursive_deps(packages, max_deps=20):
-    # get a list of all rpm_pkgs that are to be removed
-    rpm_pkg_names = []
-    for name in packages:
-        # Empty list if pkg is only for a different arch
-        bin_pkgs = package_mapper.by_src.get(name, [])
-        rpm_pkg_names.extend([p.name for p in bin_pkgs])
+                    for srpm_name in new_srpm_names:
+                        people_queue.put(srpm_name)
 
-    # dict for all dependent package for each to-be-removed package
-    dep_map = OrderedDict()
-    for name in packages:
-        ignore = rpm_pkg_names
-        dep_map[name] = OrderedDict()
-        to_check = [name]
-        allow_more = True
-        seen = []
-        while True:
-            sys.stderr.write("to_check: {0}\n".format(repr(to_check)))
-            check_next = to_check.pop()
-            seen.append(check_next)
-            dependent_packages = find_dependent_packages(check_next, ignore)
-            if dependent_packages:
-                new_names = []
-                new_srpm_names = set()
-                for pkg, dependencies in dependent_packages.items():
-                    if pkg.arch != "src":
-                        srpm_name = package_mapper.by_bin[pkg].name
-                    else:
-                        srpm_name = pkg.name
-                    if srpm_name not in to_check and \
-                            srpm_name not in new_names and \
-                            srpm_name not in seen:
-                        new_names.append(srpm_name)
-                    new_srpm_names.add(srpm_name)
+                    ignore.extend(new_names)
+                    if allow_more:
+                        to_check.extend(new_names)
+                        dep_count = len(set(dep_map[name].keys() + to_check))
+                        if dep_count > max_deps:
+                            allow_more = False
+                            to_check = to_check[0:max_deps]
+                if not to_check:
+                    break
+            if not allow_more:
+                sys.stderr.write("More than {0} broken deps for package"
+                                 "'{1}', dependency check not"
+                                 " completed\n".format(max_deps, name))
+        return dep_map
 
-                    for dep in dependencies:
-                        dep_map[name].setdefault(
-                            srpm_name,
-                            OrderedDict()
-                        ).setdefault(pkg, set()).add(dep)
-
-                for srpm_name in new_srpm_names:
-                    people_queue.put(srpm_name)
-
-                ignore.extend(new_names)
-                if allow_more:
-                    to_check.extend(new_names)
-                    dep_count = len(set(dep_map[name].keys() + to_check))
-                    if dep_count > max_deps:
-                        allow_more = False
-                        to_check = to_check[0:max_deps]
-            if not to_check:
-                break
-        if not allow_more:
-            sys.stderr.write("More than {0} broken deps for package"
-                             "'{1}', dependency check not"
-                             " completed\n".format(max_deps, name))
-    return dep_map
+    # This function was stolen from pungi
+    def SRPM(self, package):
+        """Given a package object, get a package object for the
+        corresponding source rpm. Requires yum still configured
+        and a valid package object."""
+        srpm = package.sourcerpm.split('.src.rpm')[0]
+        (sname, sver, srel) = srpm.rsplit('-', 2)
+        try:
+            srpmpo = self.yumbase.pkgSack.searchNevra(name=sname,
+                                                      ver=sver,
+                                                      rel=srel,
+                                                      arch='src')[0]
+            return srpmpo
+        except IndexError:
+            print >> sys.stderr, "Error: Cannot find a source rpm for %s" % srpm
+            sys.exit(1)
 
 
 def maintainer_table(packages):
@@ -464,12 +462,19 @@ def maintainer_info(affected_people):
     return info
 
 
-def package_info(packages, orphans=None, failed=None):
+def package_info(packages, release, orphans=None, failed=None):
+    sys.stderr.write("Setting up yum...")
+    yumbase = setup_yum(repo=RELEASES[release]["repo"],
+                        source_repo=RELEASES[release]["source_repo"])
+    sys.stderr.write("done\n")
+    sys.stderr.write("Setting up dependency checker...")
+    depchecker = DepChecker(yumbase)
+    sys.stderr.write("done\n")
     info = ""
     sys.stderr.write('Calculating dependencies...')
     # Create yum object and depsolve out if requested.
     # TODO: add app args to either depsolve or not
-    dep_map = recursive_deps(packages)
+    dep_map = depchecker.recursive_deps(packages)
     sys.stderr.write('done\n')
 
     sys.stderr.write("Waiting for (co)maintainer information...")
@@ -515,7 +520,7 @@ def package_info(packages, orphans=None, failed=None):
     return info, addresses
 
 
-def main():
+def main(release="rawhide"):
     parser = argparse.ArgumentParser()
     parser.add_argument("--skip-orphans", dest="skip_orphans",
                         help="Do not look for orphans",
@@ -535,7 +540,8 @@ def main():
 
     # Start threads to get information about (co)maintainers for packages
     for i in range(0, 2):
-        people_thread = Thread(target=people_worker)
+        people_thread = Thread(target=people_worker,
+                               args=(RELEASES[release]["tag"],))
         people_thread.daemon = True
         people_thread.start()
     # keep pylint silent
@@ -545,8 +551,9 @@ def main():
     unblocked = unblocked_packages(sorted(list(set(list(orphans) + failed))))
     sys.stderr.write('done\n')
 
-    print HEADER
-    info, addresses = package_info(unblocked, orphans=orphans, failed=failed)
+    print HEADER.format(RELEASES[release]["tag"].upper())
+    info, addresses = package_info(unblocked, release, orphans=orphans,
+                                   failed=failed)
     print info
     print FOOTER
 
