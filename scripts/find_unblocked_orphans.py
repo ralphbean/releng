@@ -199,7 +199,9 @@ def get_people(package, branch=RAWHIDE_RELEASE["branch"]):
         sys.stderr.write(
             "Error getting maintainer of package {} on branch {}\n".format(
                 package, branch))
+        # FIXME: Write proper traceback
         sys.stderr.write(str(e))
+        return []
     pkginfo = pkginfo["packages"][0]
     people_ = [pkginfo["point_of_contact"]]
     people_.extend(associated(pkginfo, exclude=people_))
