@@ -32,6 +32,26 @@ except ImportError:
     with_texttable = False
 
 
+EPEL5_RELEASE = dict(
+    repo='https://kojipkgs.fedoraproject.org/mash/updates/el5-epel/x86_64/',
+    source_repo='https://kojipkgs.fedoraproject.org/mash/updates/'
+    'el5-epel/SRPMS',
+    tag='dist-5E-epel',
+    branch='el5')
+
+EPEL6_RELEASE = dict(
+    repo='https://kojipkgs.fedoraproject.org/mash/updates/el6-epel/x86_64/',
+    source_repo='https://kojipkgs.fedoraproject.org/mash/updates/'
+    'el6-epel/SRPMS',
+    tag='dist-6E-epel',
+    branch='el6')
+
+EPEL7_RELEASE = dict(
+    repo='https://kojipkgs.fedoraproject.org/mash/updates/epel7/x86_64/',
+    source_repo='https://kojipkgs.fedoraproject.org/mash/updates/epel7/SRPMS',
+    tag='epel7',
+    branch='epel7')
+
 RAWHIDE_RELEASE = dict(
     repo='https://kojipkgs.fedoraproject.org/mash/rawhide/i386/os',
     source_repo='https://kojipkgs.fedoraproject.org/mash/rawhide/source/SRPMS',
@@ -47,6 +67,9 @@ BRANCHED_RELEASE = dict(
 RELEASES = {
     "rawhide": RAWHIDE_RELEASE,
     "branched": BRANCHED_RELEASE,
+    "epel7": EPEL7_RELEASE,
+    "epel6": EPEL6_RELEASE,
+    "epel5": EPEL5_RELEASE,
 }
 
 # pkgdb uid for orphan
@@ -529,11 +552,12 @@ def package_info(packages, release, orphans=None, failed=None):
     return info, addresses
 
 
-def main(release="rawhide"):
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--skip-orphans", dest="skip_orphans",
                         help="Do not look for orphans",
                         default=False, action="store_true")
+    parser.add_argument("--release", choices=RELEASES.keys(), default="rawhide")
     parser.add_argument("failed", nargs="*",
                         help="Additional packages, e.g. FTBFS packages")
     args = parser.parse_args()
@@ -544,15 +568,15 @@ def main(release="rawhide"):
     else:
         # list of orphans on the devel branch from pkgdb
         sys.stderr.write('Contacting pkgdb for list of orphans...')
-        orphans = orphan_packages(RELEASES[release]["branch"])
+        orphans = sorted(orphan_packages(RELEASES[args.release]["branch"]))
         sys.stderr.write('done\n')
 
     sys.stderr.write('Getting builds from koji...')
     unblocked = unblocked_packages(sorted(list(set(list(orphans) + failed))))
     sys.stderr.write('done\n')
 
-    print HEADER.format(RELEASES[release]["tag"].upper())
-    info, addresses = package_info(unblocked, release, orphans=orphans,
+    print HEADER.format(RELEASES[args.release]["tag"].upper())
+    info, addresses = package_info(unblocked, args.release, orphans=orphans,
                                    failed=failed)
     print info
     print FOOTER
