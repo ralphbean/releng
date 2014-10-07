@@ -599,7 +599,7 @@ def package_info(packages, release, orphans=None, failed=None):
         breaking = breaking.union(set(deps.keys()))
 
     if breaking:
-        info += wrap_and_format("Affected packages", sorted(breaking))
+        info += wrap_and_format("Depending packages", sorted(breaking))
 
     if failed:
         info += "\nFTBFS: " + " ".join(failed)
