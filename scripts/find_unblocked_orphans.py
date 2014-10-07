@@ -83,9 +83,16 @@ https://fedoraproject.org/wiki/How_to_remove_a_package_at_end_of_life
 
 According to https://fedoraproject.org/wiki/Schedule branching will
 occur not earlier than 2014-07-08. The packages will be retired shortly before.
+"""
+
+HEADER = """The following packages are orphaned and might be retired eventually,
+unless someone adopts them. If you know for sure that the package should be
+retired, please do so now with a proper reason:
+https://fedoraproject.org/wiki/How_to_remove_a_package_at_end_of_life
 
 Note: If you received this mail directly you (co)maintain one of the affected
-packages or a package that depends on one.
+packages or a package that depends on one. Please orphan the affected package or
+retire your package to avoid broken dependencies.
 """
 
 FOOTER = """The script creating this output is run and developed by Fedora
@@ -575,7 +582,7 @@ def main():
     unblocked = unblocked_packages(sorted(list(set(list(orphans) + failed))))
     sys.stderr.write('done\n')
 
-    # print HEADER.format(RELEASES[args.release]["tag"].upper())
+    print HEADER.format(RELEASES[args.release]["tag"].upper())
     info, addresses = package_info(unblocked, args.release, orphans=orphans,
                                    failed=failed)
     print info
