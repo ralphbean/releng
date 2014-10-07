@@ -420,6 +420,7 @@ class DepChecker(object):
         # dict for all dependent packages for each to-be-removed package
         dep_map = OrderedDict()
         for name in packages:
+            sys.stderr.write("Checking: {0}\n".format(name))
             ignore = rpm_pkg_names
             dep_map[name] = OrderedDict()
             to_check = [name]
