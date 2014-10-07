@@ -193,7 +193,13 @@ def get_people(package, branch=RAWHIDE_RELEASE["branch"]):
                     other_people.add(fas_name)
         return sorted(other_people)
 
-    pkginfo = pkgdb.get_package(package, branches=branch)
+    try:
+        pkginfo = pkgdb.get_package(package, branches=branch)
+    except Exception as e:
+        sys.stderr.write(
+            "Error getting maintainer of package {} on branch {}\n".format(
+                package, branch))
+        sys.stderr.write(str(e))
     pkginfo = pkginfo["packages"][0]
     people_ = [pkginfo["point_of_contact"]]
     people_.extend(associated(pkginfo, exclude=people_))
