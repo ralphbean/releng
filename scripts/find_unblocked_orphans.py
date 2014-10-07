@@ -427,7 +427,8 @@ class DepChecker(object):
             allow_more = True
             seen = []
             while True:
-                sys.stderr.write("to_check: {0}\n".format(repr(to_check)))
+                sys.stderr.write("to_check ({}): {}\n".format(len(to_check),
+                                                              repr(to_check)))
                 check_next = to_check.pop()
                 seen.append(check_next)
                 dependent_packages = self.find_dependent_packages(check_next,
@@ -524,7 +525,8 @@ def dependency_info(dep_map, affected_people, people_dict):
     info = ""
     for package_name, subdict in dep_map.items():
         if subdict:
-            info += "Depending on: %s\n" % package_name
+            info += "Depending on: {} ({})\n".format(package_name,
+                                                     len(subdict.keys()))
             for fedora_package, dependent_packages in subdict.items():
                 people = people_dict[fedora_package]
                 for p in people:
