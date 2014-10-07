@@ -575,7 +575,7 @@ def main():
     unblocked = unblocked_packages(sorted(list(set(list(orphans) + failed))))
     sys.stderr.write('done\n')
 
-    print HEADER.format(RELEASES[args.release]["tag"].upper())
+    # print HEADER.format(RELEASES[args.release]["tag"].upper())
     info, addresses = package_info(unblocked, args.release, orphans=orphans,
                                    failed=failed)
     print info
