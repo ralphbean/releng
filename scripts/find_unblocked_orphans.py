@@ -658,7 +658,7 @@ def main():
     print text
 
     if args.mailto or args.send:
-        subject = "Orphan packages in " + args.release
+        subject = "Orphaned packages in " + args.release
         if args.mailto:
             mailto = args.mailto
         else:
