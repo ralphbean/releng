@@ -14,6 +14,7 @@
 from collections import OrderedDict
 import cPickle as pickle
 import datetime
+import hashlib
 import os
 import argparse
 from Queue import Queue
@@ -156,8 +157,10 @@ def setup_yum(repo=RAWHIDE_RELEASE["repo"],
     yb.conf.cache = 0
 
     yb.repos.disableRepo('*')
-    yb.add_enable_repo('repo', [repo])
-    yb.add_enable_repo('repo-source', [source_repo])
+    # use digest to make repo id unique for each URL
+    yb.add_enable_repo('repo-' + hashlib.sha256(repo).hexdigest(), [repo])
+    yb.add_enable_repo('repo-source-' + hashlib.sha256(repo).hexdigest(),
+                       [source_repo])
     yb.arch.archlist.append('src')
     return yb
 
