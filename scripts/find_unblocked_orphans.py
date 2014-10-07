@@ -559,7 +559,7 @@ def package_info(packages, release, orphans=None, failed=None):
 
     table, affected_people = maintainer_table(packages, depchecker.people_dict)
     info += table
-    info += "\nThe following packages require above mentioned packages:\n"
+    info += "\n\nThe following packages require above mentioned packages:\n"
     info += dependency_info(dep_map, affected_people, depchecker.people_dict)
 
     info += "Affected (co)maintainers\n"
