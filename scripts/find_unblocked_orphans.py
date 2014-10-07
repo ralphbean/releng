@@ -671,7 +671,8 @@ def main():
         if mail_errors:
             sys.stderr.write("mail errors: " + repr(mail_errors) + "\n")
 
-    sys.stderr.write("Addresses: " + ", ".join(addresses) + "\n")
+    sys.stderr.write("Addresses ({}): {}\n".format(len(addresses),
+                                                   ", ".join(addresses)))
 
 if __name__ == "__main__":
     main()
