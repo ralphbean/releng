@@ -22,6 +22,7 @@ import hashlib
 import os
 import smtplib
 import sys
+import textwrap
 
 import koji
 import pkgdb2client
@@ -416,7 +417,7 @@ class DepChecker(object):
             bin_pkgs = self.by_src.get(name, [])
             rpm_pkg_names.extend([p.name for p in bin_pkgs])
 
-        # dict for all dependent package for each to-be-removed package
+        # dict for all dependent packages for each to-be-removed package
         dep_map = OrderedDict()
         for name in packages:
             ignore = rpm_pkg_names
@@ -566,18 +567,28 @@ def package_info(packages, release, orphans=None, failed=None):
 
     info += "Affected (co)maintainers\n"
     info += maintainer_info(affected_people)
+
+    wrapper = textwrap.TextWrapper(break_long_words=False,
+                                   break_on_hyphens=False)
+
+    def wrap_and_format(label, pkgs):
+        count = len(pkgs)
+        text = "{} ({}): {}".format(label, count, " ".join(pkgs))
+        wrappedtext = "\n" + wrapper.fill(text) + "\n\n"
+        return wrappedtext
+
     if orphans:
-        info += "\norphans: " + " ".join(orphans)
-        info += "\n\n"
+        info += wrap_and_format("Orphans", orphans)
+
         orphans_breaking_deps = [o for o in orphans if
                                  o in dep_map and dep_map[o]]
-        info += "orphans (depended on): " + " ".join(orphans_breaking_deps)
-        info += "\n\n"
+        info += wrap_and_format("Orphans (dependend on)", orphans_breaking_deps)
+
         orphans_not_breaking_deps = [o for o in orphans if
                                      o not in dep_map or not dep_map[o]]
-        info += "orphans (not depended on): " + " ".join(
-            orphans_not_breaking_deps)
-        info += "\n\n"
+
+        info += wrap_and_format("Orphans (not depended on)",
+                                orphans_not_breaking_deps)
     if failed:
         info += "\nFTBFS: " + " ".join(failed)
         info += "\n"
