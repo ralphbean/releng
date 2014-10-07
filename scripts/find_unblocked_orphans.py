@@ -568,8 +568,9 @@ def package_info(packages, release, orphans=None, failed=None):
     info += "Affected (co)maintainers\n"
     info += maintainer_info(affected_people)
 
-    wrapper = textwrap.TextWrapper(break_long_words=False,
-                                   break_on_hyphens=False)
+    wrapper = textwrap.TextWrapper(
+        break_long_words=False, subsequent_indent="    ", break_on_hyphens=False
+    )
 
     def wrap_and_format(label, pkgs):
         count = len(pkgs)
