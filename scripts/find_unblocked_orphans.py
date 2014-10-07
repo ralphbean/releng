@@ -590,6 +590,14 @@ def package_info(packages, release, orphans=None, failed=None):
 
         info += wrap_and_format("Orphans (not depended on)",
                                 orphans_not_breaking_deps)
+
+    breaking = set()
+    for package, deps in dep_map.items():
+        breaking = breaking.union(set(deps.keys()))
+
+    if breaking:
+        info += wrap_and_format("Affected packages", sorted(breaking))
+
     if failed:
         info += "\nFTBFS: " + " ".join(failed)
         info += "\n"
