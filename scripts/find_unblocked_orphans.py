@@ -17,8 +17,10 @@ from threading import Thread
 import argparse
 import cPickle as pickle
 import datetime
+import email.mime.text
 import hashlib
 import os
+import smtplib
 import sys
 
 import koji
@@ -37,32 +39,42 @@ EPEL5_RELEASE = dict(
     source_repo='https://kojipkgs.fedoraproject.org/mash/updates/'
     'el5-epel/SRPMS',
     tag='dist-5E-epel',
-    branch='el5')
+    branch='el5',
+    mailto='epel-devel@lists.fedoraproject.org',
+)
 
 EPEL6_RELEASE = dict(
     repo='https://kojipkgs.fedoraproject.org/mash/updates/el6-epel/x86_64/',
     source_repo='https://kojipkgs.fedoraproject.org/mash/updates/'
     'el6-epel/SRPMS',
     tag='dist-6E-epel',
-    branch='el6')
+    branch='el6',
+    mailto='epel-devel@lists.fedoraproject.org',
+)
 
 EPEL7_RELEASE = dict(
     repo='https://kojipkgs.fedoraproject.org/mash/updates/epel7/x86_64/',
     source_repo='https://kojipkgs.fedoraproject.org/mash/updates/epel7/SRPMS',
     tag='epel7',
-    branch='epel7')
+    branch='epel7',
+    mailto='epel-devel@lists.fedoraproject.org',
+)
 
 RAWHIDE_RELEASE = dict(
     repo='https://kojipkgs.fedoraproject.org/mash/rawhide/i386/os',
     source_repo='https://kojipkgs.fedoraproject.org/mash/rawhide/source/SRPMS',
     tag='f22',
-    branch='master')
+    branch='master',
+    mailto='devel@lists.fedoraproject.org',
+)
 
 BRANCHED_RELEASE = dict(
     repo='https://kojipkgs.fedoraproject.org/mash/branched/i386/os',
     source_repo='https://kojipkgs.fedoraproject.org/mash/branched/source/SRPMS',
     tag='f21',
-    branch='f21')
+    branch='f21',
+    mailto='devel@lists.fedoraproject.org',
+)
 
 RELEASES = {
     "rawhide": RAWHIDE_RELEASE,
@@ -95,12 +107,30 @@ packages or a package that depends on one. Please orphan the affected package or
 retire your package to avoid broken dependencies.
 """
 
-FOOTER = """The script creating this output is run and developed by Fedora
+FOOTER = """-- \nThe script creating this output is run and developed by Fedora
 Release Engineering. Please report issues at its trac instance:
 https://fedorahosted.org/rel-eng/
 The sources of this script can be found at:
 https://git.fedorahosted.org/cgit/releng/tree/scripts/find_unblocked_orphans.py
 """
+
+
+def send_mail(from_, to, subject, text, bcc=None):
+    if bcc is None:
+        bcc = []
+
+    msg = email.mime.text.MIMEText(text)
+    msg["Subject"] = subject
+    msg["From"] = from_
+    msg["To"] = to
+    if isinstance(to, basestring):
+        to = [to]
+    smtp = smtplib.SMTP('127.0.0.1')
+    errors = smtp.sendmail(from_, to + bcc, msg.as_string())
+    smtp.quit()
+    return errors
+
+
 pkgdb = pkgdb2client.PkgDB()
 
 
@@ -555,7 +585,6 @@ def package_info(packages, release, orphans=None, failed=None):
 
     addresses = ["{0}@fedoraproject.org".format(p)
                  for p in affected_people.keys() if p != ORPHAN_UID]
-    addresses = "Bcc: {0}\n".format(", ".join(addresses))
     return info, addresses
 
 
@@ -565,6 +594,13 @@ def main():
                         help="Do not look for orphans",
                         default=False, action="store_true")
     parser.add_argument("--release", choices=RELEASES.keys(), default="rawhide")
+    parser.add_argument("--mailto", default=None,
+                        help="Send mail to this address (for testing)")
+    parser.add_argument(
+        "--send", default=False, action="store_true",
+        help="Actually send mail including Bcc addresses to mailing list"
+    )
+    parser.add_argument("--mailfrom", default="nobody@fedoraproject.org")
     parser.add_argument("failed", nargs="*",
                         help="Additional packages, e.g. FTBFS packages")
     args = parser.parse_args()
@@ -582,13 +618,29 @@ def main():
     unblocked = unblocked_packages(sorted(list(set(list(orphans) + failed))))
     sys.stderr.write('done\n')
 
-    print HEADER.format(RELEASES[args.release]["tag"].upper())
+    text = HEADER.format(RELEASES[args.release]["tag"].upper())
     info, addresses = package_info(unblocked, args.release, orphans=orphans,
                                    failed=failed)
-    print info
-    print FOOTER
+    text += "\n"
+    text += info
+    text += FOOTER
+    print text
 
-    sys.stderr.write(addresses)
+    if args.mailto or args.send:
+        subject = "Orphan packages in " + args.release
+        if args.mailto:
+            mailto = args.mailto
+        else:
+            mailto = RELEASES[args.release]["mailto"]
+        if args.send:
+            bcc = addresses
+        else:
+            bcc = None
+        mail_errors = send_mail(args.mailfrom, mailto, subject, text, bcc)
+        if mail_errors:
+            sys.stderr.write("mail errors: " + repr(mail_errors) + "\n")
+
+    sys.stderr.write("Addresses: " + ", ".join(addresses) + "\n")
 
 if __name__ == "__main__":
     main()
