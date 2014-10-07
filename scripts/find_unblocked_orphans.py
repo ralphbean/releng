@@ -11,15 +11,15 @@
 #     Jesse Keating <jkeating@redhat.com>
 #     Till Maas <opensource@till.name>
 
+from Queue import Queue
 from collections import OrderedDict
+from threading import Thread
+import argparse
 import cPickle as pickle
 import datetime
 import hashlib
 import os
-import argparse
-from Queue import Queue
 import sys
-from threading import Thread
 
 import koji
 import pkgdb2client
