@@ -552,27 +552,20 @@ def maintainer_info(affected_people):
     return info
 
 
-def package_info(packages, release, orphans=None, failed=None):
-    sys.stderr.write("Setting up dependency checker...")
-    depchecker = DepChecker(release)
-    sys.stderr.write("done\n")
+def package_info(packages, dep_map, people_dict, orphans=None, failed=None):
     info = ""
-    sys.stderr.write('Calculating dependencies...')
-    # Create yum object and depsolve out if requested.
-    # TODO: add app args to either depsolve or not
-    dep_map = depchecker.recursive_deps(packages)
-    sys.stderr.write('done\n')
 
-    table, affected_people = maintainer_table(packages, depchecker.people_dict)
+    table, affected_people = maintainer_table(packages, people_dict)
     info += table
     info += "\n\nThe following packages require above mentioned packages:\n"
-    info += dependency_info(dep_map, affected_people, depchecker.people_dict)
+    info += dependency_info(dep_map, affected_people, people_dict)
 
     info += "Affected (co)maintainers\n"
     info += maintainer_info(affected_people)
 
     wrapper = textwrap.TextWrapper(
-        break_long_words=False, subsequent_indent="    ", break_on_hyphens=False
+        break_long_words=False, subsequent_indent="    ",
+        break_on_hyphens=False
     )
 
     def wrap_and_format(label, pkgs):
@@ -624,7 +617,8 @@ def main():
     parser.add_argument("--skip-orphans", dest="skip_orphans",
                         help="Do not look for orphans",
                         default=False, action="store_true")
-    parser.add_argument("--release", choices=RELEASES.keys(), default="rawhide")
+    parser.add_argument("--release", choices=RELEASES.keys(),
+                        default="rawhide")
     parser.add_argument("--mailto", default=None,
                         help="Send mail to this address (for testing)")
     parser.add_argument(
@@ -650,8 +644,16 @@ def main():
     sys.stderr.write('done\n')
 
     text = HEADER.format(RELEASES[args.release]["tag"].upper())
-    info, addresses = package_info(unblocked, args.release, orphans=orphans,
-                                   failed=failed)
+    sys.stderr.write("Setting up dependency checker...")
+    depchecker = DepChecker(args.release)
+    sys.stderr.write("done\n")
+    sys.stderr.write('Calculating dependencies...')
+    # Create yum object and depsolve out if requested.
+    # TODO: add app args to either depsolve or not
+    dep_map = depchecker.recursive_deps(unblocked)
+    sys.stderr.write('done\n')
+    info, addresses = package_info(unblocked, dep_map, depchecker.people_dict,
+                                   orphans=orphans, failed=failed)
     text += "\n"
     text += info
     text += FOOTER
