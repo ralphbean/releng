@@ -71,7 +71,8 @@ RAWHIDE_RELEASE = dict(
 
 BRANCHED_RELEASE = dict(
     repo='https://kojipkgs.fedoraproject.org/mash/branched/i386/os',
-    source_repo='https://kojipkgs.fedoraproject.org/mash/branched/source/SRPMS',
+    source_repo='https://kojipkgs.fedoraproject.org/mash/branched/source/'
+                'SRPMS',
     tag='f21',
     branch='f21',
     mailto='devel@lists.fedoraproject.org',
@@ -98,14 +99,14 @@ According to https://fedoraproject.org/wiki/Schedule branching will
 occur not earlier than 2014-07-08. The packages will be retired shortly before.
 """
 
-HEADER = """The following packages are orphaned and might be retired eventually,
-unless someone adopts them. If you know for sure that the package should be
-retired, please do so now with a proper reason:
+HEADER = """The following packages are orphaned and might be retired
+eventually, unless someone adopts them. If you know for sure that the package
+should be retired, please do so now with a proper reason:
 https://fedoraproject.org/wiki/How_to_remove_a_package_at_end_of_life
 
 Note: If you received this mail directly you (co)maintain one of the affected
-packages or a package that depends on one. Please orphan the affected package or
-retire your package to avoid broken dependencies.
+packages or a package that depends on one. Please orphan the affected package
+or retire your package to avoid broken dependencies.
 """
 
 FOOTER = """-- \nThe script creating this output is run and developed by Fedora
@@ -338,7 +339,8 @@ class DepChecker(object):
             rpms = self.by_src[srpmname]
         except KeyError:
             # If we don't have a package in the repo, there is nothing to do
-            sys.stderr.write("Package {0} not found in repo\n".format(srpmname))
+            sys.stderr.write(
+                "Package {0} not found in repo\n".format(srpmname))
             rpms = []
 
         # provides of all packages built from ``srpmname``
@@ -490,7 +492,8 @@ class DepChecker(object):
                                                       arch='src')[0]
             return srpmpo
         except IndexError:
-            print >> sys.stderr, "Error: Cannot find a source rpm for %s" % srpm
+            sys.stderr.write(
+                "Error: Cannot find a source rpm for {}\n".format(srpm))
             sys.exit(1)
 
 
@@ -579,7 +582,8 @@ def package_info(packages, dep_map, people_dict, orphans=None, failed=None):
 
         orphans_breaking_deps = [o for o in orphans if
                                  o in dep_map and dep_map[o]]
-        info += wrap_and_format("Orphans (dependend on)", orphans_breaking_deps)
+        info += wrap_and_format("Orphans (dependend on)",
+                                orphans_breaking_deps)
 
         orphans_not_breaking_deps = [o for o in orphans if
                                      o not in dep_map or not dep_map[o]]
