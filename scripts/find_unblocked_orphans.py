@@ -105,8 +105,8 @@ should be retired, please do so now with a proper reason:
 https://fedoraproject.org/wiki/How_to_remove_a_package_at_end_of_life
 
 Note: If you received this mail directly you (co)maintain one of the affected
-packages or a package that depends on one. Please orphan the affected package
-or retire your package to avoid broken dependencies.
+packages or a package that depends on one. Please adopt the affected package or
+retire your depending package to avoid broken dependencies.
 """
 
 FOOTER = """-- \nThe script creating this output is run and developed by Fedora
