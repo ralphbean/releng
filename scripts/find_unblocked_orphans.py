@@ -586,10 +586,11 @@ def maintainer_info(affected_people):
     return info
 
 
-def package_info(packages, dep_map, pkgdb_dict, orphans=None, failed=None):
+def package_info(unblocked, dep_map, pkgdb_dict, orphans=None, failed=None,
+                 week_limit=6):
     info = ""
 
-    table, affected_people = maintainer_table(packages, pkgdb_dict)
+    table, affected_people = maintainer_table(unblocked, pkgdb_dict)
     info += table
     info += "\n\nThe following packages require above mentioned packages:\n"
     info += dependency_info(dep_map, affected_people, pkgdb_dict)
@@ -617,11 +618,28 @@ def package_info(packages, dep_map, pkgdb_dict, orphans=None, failed=None):
         info += wrap_and_format("Orphans (dependend on)",
                                 orphans_breaking_deps)
 
+        orphans_breaking_deps_stale = [
+            o for o in orphans_breaking_deps if
+            (pkgdb_dict[o].age.days / 7) >= week_limit]
+
+        info += wrap_and_format(
+            "Orphans for at least {} weeks (dependend on)".format(week_limit),
+            orphans_breaking_deps_stale)
+
         orphans_not_breaking_deps = [o for o in orphans if
                                      o not in dep_map or not dep_map[o]]
 
         info += wrap_and_format("Orphans (not depended on)",
                                 orphans_not_breaking_deps)
+
+        orphans_not_breaking_deps_stale = [
+            o for o in orphans_not_breaking_deps if
+            (pkgdb_dict[o].age.days / 7) >= week_limit]
+
+        info += wrap_and_format(
+            "Orphans for at least {} weeks (not dependend on)".format(
+                week_limit),
+            orphans_not_breaking_deps_stale)
 
     breaking = set()
     for package, deps in dep_map.items():
