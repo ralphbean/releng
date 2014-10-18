@@ -528,7 +528,7 @@ def maintainer_table(packages, pkgdb_dict):
 
     if with_table:
         table = texttable.Texttable(max_width=80)
-        table.header(["Package", "(co)maintainers", "age"])
+        table.header(["Package", "(co)maintainers", "Status Change"])
         table.set_cols_align(["l", "l", "l"])
         table.set_deco(table.HEADER)
     else:
@@ -542,8 +542,8 @@ def maintainer_table(packages, pkgdb_dict):
         p = ', '.join(people)
         status_change = pkginfo.status_change
         age = pkginfo.age
-        agestr = "{} ({} weeks)".format(status_change.strftime("%Y-%m-%d"),
-                                        age.days / 7)
+        agestr = "{} ({} weeks ago)".format(status_change.strftime("%Y-%m-%d"),
+                                            age.days / 7)
 
         if with_table:
             table.add_row([package_name, p, agestr])
