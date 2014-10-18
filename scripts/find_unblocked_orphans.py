@@ -315,6 +315,7 @@ class DepChecker(object):
         self.pkgdbinfo_queue = Queue()
         self.pkgdb_cache = "orphans-pkgdb-{}.pickle".format(release)
         self.pkgdb_dict = get_cache(self.pkgdb_cache, default={})
+        self.not_in_repo = []
 
     def create_mapping(self):
         src_by_bin = {}  # Dict of source pkg objects by binary package objects
@@ -368,6 +369,7 @@ class DepChecker(object):
             # If we don't have a package in the repo, there is nothing to do
             sys.stderr.write(
                 "Package {0} not found in repo\n".format(srpmname))
+            self.not_in_repo.append(srpmname)
             rpms = []
 
         # provides of all packages built from ``srpmname``
@@ -587,9 +589,10 @@ def maintainer_info(affected_people):
     return info
 
 
-def package_info(unblocked, dep_map, pkgdb_dict, orphans=None, failed=None,
+def package_info(unblocked, dep_map, depchecker, orphans=None, failed=None,
                  week_limit=6):
     info = ""
+    pkgdb_dict = depchecker.pkgdb_dict
 
     table, affected_people = maintainer_table(unblocked, pkgdb_dict)
     info += table
@@ -671,6 +674,10 @@ def package_info(unblocked, dep_map, pkgdb_dict, orphans=None, failed=None,
             ftbfs_not_breaking_deps)
         info += "\n\n"
 
+    if depchecker.not_in_repo:
+        info += wrap_and_format("Not found in repo",
+                                sorted(depchecker.not_in_repo))
+
     addresses = ["{0}@fedoraproject.org".format(p)
                  for p in affected_people.keys() if p != ORPHAN_UID]
     return info, addresses
@@ -716,7 +723,7 @@ def main():
     # TODO: add app args to either depsolve or not
     dep_map = depchecker.recursive_deps(unblocked)
     sys.stderr.write('done\n')
-    info, addresses = package_info(unblocked, dep_map, depchecker.pkgdb_dict,
+    info, addresses = package_info(unblocked, dep_map, depchecker,
                                    orphans=orphans, failed=failed)
     text += "\n"
     text += info
