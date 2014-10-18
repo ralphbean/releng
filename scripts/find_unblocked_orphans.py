@@ -609,6 +609,7 @@ def package_info(packages, dep_map, pkgdb_dict, orphans=None, failed=None):
         return wrappedtext
 
     if orphans:
+        orphans = [o for o in orphans if o in unblocked]
         info += wrap_and_format("Orphans", orphans)
 
         orphans_breaking_deps = [o for o in orphans if
