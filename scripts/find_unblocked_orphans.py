@@ -649,6 +649,15 @@ def package_info(unblocked, dep_map, pkgdb_dict, orphans=None, failed=None,
     if breaking:
         info += wrap_and_format("Depending packages", sorted(breaking))
 
+        if orphans:
+            stale_breaking = set()
+            for package in orphans_breaking_deps_stale:
+                stale_breaking = stale_breaking.union(
+                    set(dep_map[package].keys()))
+            info += wrap_and_format(
+                "Packages depending on packages orphaned for more than "
+                "{} weeks".format(week_limit), sorted(stale_breaking))
+
     if failed:
         info += "\nFTBFS: " + " ".join(failed)
         info += "\n"
