@@ -179,35 +179,46 @@ def write_cache(data, filename, cachedir='~/.cache'):
         pickle.dump(data, pickle_file)
 
 
-def get_people(package, branch=RAWHIDE_RELEASE["branch"]):
-    def associated(pkginfo, exclude=None):
-        """
+class PKGDBInfo(object):
+    def __init__(self, package, branch=RAWHIDE_RELEASE["branch"]):
+        self.package = package
+        self.branch = branch
 
-        :param exclude: People to exclude, e.g. the point of contact.
-        :type exclude: list
-        """
-        other_people = set()
-        for acl in pkginfo.get("acls", []):
-            if acl["status"] == "Approved":
-                fas_name = acl["fas_name"]
-                if fas_name != "group::provenpackager" and \
-                        fas_name not in exclude:
-                    other_people.add(fas_name)
-        return sorted(other_people)
+        try:
+            pkginfo = pkgdb.get_package(package, branches=branch)
+        except Exception as e:
+            sys.stderr.write(
+                "Error getting pkgdb info for {} on {}\n".format(
+                    package, branch))
+            # FIXME: Write proper traceback
+            sys.stderr.write(str(e))
+            self.pkginfo = None
+            return
 
-    try:
-        pkginfo = pkgdb.get_package(package, branches=branch)
-    except Exception as e:
-        sys.stderr.write(
-            "Error getting maintainer of package {} on branch {}\n".format(
-                package, branch))
-        # FIXME: Write proper traceback
-        sys.stderr.write(str(e))
-        return []
-    pkginfo = pkginfo["packages"][0]
-    people_ = [pkginfo["point_of_contact"]]
-    people_.extend(associated(pkginfo, exclude=people_))
-    return people_
+        self.pkginfo = pkginfo["packages"][0]
+
+    def get_people(self):
+        def associated(pkginfo, exclude=None):
+            """
+
+            :param exclude: People to exclude, e.g. the point of contact.
+            :type exclude: list
+            """
+            other_people = set()
+            for acl in pkginfo.get("acls", []):
+                if acl["status"] == "Approved":
+                    fas_name = acl["fas_name"]
+                    if fas_name != "group::provenpackager" and \
+                            fas_name not in exclude:
+                        other_people.add(fas_name)
+            return sorted(other_people)
+
+        if self.pkginfo is not None:
+            people_ = [self.pkginfo["point_of_contact"]]
+            people_.extend(associated(self.pkginfo, exclude=people_))
+            return people_
+        else:
+            return []
 
 
 def setup_yum(repo=RAWHIDE_RELEASE["repo"],
@@ -285,9 +296,9 @@ class DepChecker(object):
         yumbase = setup_yum(repo=RELEASES[release]["repo"],
                             source_repo=RELEASES[release]["source_repo"])
         self.yumbase = yumbase
-        self.people_queue = Queue()
-        self.people_cache = "orphans-people-{}.pickle".format(release)
-        self.people_dict = get_cache(self.people_cache, default={})
+        self.pkgdbinfo_queue = Queue()
+        self.pkgdb_cache = "orphans-pkgdb-{}.pickle".format(release)
+        self.pkgdb_dict = get_cache(self.pkgdb_cache, default={})
 
     def create_mapping(self):
         src_by_bin = {}  # Dict of source pkg objects by binary package objects
@@ -394,19 +405,19 @@ class DepChecker(object):
                         prov)
         return OrderedDict(sorted(dependent_packages.items()))
 
-    def people_worker(self):
+    def pkgdb_worker(self):
         branch = RELEASES[self.release]["branch"]
         while True:
-            package = self.people_queue.get()
-            if package not in self.people_dict:
-                people_ = get_people(package, branch)
-                self.people_dict[package] = people_
-            self.people_queue.task_done()
+            package = self.pkgdbinfo_queue.get()
+            if package not in self.pkgdb_dict:
+                pkginfo = PKGDBInfo(package, branch)
+                self.pkgdb_dict[package] = pkginfo
+            self.pkgdbinfo_queue.task_done()
 
     def recursive_deps(self, packages, max_deps=20):
         # Start threads to get information about (co)maintainers for packages
         for i in range(0, 2):
-            people_thread = Thread(target=self.people_worker)
+            people_thread = Thread(target=self.pkgdb_worker)
             people_thread.daemon = True
             people_thread.start()
         # keep pylint silent
@@ -414,7 +425,7 @@ class DepChecker(object):
         # get a list of all rpm_pkgs that are to be removed
         rpm_pkg_names = []
         for name in packages:
-            self.people_queue.put(name)
+            self.pkgdbinfo_queue.put(name)
             # Empty list if pkg is only for a different arch
             bin_pkgs = self.by_src.get(name, [])
             rpm_pkg_names.extend([p.name for p in bin_pkgs])
@@ -456,7 +467,7 @@ class DepChecker(object):
                             ).setdefault(pkg, set()).add(dep)
 
                     for srpm_name in new_srpm_names:
-                        self.people_queue.put(srpm_name)
+                        self.pkgdbinfo_queue.put(srpm_name)
 
                     ignore.extend(new_names)
                     if allow_more:
@@ -473,9 +484,9 @@ class DepChecker(object):
                                  " completed\n".format(max_deps, name))
 
         sys.stderr.write("Waiting for (co)maintainer information...")
-        self.people_queue.join()
+        self.pkgdbinfo_queue.join()
         sys.stderr.write("done\n")
-        write_cache(self.people_dict, self.people_cache)
+        write_cache(self.pkgdb_dict, self.pkgdb_cache)
         return dep_map
 
     # This function was stolen from pungi
@@ -497,7 +508,7 @@ class DepChecker(object):
             sys.exit(1)
 
 
-def maintainer_table(packages, people_dict):
+def maintainer_table(packages, pkgdb_dict):
     affected_people = {}
 
     if with_texttable:
@@ -509,7 +520,7 @@ def maintainer_table(packages, people_dict):
         table = ""
 
     for package_name in packages:
-        people = people_dict[package_name]
+        people = pkgdb_dict[package_name].get_people()
         for p in people:
             affected_people.setdefault(p, set()).add(package_name)
         p = ', '.join(people)
@@ -524,14 +535,14 @@ def maintainer_table(packages, people_dict):
     return table, affected_people
 
 
-def dependency_info(dep_map, affected_people, people_dict):
+def dependency_info(dep_map, affected_people, pkgdb_dict):
     info = ""
     for package_name, subdict in dep_map.items():
         if subdict:
             info += "Depending on: {} ({})\n".format(package_name,
                                                      len(subdict.keys()))
             for fedora_package, dependent_packages in subdict.items():
-                people = people_dict[fedora_package]
+                people = pkgdb_dict[fedora_package].get_people()
                 for p in people:
                     affected_people.setdefault(p, set()).add(package_name)
                 p = ", ".join(people)
@@ -555,13 +566,13 @@ def maintainer_info(affected_people):
     return info
 
 
-def package_info(packages, dep_map, people_dict, orphans=None, failed=None):
+def package_info(packages, dep_map, pkgdb_dict, orphans=None, failed=None):
     info = ""
 
-    table, affected_people = maintainer_table(packages, people_dict)
+    table, affected_people = maintainer_table(packages, pkgdb_dict)
     info += table
     info += "\n\nThe following packages require above mentioned packages:\n"
-    info += dependency_info(dep_map, affected_people, people_dict)
+    info += dependency_info(dep_map, affected_people, pkgdb_dict)
 
     info += "Affected (co)maintainers\n"
     info += maintainer_info(affected_people)
@@ -656,7 +667,7 @@ def main():
     # TODO: add app args to either depsolve or not
     dep_map = depchecker.recursive_deps(unblocked)
     sys.stderr.write('done\n')
-    info, addresses = package_info(unblocked, dep_map, depchecker.people_dict,
+    info, addresses = package_info(unblocked, dep_map, depchecker.pkgdb_dict,
                                    orphans=orphans, failed=failed)
     text += "\n"
     text += info
