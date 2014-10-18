@@ -99,14 +99,15 @@ According to https://fedoraproject.org/wiki/Schedule branching will
 occur not earlier than 2014-07-08. The packages will be retired shortly before.
 """
 
-HEADER = """The following packages are orphaned and might be retired
-eventually, unless someone adopts them. If you know for sure that the package
-should be retired, please do so now with a proper reason:
+HEADER = """The following packages are orphaned and will be retired when they
+are orphaned for six weeks, unless someone adopts them. If you know for sure
+that the package should be retired, please do so now with a proper reason:
 https://fedoraproject.org/wiki/How_to_remove_a_package_at_end_of_life
 
 Note: If you received this mail directly you (co)maintain one of the affected
 packages or a package that depends on one. Please adopt the affected package or
-retire your depending package to avoid broken dependencies.
+retire your depending package to avoid broken dependencies, otherwise your
+package will be retired when the affected package gets retired.
 """
 
 FOOTER = """-- \nThe script creating this output is run and developed by Fedora
