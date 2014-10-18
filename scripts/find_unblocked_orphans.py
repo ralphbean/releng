@@ -30,9 +30,9 @@ import yum
 
 try:
     import texttable
-    with_texttable = True
+    with_table = True
 except ImportError:
-    with_texttable = False
+    with_table = False
 
 
 EPEL5_RELEASE = dict(
@@ -219,6 +219,21 @@ class PKGDBInfo(object):
             return people_
         else:
             return []
+
+    @property
+    def age(self):
+        now = datetime.datetime.utcnow()
+        age = now - self.status_change
+        return age
+
+    @property
+    def status_change(self):
+        status_change = self.pkginfo["status_change"]
+        status_change = datetime.datetime.utcfromtimestamp(status_change)
+        return status_change
+
+    def __getitem__(self, *args, **kwargs):
+        return self.pkginfo.__getitem__(*args, **kwargs)
 
 
 def setup_yum(repo=RAWHIDE_RELEASE["repo"],
@@ -511,26 +526,31 @@ class DepChecker(object):
 def maintainer_table(packages, pkgdb_dict):
     affected_people = {}
 
-    if with_texttable:
+    if with_table:
         table = texttable.Texttable(max_width=80)
-        table.header(["Package", "(co)maintainers"])
-        table.set_cols_align(["l", "l"])
+        table.header(["Package", "(co)maintainers", "age"])
+        table.set_cols_align(["l", "l", "l"])
         table.set_deco(table.HEADER)
     else:
         table = ""
 
     for package_name in packages:
-        people = pkgdb_dict[package_name].get_people()
+        pkginfo = pkgdb_dict[package_name]
+        people = pkginfo.get_people()
         for p in people:
             affected_people.setdefault(p, set()).add(package_name)
         p = ', '.join(people)
+        status_change = pkginfo.status_change
+        age = pkginfo.age
+        agestr = "{} ({} weeks)".format(status_change.strftime("%Y-%m-%d"),
+                                        age.days / 7)
 
-        if with_texttable:
-            table.add_row([package_name, p])
+        if with_table:
+            table.add_row([package_name, p, agestr])
         else:
-            table += "{0} {1}\n".format(package_name, p)
+            table += "{} {} {}\n".format(package_name, p, agestr)
 
-    if with_texttable:
+    if with_table:
         table = table.draw()
     return table, affected_people
 
