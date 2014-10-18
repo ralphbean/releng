@@ -1,0 +1,78 @@
+#!/usr/bin/python -tt
+# vim: fileencoding=utf8
+# SPDX-License-Identifier: GPL-2.0+
+# {{{ License header: GPLv2+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+# }}}
+
+import argparse
+import os
+import shutil
+import subprocess
+import tempfile
+
+
+def retire(pkg, branch, reason, dryrun=False):
+    tempdir = tempfile.mkdtemp(pkg, branch)
+    try:
+        cmd = ["fedpkg", "clone", pkg]
+        if dryrun:
+            print(cmd)
+        else:
+            subprocess.check_call(cmd, cwd=tempdir)
+        pkgdir = os.path.join(tempdir, pkg)
+
+        cmd = ["fedpkg", "switch-branch", branch]
+        if dryrun:
+            print(cmd)
+        else:
+            subprocess.check_call(cmd, cwd=pkgdir)
+
+        cmd = ["fedpkg", "retire", reason]
+        if dryrun:
+            print(cmd)
+        else:
+            subprocess.check_call(cmd, cwd=pkgdir)
+    finally:
+        shutil.rmtree(tempdir)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Helper to retire packages")
+    parser.add_argument("--branch", default="master",
+                        choices=["master", "f21", "epel7", "el6", "el5"])
+    parser.add_argument("--reasonfile", default=None)
+    parser.add_argument("--reason", default=None)
+    parser.add_argument("pkg", nargs="+")
+    args = parser.parse_args()
+
+    if args.reasonfile is None and args.reason is None:
+        reasonfile = tempfile.NamedTemporaryFile(delete=False)
+        filename = reasonfile.name
+        childpid = os.fork()
+        if childpid == 0:
+            os.execlp("vim", "vim", filename)
+        else:
+            os.waitpid(childpid, 0)
+        reason = reasonfile.read()
+        os.unlink(filename)
+    elif args.reasonfile is not None:
+        with open(args.reasonfile, "rb") as reasonfile:
+            reason = reasonfile.read()
+    else:
+        reason = args.reason
+        if reason[-1] != "\n":
+            reason += "\n"
+
+    for pkg in args.pkg:
+        retire(pkg, args.branch, reason, dryrun=False)
