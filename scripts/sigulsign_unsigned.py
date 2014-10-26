@@ -357,9 +357,9 @@ class SigulHelper(object):
         self.arch = arch
 
         command = self.build_cmdline('get-public-key', self.key)
-        ret, pubkey = self.run_command(command)[0:2]
+        ret, pubkey, stderr = self.run_command(command)
         if ret != 0:
-            raise ValueError("Invalid key or password")
+            raise ValueError("Invalid key or password: " + stderr)
         self.keyid, self.v3 = get_key_info(pubkey)
 
     def build_cmdline(self, *args):
@@ -487,8 +487,9 @@ if __name__ == "__main__":
                                        config_file=opts.sigul_config_file,
                                        arch=opts.arch, ask=True,
                                        ask_with_agent=opts.gpg_agent)
-        except ValueError:
-            logging.error('Error validating passphrase for key %s' % key)
+        except ValueError as error:
+            logging.error('Error validating passphrase for key %s: %s', key,
+                          error)
             sys.exit(1)
 
     # setup the koji session
