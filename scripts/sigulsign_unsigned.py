@@ -138,10 +138,10 @@ def get_key_info(source, filename=False):
     return keyid, v3
 
 
-def get_gpg_agent_passphrase(cache_id, ask=False, error_message="X", prompt="X",
-                   description=None):
+def get_gpg_agent_passphrase(cache_id, ask=False, error_message="X",
+                             prompt="X", description=None):
     gpg_agent = subprocess.Popen(["gpg-connect-agent"], stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE)
+                                 stdout=subprocess.PIPE)
 
     cmdline = ["GET_PASSPHRASE"]
     if not ask:
@@ -160,8 +160,8 @@ def get_gpg_agent_passphrase(cache_id, ask=False, error_message="X", prompt="X",
 
     response, error = gpg_agent.communicate(cmdline)
     if gpg_agent.returncode != 0:
-         raise RuntimeError("gpg-agent-connect error: {}:{}".format(
-             gpg_agent.returncode, error))
+        raise RuntimeError("gpg-agent-connect error: {}:{}".format(
+            gpg_agent.returncode, error))
     elif not response.startswith("OK"):
         raise RuntimeError("gpg-agent-connect error message: {}".format(
             response))
@@ -343,12 +343,14 @@ class SigulHelper(object):
 
             cache_id = "sigul:{}:{}".format(fas_username, key)
             try:
-                self.password = get_gpg_agent_passphrase(cache_id, ask=ask_with_agent)
+                self.password = get_gpg_agent_passphrase(cache_id,
+                                                         ask=ask_with_agent)
             except:
                 self.password = None
 
             if self.password is None and ask and not ask_with_agent:
-                self.password = getpass.getpass(prompt='Passphrase for %s: ' % key)
+                self.password = getpass.getpass(
+                    prompt='Passphrase for %s: ' % key)
         else:
             self.password = password
         if self.password is None:
@@ -458,7 +460,7 @@ if __name__ == "__main__":
 
     key = args[0]
     logging.debug('Using %s for key %s' % (KEYS[key]['id'], key))
-    if not key in KEYS.keys():
+    if key not in KEYS.keys():
         logging.error('Unknown key %s' % key)
         parser.print_help()
         sys.exit(1)
