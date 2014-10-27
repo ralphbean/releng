@@ -26,6 +26,8 @@ import time
 import koji
 import pkgdb2client
 
+from autosigner import SubjectSMTPHandler
+
 
 log = logging.getLogger(__name__)
 RETIRING_BRANCHES = ["el5", "el6", "epel7", "f21", "master"]
@@ -207,17 +209,6 @@ def block_all_retired(branches=RETIRING_BRANCHES):
         if unblocked:
             log.info("Blocked packages %s on %s", unblocked, branch)
             block_package(unblocked, branch)
-
-
-class SubjectSMTPHandler(logging.handlers.SMTPHandler):
-    # Class copied from autosigner.py
-    subject_prefix = ""
-
-    def getSubject(self, record):
-        first_line = record.message.split("\n")[0]
-        fmt = self.subject_prefix + "{0.levelname}: {first_line}"
-
-        return fmt.format(record, first_line=first_line)
 
 
 def setup_logging(debug=False, mail=False):
