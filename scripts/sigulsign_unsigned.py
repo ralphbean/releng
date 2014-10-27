@@ -358,11 +358,15 @@ class SigulHelper(object):
         self.config_file = config_file
         self.arch = arch
 
-        command = self.build_cmdline('get-public-key', self.key)
-        ret, pubkey, stderr = self.run_command(command)
+        ret, pubkey, stderr = self.get_public_key()
         if ret != 0:
             raise ValueError("Invalid key or password: " + stderr)
         self.keyid, self.v3 = get_key_info(pubkey)
+
+    def get_public_key(self):
+        command = self.build_cmdline('get-public-key', self.key)
+        ret, stdout, stderr = self.run_command(command)
+        return ret, stdout, stderr
 
     def build_cmdline(self, *args):
         cmdline = ['sigul', '--batch']
