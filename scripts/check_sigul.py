@@ -42,8 +42,8 @@ if __name__ == "__main__":
     # FIXME: Make this a config option
     fedora_user = getpass.getuser()
     mail_logger = SubjectSMTPHandler(
-        "127.0.0.1", fedora_user, [fedora_user], "Autosigner log event")
-    mail_logger.subject_prefix = "Autosigner: "
+        "127.0.0.1", fedora_user, [fedora_user], "Sigul check log event")
+    mail_logger.subject_prefix = "Sigul check: "
     mail_logger.setLevel(logging.DEBUG)
     mail_logger.setFormatter(formatter)
     log.addHandler(mail_logger)
