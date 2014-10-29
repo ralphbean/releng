@@ -17,6 +17,13 @@ from autosigner import SubjectSMTPHandler
 
 log = logging.getLogger(__name__)
 RETIRING_BRANCHES = ["el5", "el6", "epel7", "f21", "master"]
+PROD_ONLY_BRANCHES = ["el5", "el6", "epel7", "master"]
+
+PRODUCTION_PKGDB = "https://admin.fedoraproject.org/pkgdb"
+STAGING_PKGDB = "https://admin.stg.fedoraproject.org/pkgdb"
+
+PRODUCTION_KOJI = "https://koji.fedoraproject.org/kojihub"
+STAGING_KOJI = "https://koji.stg.fedoraproject.org/kojihub"
 
 
 class ReleaseMapper(object):
@@ -24,7 +31,7 @@ class ReleaseMapper(object):
     KOJI_TAG = 1
     EPEL_BUILD_TAG = 2
 
-    def __init__(self):
+    def __init__(self, staging=False):
 
         # git branchname, koji tag, pkgdb version
         self.mapping = (
@@ -33,10 +40,13 @@ class ReleaseMapper(object):
             ("f20", "f20", ""),
             ("f19", "f19", ""),
             ("f18", "f18", ""),
-            ("epel7", "epel7", "epel7-build"),
-            ("el6", "dist-6E-epel", "dist-6E-epel-build"),
-            ("el5", "dist-5E-epel", "dist-5E-epel-build"),
         )
+        if not staging:
+            self.mapping = self.mapping + (
+                ("epel7", "epel7", "epel7-build"),
+                ("el6", "dist-6E-epel", "dist-6E-epel-build"),
+                ("el5", "dist-5E-epel", "dist-5E-epel-build"),
+            )
 
     def branchname(self, key=""):
         return self.lookup(key, self.BRANCHNAME)
@@ -59,32 +69,42 @@ class ReleaseMapper(object):
         return None
 
 
-def blocked_packages(branch="master"):
-    mapper = ReleaseMapper()
+def blocked_packages(branch="master", staging=False):
+    mapper = ReleaseMapper(staging=staging)
     tag = mapper.koji_tag(branch)
-    kojisession = koji.ClientSession('https://koji.fedoraproject.org/kojihub')
+    url = PRODUCTION_KOJI if not staging else STAGING_KOJI
+    kojisession = koji.ClientSession(url)
     pkglist = kojisession.listPackages(tagID=tag, inherited=True)
-    blocked = [p["package_name"] for p in pkglist if p["blocked"]]
+    blocked = [p["package_name"] for p in pkglist if p.get("blocked")]
     return blocked
 
 
-def get_retired_packages(branch="master"):
-    pkgdb = pkgdb2client.PkgDB()
-    retiredresponse = pkgdb.get_packages(
-        "", branches=branch, page="all", status="Retired")
+def get_retired_packages(branch="master", staging=False):
+    url = PRODUCTION_PKGDB if not staging else STAGING_PKGDB
+    pkgdb = pkgdb2client.PkgDB(url)
+
+    try:
+        retiredresponse = pkgdb.get_packages(
+            "", branches=branch, page="all", status="Retired")
+    except pkgdb2client.PkgDBException as e:
+        if not "No packages found for these parameters" in str(e):
+            raise
+        return []
+
     retiredinfo = retiredresponse["packages"]
     retiredpkgs = [p["name"] for p in retiredinfo]
     return retiredpkgs
 
 
-def pkgdb_retirement_status(package, branch="master"):
+def pkgdb_retirement_status(package, branch="master", staging=False):
     """ Returns retirement info for `package` in `branch`
 
     :returns: dict: retired: True - if retired, False if not, None if
     there was an error, status_change: last status change as datetime object
     """
 
-    pkgdb = pkgdb2client.PkgDB()
+    url = PRODUCTION_PKGDB if not staging else STAGING_PKGDB
+    pkgdb = pkgdb2client.PkgDB(url)
     retired = None
     status_change = None
     try:
@@ -129,14 +149,16 @@ def get_retirement_info(message):
     return None
 
 
-def block_package(packages, branch="master"):
+def block_package(packages, branch="master", staging=False):
     if isinstance(packages, basestring):
         packages = [packages]
 
     if len(packages) == 0:
         return None
 
-    mapper = ReleaseMapper()
+    url = PRODUCTION_KOJI if not staging else STAGING_KOJI
+
+    mapper = ReleaseMapper(staging=staging)
     tag = mapper.koji_tag(branch)
     cmd = ["koji", "block-pkg", tag] + packages
     log.debug("Running: %s", " ".join(cmd))
@@ -145,16 +167,16 @@ def block_package(packages, branch="master"):
     epel_build_tag = mapper.epel_build_tag(branch)
 
     if epel_build_tag:
-        cmd = ["koji", "untag-build", "--all", tag] + packages
+        cmd = ["koji", "-s", url, "untag-build", "--all", tag] + packages
         log.debug("Running: %s", " ".join(cmd))
         subprocess.check_call(cmd)
 
-        cmd = ["koji", "unblock-pkg", epel_build_tag] + packages
+        cmd = ["koji", "-s", url, "unblock-pkg", epel_build_tag] + packages
         log.debug("Running: %s", " ".join(cmd))
         subprocess.check_call(cmd)
 
 
-def handle_message(message, retiring_branches=RETIRING_BRANCHES):
+def handle_message(message, retiring_branches=RETIRING_BRANCHES, staging=False):
     messageinfo = get_retirement_info(message)
     msg_id = message["msg_id"]
     if messageinfo is None:
@@ -171,21 +193,24 @@ def handle_message(message, retiring_branches=RETIRING_BRANCHES):
 
     package = messageinfo["name"]
 
-    pkgdbinfo = pkgdb_retirement_status(package, branch)
+    pkgdbinfo = pkgdb_retirement_status(package, branch, staging)
 
     if pkgdbinfo["retired"] is not True:
         log.error("Processing '%s', package '%s' not retired",
                   msg_id, package)
 
     log.debug("'%s' retired on '%s'", package, pkgdbinfo["status_change"])
-    return block_package(package, branch)
+    return block_package(package, branch, staging=staging)
 
 
-def block_all_retired(branches=RETIRING_BRANCHES):
+def block_all_retired(branches=RETIRING_BRANCHES, staging=False):
     for branch in branches:
         log.debug("Processing branch %s", branch)
-        retired = get_retired_packages(branch)
-        blocked = blocked_packages(branch)
+        if staging and branch in PROD_ONLY_BRANCHES:
+            log.warning('%s not handled in staging..' % branch)
+            continue
+        retired = get_retired_packages(branch, staging)
+        blocked = blocked_packages(branch, staging)
 
         unblocked = []
         for pkg in retired:
@@ -194,7 +219,7 @@ def block_all_retired(branches=RETIRING_BRANCHES):
 
         if unblocked:
             log.info("Blocked packages %s on %s", unblocked, branch)
-            block_package(unblocked, branch)
+            block_package(unblocked, branch, staging=staging)
 
 
 def setup_logging(debug=False, mail=False):
@@ -237,11 +262,14 @@ if __name__ == "__main__":
     parser.add_argument(
         "--branch", default="master",
         help="Branch to retire specified packages on, default: %(default)s")
+    parser.add_argument(
+        "--staging", default=False, action="store_true",
+        help="Talk to staging services (pkgdb), instead of production")
     args = parser.parse_args()
 
     setup_logging(args.debug)
 
     if not args.packages:
-        block_all_retired()
+        block_all_retired(staging=args.staging)
     else:
-        block_package(args.packages, args.branch)
+        block_package(args.packages, args.branch, staging=args.staging)
