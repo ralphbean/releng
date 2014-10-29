@@ -20,6 +20,7 @@ MASHDIR="/mnt/koji/mash/${DIST}-$DATE"
 EXPANDARCH=""
 DEPOPTS=""
 MASHOPTS=""
+MOCK="/usr/bin/mock"
 MOCKCONFIG="fedora-${DIST}-compose-i386"
 TOMAIL="devel@lists.fedoraproject.org test@lists.fedoraproject.org"
 SUBJECT='rawhide report: '$DATE' changes'
@@ -105,34 +106,34 @@ log "git clone of comps finished"
 [ -f "$logdir/${COMPSFILE}" ] || exit 1
 
 log "mock init"
-mock -r $MOCKCONFIG --uniqueext=$DATE --init
+$MOCK -r $MOCKCONFIG --uniqueext=$DATE --init
 log "mock install base packages"
-mock -r $MOCKCONFIG --uniqueext=$DATE --no-clean --install koji yum createrepo cvs make intltool findutils mash yum-utils rsync repoview hardlink
+$MOCK -r $MOCKCONFIG --uniqueext=$DATE --no-clean --install koji yum createrepo cvs make intltool findutils mash yum-utils rsync repoview hardlink
 # Copy in the hosts file so that we get the right address for koji
 log "mock setup /etc/hosts"
-mock -r $MOCKCONFIG --uniqueext=$DATE --copyin /etc/hosts /etc/hosts >/dev/null 2>&1 # this reports to fail, but actually works
+$MOCK -r $MOCKCONFIG --uniqueext=$DATE --copyin /etc/hosts /etc/hosts >/dev/null 2>&1 # this reports to fail, but actually works
 
 send_fedmsg start mash.start
 
 log "starting mash"
 # Drop privs here so that we run as the masher UID
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash $MASHOPTS -p $TREEPREFIX/development/$BRANCHED -o ${MASHDIR} --compsfile $logdir/${COMPSFILE} $BRANCHED$EXPANDARCH > $logdir/mash.log 2>&1" || exit 1
+$MOCK -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash $MASHOPTS -p $TREEPREFIX/development/$BRANCHED -o ${MASHDIR} --compsfile $logdir/${COMPSFILE} $BRANCHED$EXPANDARCH > $logdir/mash.log 2>&1" || exit 1
 
 send_fedmsg done mash.complete
 
 log "finished mash"
 log "starting hardlink"
 # hardlink the noarch deltarpms between x86_64 and i386 
-mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "hardlink -v -c ${MASHDIR}/$BRANCHED$EXPANDARCH/*/os/drpms/"
+$MOCK -r $MOCKCONFIG --uniqueext=$DATE --chroot "hardlink -v -c ${MASHDIR}/$BRANCHED$EXPANDARCH/*/os/drpms/"
 log "finished hardlink"
 
 log "starting repodiff"
-mock -r $MOCKCONFIG --uniqueext=$DATE --chroot "rm -f /var/lib/rpm/__db*"
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -s -q --new=file://${MASHDIR}/$BRANCHED$EXPANDARCH/source/SRPMS --old=file://$TREEPREFIX/development/$BRANCHED/source/SRPMS > $logdir/repodiff"
+$MOCK -r $MOCKCONFIG --uniqueext=$DATE --chroot "rm -f /var/lib/rpm/__db*"
+$MOCK -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -s -q --new=file://${MASHDIR}/$BRANCHED$EXPANDARCH/source/SRPMS --old=file://$TREEPREFIX/development/$BRANCHED/source/SRPMS > $logdir/repodiff"
 log "finished repodiff"
 
 log "starting spam-o-matic"
-mock -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic $DEPOPTS ${MASHDIR}/$BRANCHED$EXPANDARCH >$logdir/depcheck" &
+$MOCK -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic $DEPOPTS ${MASHDIR}/$BRANCHED$EXPANDARCH >$logdir/depcheck" &
 log "finished spam-o-matic"
 
 send_fedmsg start pungify.start
@@ -161,7 +162,7 @@ echo "Running build_composeinfo"
 wait
 log "finished build_composeinfo"
 log "starting mock clean"
-mock -r $MOCKCONFIG --uniqueext=$DATE --clean
+$MOCK -r $MOCKCONFIG --uniqueext=$DATE --clean
 log "finished mock clean"
 
 [ -n "$NOSYNC" ] && exit $rc
