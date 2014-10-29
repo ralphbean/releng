@@ -7,6 +7,7 @@
 
 DATE=$1
 ARCH=$2
+ENVIRONMENT=$3
 
 BRANCHED="21"
 DIST=branched
@@ -38,6 +39,10 @@ RSYNCPREFIX=""
 [ "$ARCH" == "ppc" ] && {
 MOCKCONFIG="fedora-${DIST}-compose-ppc64"
 
+}
+
+[ -n "$ENVIRONMENT" ] && {
+ENVIRONMENT='production';
 }
  
 RSYNC_OPTS="-rlptDHhv --delay-updates"
@@ -83,7 +88,12 @@ log "started"
 send_fedmsg start start
 
 log "blocking retired packages"
-./scripts/block_retired.py
+if [ "$ENVIRONMENT" == "production" ]; then
+    ./scripts/block_retired.py
+else
+    ./scripts/block_retired.py  --staging
+fi
+
 
 log "git clone of comps started"
 pushd $TMPDIR
