@@ -44,7 +44,7 @@ if __name__ == "__main__":
     mail_logger = SubjectSMTPHandler(
         "127.0.0.1", fedora_user, [fedora_user], "Sigul check log event")
     mail_logger.subject_prefix = "Sigul check: "
-    mail_logger.setLevel(logging.DEBUG)
+    mail_logger.setLevel(logging.WARNING)
     mail_logger.setFormatter(formatter)
     log.addHandler(mail_logger)
 
@@ -68,7 +68,13 @@ if __name__ == "__main__":
         for key, helper in helpers.items():
             res = helper.get_public_key()
             ret, pubkey, errors = res
-            if status.setdefault(key, res) != res:
+            if ret != 0 or errors:
+                log.debug("Key '{}' not working {}:{}".format(
+                    key, ret, errors))
+            else:
+                log.debug("Key '{}' working".format(key))
+
+            if status.get(key, res) != res:
                 if ret != 0 or errors:
                     log.error(
                         "Sigul for key '{}' stopped working: {}:{}".format(
@@ -76,5 +82,7 @@ if __name__ == "__main__":
                 else:
                     log.warning(
                         "Sigul for key '{}' resumed working".format(key))
+
+            status[key] = res
 
         time.sleep(600)
