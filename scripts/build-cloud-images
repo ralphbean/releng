@@ -22,11 +22,16 @@ TARGET=f$VERSION-candidate
 BRANCH=branched
 fi
 
+if [ "$COMPOSE" == "nightly" ]; then
+    url=http://kojipkgs.fedoraproject.org/mash/$BRANCH-$BUILD/$VERSION/\$arch/os/
+else
+    url=http://compose-x86-02.phx2.fedoraproject.org/compose/$VERSION$COMPOSE/$VERSION/Cloud/\$arch/os/
+fi
+
 for spin in Base
 do
     declare -l lspin
     lspin=$spin
-    url=http://compose-x86-02.phx2.fedoraproject.org/compose/$VERSION$COMPOSE/$VERSION/Cloud/\$arch/os/
     kickstart=fedora-cloud-$lspin-$GITHASH.ks
     ksflatten -c fedora-cloud-$lspin.ks -o $kickstart >& /dev/null
     echo "url --url=$url"|sed -e 's|$arch|$basearch|g' >> $kickstart
@@ -38,7 +43,6 @@ for spin in Atomic
 do
     declare -l lspin
     lspin=$spin
-    url=http://compose-x86-02.phx2.fedoraproject.org/compose/$VERSION$COMPOSE/$VERSION/Cloud/\$arch/os/
     kickstart=fedora-cloud-$lspin-$GITHASH.ks
     ksflatten -c fedora-cloud-$lspin.ks -o $kickstart >& /dev/null
     echo "url --url=$url"|sed -e 's|$arch|$basearch|g' >> $kickstart
@@ -50,7 +54,6 @@ for spin in Base
 do
     declare -l lspin
     lspin=$spin
-    url=http://compose-x86-02.phx2.fedoraproject.org/compose/$VERSION$COMPOSE/$VERSION/Cloud/\$arch/os/
     kickstart=fedora-docker-$lspin-$GITHASH.ks
     ksflatten -c fedora-docker-$lspin.ks -o $kickstart >& /dev/null
     echo "url --url=$url"|sed -e 's|$arch|$basearch|g' >> $kickstart

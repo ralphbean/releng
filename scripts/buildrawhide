@@ -206,7 +206,7 @@ log "finished checking out spin-kickstarts"
 log "started building live/arm/cloud images"
 ../releng/scripts/build-livecds $BRANCHED $DATE $BRANCHED
 ../releng/scripts/build-arm-images $BRANCHED $DATE $BRANCHED
-../releng/scripts/build-cloud-images $BRANCHED $DATE $BRANCHED
+../releng/scripts/build-cloud-images $BRANCHED $DATE $BRANCHED nightly
 log "finished starting building live/arm/cloud images"
 popd
 popd
