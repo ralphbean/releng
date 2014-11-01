@@ -733,7 +733,7 @@ def main():
     print text
 
     if args.mailto or args.send:
-        now = datetime.datetime()
+        now = datetime.datetime.utcnow()
         today = now.strftime("%Y-%m-%d")
         subject = "Orphaned Packages in {} ({})".format(args.release, today)
         if args.mailto:
