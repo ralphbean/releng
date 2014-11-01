@@ -543,10 +543,8 @@ def maintainer_table(packages, pkgdb_dict):
         for p in people:
             affected_people.setdefault(p, set()).add(package_name)
         p = ', '.join(people)
-        status_change = pkginfo.status_change
         age = pkginfo.age
-        agestr = "{} ({} weeks ago)".format(status_change.strftime("%Y-%m-%d"),
-                                            age.days / 7)
+        agestr = "{} weeks ago".format(age.days / 7)
 
         if with_table:
             table.add_row([package_name, p, agestr])
@@ -562,8 +560,12 @@ def dependency_info(dep_map, affected_people, pkgdb_dict):
     info = ""
     for package_name, subdict in dep_map.items():
         if subdict:
-            info += "Depending on: {} ({})\n".format(package_name,
-                                                     len(subdict.keys()))
+            pkginfo = pkgdb_dict[package_name]
+            status_change = pkginfo.status_change.strftime("%Y-%m-%d")
+            age = pkginfo.age.days / 7
+            fmt = "Depending on: {} ({}), status change: {} ({} weeks ago)\n"
+            info += fmt.format(package_name, len(subdict.keys()),
+                               status_change, age)
             for fedora_package, dependent_packages in subdict.items():
                 people = pkgdb_dict[fedora_package].get_people()
                 for p in people:
