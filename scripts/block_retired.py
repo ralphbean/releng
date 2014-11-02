@@ -1,5 +1,5 @@
 #!/usr/bin/python -tt
-# vim: fileencoding=utf8 foldmethod=marker
+# vim: fileencoding=utf8
 # SPDX-License-Identifier: GPL-2.0+
 
 import argparse
