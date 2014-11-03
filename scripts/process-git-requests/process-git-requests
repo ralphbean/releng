@@ -198,6 +198,7 @@ def add_package(pkgdb, request, bug):
                     'Approved',
                     i)
         except AuthError, e:
+            logging.debug('It says AuthError: %s', e)
             if sys.stdin.isatty():
                 if retry >= config['pkgdb.retries']:
                     break
