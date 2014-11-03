@@ -34,7 +34,7 @@ class MashMonitor(object):
         listing_resp = self.get(self.base_url)
         soup = BeautifulSoup(listing_resp.content)
 
-        href_re = re.compile("^{}-.*".format(self.release))
+        href_re = re.compile("^{}-[0-9]{{8}}/".format(self.release))
 
         anchors = soup.find_all("a", attrs={"href": href_re})
         hrefs = sorted([x["href"] for x in anchors])
