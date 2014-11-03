@@ -156,7 +156,8 @@ def add_package(pkgdb, request, bug):
     def pkg_exists(pkg):
         try:
             pkgdb.get_package(str(pkg))
-        except PkgDBException:
+        except PkgDBException as err:
+            log.debug('Error when retrieving package %s: %s', str(pkg), err)
             # We get an error back if (at least) the package doesn't exist.
             return False
         return True
