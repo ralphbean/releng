@@ -1,8 +1,9 @@
 #!/usr/bin/python -tt
 # vim: fileencoding=utf8
 # SPDX-License-Identifier: GPL-2.0+
-# Get signing warnings from all mash logs
+# Get signing warnings from mash logs
 
+import argparse
 import os
 import re
 
@@ -76,8 +77,12 @@ class MashMonitor(object):
 
 
 if __name__ == "__main__":
-    for arch in ["primary", "ppc", "arm", "s390"]:
-        for release in ["branched", "rawhide"]:
+    parser = argparse.ArgumentParser("Get signing warnings from mash logs")
+    parser.add_argument("--releases", default="branched,rawhide")
+    parser.add_argument("--archs", default="primary,ppc,arm,s390")
+    args = parser.parse_args()
+    for arch in args.archs.split(","):
+        for release in args.releases.split(","):
             mashmon = MashMonitor(release=release, arch=arch)
             warnings = mashmon.montitor()
             for w in warnings:
