@@ -835,7 +835,7 @@ if __name__ == '__main__':
 
     print "Connecting to pkgdb..."
     config = parse_pkgdb_config()
-    pkgdb = PkgDB(config['pkgdb.url'], True)
+    pkgdb = PkgDB(config['pkgdb.url'], insecure=False)
     pkgdb.login(options.user, getpass.getpass('PackageDB Password: '), True)
 
     print "Getting valid branches...."
