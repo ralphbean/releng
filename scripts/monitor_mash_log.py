@@ -71,8 +71,8 @@ class MashMonitor(object):
     def montitor(self):
         hrefs = self.get_hrefs()
         self.latest_href = hrefs[-1]
-        latest_url = self.build_mash_log_url(self.latest_href)
-        warnings = self.get_signature_warnings(latest_url)
+        self.latest_url = self.build_mash_log_url(self.latest_href)
+        warnings = self.get_signature_warnings(self.latest_url)
         return warnings
 
 
@@ -85,5 +85,7 @@ if __name__ == "__main__":
         for release in args.releases.split(","):
             mashmon = MashMonitor(release=release, arch=arch)
             warnings = mashmon.montitor()
+            if warnings:
+                print(mashmon.latest_url)
             for w in warnings:
                 print("{}/{}: {}".format(arch, release, w))
