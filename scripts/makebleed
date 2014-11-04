@@ -4,8 +4,8 @@
 # SPDX-License-Identifier:      GPL-2.0+
 
 PKGS="$@"
-
-pushd ~/bleed/
+BLEEDDIR=/mnt/fedora_koji/compose/bleed/
+pushd $BLEEDDIR
 
 for pkg in $PKGS
 do
@@ -21,6 +21,6 @@ do
  sg releng "createrepo --update -d $dir"
 done
 
-sg releng "rsync -avhH --delete ~/bleed/ /mnt/fedora_koji/koji/mash/bleed/"
+sg releng "rsync -avhH --delete $BLEEDDIR /mnt/fedora_koji/koji/mash/bleed/"
 
 popd
