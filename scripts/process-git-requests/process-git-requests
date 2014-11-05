@@ -226,7 +226,7 @@ def edit_package(pkgdb, request):
 
 def run_query(bz):
     querydata = {}
-    querydata['column_list'] = ['id', 'creation_time', 
+    querydata['column_list'] = ['id', 'creation_time',
             'assigned_to', 'reporter', 'bug_status', 'resolution',
             'component', 'blockedby', 'dependson', 'summary',
             'status_whiteboard', 'flags']
@@ -359,11 +359,11 @@ def clean_request(items):
     branches = clean_branches(items['Branches'].strip())
     branches += ' master'
     items['Branches'] = branches
-    request['branches'] = branches.split() 
+    request['branches'] = branches.split()
 
     branches = clean_branches(items['New Branches'].strip())
     items['New Branches'] = branches
-    request['newbranches'] = branches.split() 
+    request['newbranches'] = branches.split()
 
     owners = items['Owners'].strip()
     owners = re.sub(r',', ' ', owners)
@@ -511,7 +511,7 @@ def check_owners(fas, owner, comaintainers, cc_list):
             break
 
     return warnings
-        
+
 
 def process_new_request(bug, comment, allcomments, firstfound, pkgdb, fas, branches):
     '''Parse a new package request, try to repair line wrapping, and do some
@@ -849,6 +849,7 @@ if __name__ == '__main__':
     pkgdb = PkgDB(config['pkgdb.url'],
                   login_callback=pkgdb2client.ask_password)
     pkgdb.username = options.user
+
 
     print "Getting valid branches...."
     collections = pkgdb.get_collections(
