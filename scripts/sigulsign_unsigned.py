@@ -558,7 +558,7 @@ if __name__ == "__main__":
 
     # Get unsigned packages
     logging.info('Checking for unsigned rpms in koji')
-    unsigned = list(kojihelper.get_unsigned_rpms(rpmdict, sigul_helper.keyid))
+    unsigned = list(kojihelper.get_unsigned_rpms(rpmdict, KEYS[key]['id']))
     for rpm in unsigned:
         logging.debug('%s is not signed with %s' % (rpm, key))
 
