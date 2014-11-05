@@ -38,6 +38,9 @@ from pkgdb2client import PkgDB, PkgDBException
 from optparse import OptionParser
 from validate import Validator
 
+import fedora_cert
+import pkgdb2client
+
 # Red Hat's bugzilla, Fedora's FAS
 url = 'https://bugzilla.redhat.com/xmlrpc.cgi'
 fasurl = 'https://admin.fedoraproject.org/accounts/'
@@ -73,6 +76,12 @@ def clear():
 def parse_commandline():
     usage = 'usage: %prog [options]'
     parser = OptionParser(usage)
+
+    try:
+        default_user = fedora_cert.read_user_cert()
+    except fedora_cert.fedora_cert_error:
+        default_user = getpass.getuser()
+
     parser.add_option('--url', dest='url',
             help='bugzilla URL to query',
             default=url)
@@ -87,7 +96,7 @@ def parse_commandline():
     parser.add_option('-u', '--user',
             help='Username for PackageDB connection',
             dest='user',
-            default=getpass.getuser())
+            default=default_user)
     parser.add_option('--debug',
             action='store_true',
             dest='debug',
@@ -480,7 +489,9 @@ def check_owners(fas, owner, comaintainers, cc_list):
             except AuthError, e:
                 if retry >= config['pkgdb.retries']:
                     break
-                fas.password = getpass.getpass('FAS Password: ')
+                print e
+                fas.password = getpass.getpass(
+                    'FAS Password for user {}: '.format(fas.username))
             else:
                 break
 
@@ -835,8 +846,9 @@ if __name__ == '__main__':
 
     print "Connecting to pkgdb..."
     config = parse_pkgdb_config()
-    pkgdb = PkgDB(config['pkgdb.url'], insecure=False)
-    pkgdb.login(options.user, getpass.getpass('PackageDB Password: '), True)
+    pkgdb = PkgDB(config['pkgdb.url'],
+                  login_callback=pkgdb2client.ask_password)
+    pkgdb.username = options.user
 
     print "Getting valid branches...."
     collections = pkgdb.get_collections(
