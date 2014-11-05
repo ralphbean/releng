@@ -58,6 +58,8 @@ PAGER = os.environ.get('PAGER') or '/usr/bin/less'
 EDITOR = os.environ.get('EDITOR') or '/bin/vi'
 
 logging.basicConfig()
+PKGDBLOG = logging.getLogger("pkgdb2client")
+LOG = logging.getLogger("process-git-requests")
 
 # Override a method in xmlrpclib so it doesn't blow up when getting crap data
 # from Red Hat's bugzilla.
@@ -97,6 +99,11 @@ def parse_commandline():
             help='Username for PackageDB connection',
             dest='user',
             default=default_user)
+    parser.add_option('--verbose',
+            action='store_true',
+            dest='verbose',
+            default=False,
+            help='Outputs more information (less than debug though)')
     parser.add_option('--debug',
             action='store_true',
             dest='debug',
@@ -145,11 +152,13 @@ def encode_utf8(object, encoding='utf8', errors='replace'):
 # Get all valid branches for a package:
 # pkg_branches :: PkgDB -> String -> (IO) [String]
 def pkg_branches(pkgdb, pkg):
+    LOG.info('Getting branches of package %s from pkgdb', pkg)
     package = pkgdb.get_package(str(pkg))
     valid_branches = filter(lambda x: x['collection']['branchname'] in branches.keys(), package['packages'])
     return map(lambda x: x['collection']['branchname'], valid_branches)
 
 def add_package(pkgdb, request, bug):
+    LOG.info('Adding package %s in pkgdb', request['pkg'])
 
     # A nested helper function to see if a package exists or not.
     # pkg_exists :: String -> (IO) Bool
@@ -157,7 +166,7 @@ def add_package(pkgdb, request, bug):
         try:
             pkgdb.get_package(str(pkg))
         except PkgDBException as err:
-            log.debug('Error when retrieving package %s: %s', str(pkg), err)
+            LOG.debug('Error when retrieving package %s: %s', str(pkg), err)
             # We get an error back if (at least) the package doesn't exist.
             return False
         return True
@@ -198,7 +207,7 @@ def add_package(pkgdb, request, bug):
                     'Approved',
                     i)
         except AuthError, e:
-            logging.debug('It says AuthError: %s', e)
+            LOG.debug('It says AuthError: %s', e)
             if sys.stdin.isatty():
                 if retry >= config['pkgdb.retries']:
                     break
@@ -210,6 +219,7 @@ def add_package(pkgdb, request, bug):
             break
 
 def edit_package(pkgdb, request):
+    LOG.info('Edit package %s in pkgdb', request['pkg'])
     for retry in range(1, config['pkgdb.retries'] + 1):
         try:
             for i in ([request['owner']] + request['comaintainers']):
@@ -328,6 +338,7 @@ def parse_prefixed_lines(s):
 
     return items
 
+
 def clean_branches(branches):
     '''Clean up a list of branches and turn them into what pkgdb expects.'''
     branches = branches.lower()
@@ -388,6 +399,7 @@ def clean_request(items):
 
     return request
 
+
 def new_request_string(items, bug):
     r = []
     r.append("Bug URL: https://bugzilla.redhat.com/%d " % bug.id)
@@ -404,6 +416,7 @@ def new_request_string(items, bug):
     r.append('')
     return '\n'.join(r)
 
+
 def change_request_string(items, bug):
     r = []
     r.append("Bug URL: https://bugzilla.redhat.com/%d" % bug.id)
@@ -417,6 +430,7 @@ def change_request_string(items, bug):
     r.append("InitialCC: " + items['InitialCC'])
     r.append('')
     return '\n'.join(r)
+
 
 def get_pkgdb_owners(pkgdb, pkg):
     owners = {}
@@ -451,6 +465,7 @@ def get_pkgdb_owners(pkgdb, pkg):
 
     return (owners, o)
 
+
 def process_no_request(bug, allcomments):
     '''Deal with a ticket where no request was found.'''
     while 1:
@@ -479,6 +494,7 @@ def process_no_request(bug, allcomments):
         elif ok == 'b':
             webbrowser.open("https://bugzilla.redhat.com/" + str(bug.id), new=1)
     return True
+
 
 def check_owners(fas, owner, comaintainers, cc_list):
     print "Checking owners..."
@@ -518,6 +534,7 @@ def check_owners(fas, owner, comaintainers, cc_list):
 def process_new_request(bug, comment, allcomments, firstfound, pkgdb, fas, branches):
     '''Parse a new package request, try to repair line wrapping, and do some
     basic validity checks.'''
+    LOG.info('Processing new package requests')
     warned = False
     warnings = []
     items = parse_prefixed_lines(comment['text'])
@@ -663,6 +680,7 @@ def process_new_request(bug, comment, allcomments, firstfound, pkgdb, fas, branc
 def process_change_request(bug, comment, allcomments, firstfound, pkgdb, branches):
     '''Parse a change request, try to repair line wrapping, and do some
     basic validity checks.'''
+    LOG.info('Processing new branch requests')
     owned = False
     warned = False
     warnings = []
@@ -797,6 +815,7 @@ def process_change_request(bug, comment, allcomments, firstfound, pkgdb, branche
 def create_branches(package, pkghost, pkghostlocal, processed):
     '''If on pkgs01, run /usr/local/bin/pkgdb2branch.py directly.  Otherwise,
     call ssh.'''
+    LOG.info('Create branches in git')
     hostname = os.uname()[1]
     cmd = []
     if hostname != pkghostlocal:
@@ -810,9 +829,16 @@ def create_branches(package, pkghost, pkghostlocal, processed):
     print
     return processed
 
+
 if __name__ == '__main__':
     processed = []
     options = parse_commandline()
+
+    if options.debug:
+        LOG.setLevel(logging.DEBUG)
+        PKGDBLOG.setLevel(logging.DEBUG)
+    elif options.verbose:
+        LOG.setLevel(logging.INFO)
 
     print "Connecting to bugzilla..."
     try:
