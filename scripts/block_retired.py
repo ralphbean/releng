@@ -87,7 +87,7 @@ def get_retired_packages(branch="master", staging=False):
         retiredresponse = pkgdb.get_packages(
             "", branches=branch, page="all", status="Retired")
     except pkgdb2client.PkgDBException as e:
-        if not "No packages found for these parameters" in str(e):
+        if "No packages found for these parameters" not in str(e):
             raise
         return []
 
@@ -176,7 +176,8 @@ def block_package(packages, branch="master", staging=False):
         subprocess.check_call(cmd)
 
 
-def handle_message(message, retiring_branches=RETIRING_BRANCHES, staging=False):
+def handle_message(message, retiring_branches=RETIRING_BRANCHES,
+                   staging=False):
     messageinfo = get_retirement_info(message)
     msg_id = message["msg_id"]
     if messageinfo is None:
