@@ -156,24 +156,22 @@ def block_package(packages, branch="master", staging=False):
     if len(packages) == 0:
         return None
 
-    url = PRODUCTION_KOJI if not staging else STAGING_KOJI
+    def run_koji(koji_params):
+        url = PRODUCTION_KOJI if not staging else STAGING_KOJI
+        koji_cmd = ["koji", "--server", url]
+        cmd = koji_cmd + koji_params
+        log.debug("Running: %s", " ".join(cmd))
+        return subprocess.check_call(cmd)
 
     mapper = ReleaseMapper(staging=staging)
     tag = mapper.koji_tag(branch)
-    cmd = ["koji", "block-pkg", tag] + packages
-    log.debug("Running: %s", " ".join(cmd))
-    subprocess.check_call(cmd)
+    run_koji(["block-pkg", tag] + packages)
 
     epel_build_tag = mapper.epel_build_tag(branch)
 
     if epel_build_tag:
-        cmd = ["koji", "-s", url, "untag-build", "--all", tag] + packages
-        log.debug("Running: %s", " ".join(cmd))
-        subprocess.check_call(cmd)
-
-        cmd = ["koji", "-s", url, "unblock-pkg", epel_build_tag] + packages
-        log.debug("Running: %s", " ".join(cmd))
-        subprocess.check_call(cmd)
+        run_koji(["untag-build", "--all", tag] + packages)
+        run_koji(["unblock-pkg", epel_build_tag] + packages)
 
 
 def handle_message(message, retiring_branches=RETIRING_BRANCHES,
