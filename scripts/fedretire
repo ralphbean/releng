@@ -10,26 +10,24 @@ import tempfile
 
 
 def retire(pkg, branch, reason, dryrun=False):
+    def run(cmd, cwd):
+        if dryrun:
+            print(cmd)
+        else:
+            return subprocess.check_call(cmd, cwd=cwd)
+
     tempdir = tempfile.mkdtemp(pkg, branch)
     try:
         cmd = ["fedpkg", "clone", pkg]
-        if dryrun:
-            print(cmd)
-        else:
-            subprocess.check_call(cmd, cwd=tempdir)
+        run(cmd, tempdir)
+
         pkgdir = os.path.join(tempdir, pkg)
 
         cmd = ["fedpkg", "switch-branch", branch]
-        if dryrun:
-            print(cmd)
-        else:
-            subprocess.check_call(cmd, cwd=pkgdir)
+        run(cmd, pkgdir)
 
         cmd = ["fedpkg", "retire", reason]
-        if dryrun:
-            print(cmd)
-        else:
-            subprocess.check_call(cmd, cwd=pkgdir)
+        run(cmd, pkgdir)
     finally:
         shutil.rmtree(tempdir)
 
