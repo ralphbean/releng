@@ -26,6 +26,9 @@ TOMAIL="devel@lists.fedoraproject.org test@lists.fedoraproject.org"
 SUBJECT='F-'$BRANCHED' Branched report: '$DATE' changes'
 FROM="Fedora Branched Report <rawhide@fedoraproject.org>"
 RSYNCPREFIX="sudo -u ftpsync"
+ATOMIC=$(mktemp -d /tmp/atomici.${DIST}.$DATE.XXXX)
+ATOMICDEST="/mnt/fedora_koji/koji/mash/atomic/$BRANCHED/"
+
 [ -n "$ARCH" ] && {
 TREEPREFIX="/mnt/koji/tree"
 EXPANDARCH="-$ARCH"
@@ -144,6 +147,17 @@ log "finished repodiff"
 log "starting spam-o-matic"
 $MOCK -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic $DEPOPTS ${MASHDIR}/$BRANCHED$EXPANDARCH >$logdir/depcheck" &
 log "finished spam-o-matic"
+
+log "starting atomic tree creation"
+git clone https://git.fedorahosted.org/git/fedora-atomic.git $ATOMIC
+pushd $ATOMIC
+ sed -i -e 's|mirrorlist=https://mirrors.fedoraproject.org/metalink?repo=fedora-21&arch=$basearch|baseurl=http://kojipkgs.fedoraproject.org/mash/branched/$basearch/os/|g' fedora*repo
+ $MOCK -r $MOCKCONFIG --uniqueext=$DATE --init
+ $MOCK -r $MOCKCONFIG --uniqueext=$DATE --install rpm-ostree
+ $MOCK -r $MOCKCONFIG --uniqueext=$DATE --shell "if [ ! -d $ATOMICDEST ]; then ostree init --repo=$ATOMICDEST ;fi"
+ $MOCK -r $MOCKCONFIG --uniqueext=$DATE --shell "rpm-ostree compose tree --repo=$ATOMICDEST $ATOMIC/fedora-atomic-docker-host.json"
+popd
+log "finished atomic tree creation"
 
 send_fedmsg start pungify.start
 
