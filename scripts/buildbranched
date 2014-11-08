@@ -148,16 +148,17 @@ log "starting spam-o-matic"
 $MOCK -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic $DEPOPTS ${MASHDIR}/$BRANCHED$EXPANDARCH >$logdir/depcheck" &
 log "finished spam-o-matic"
 
+[ -z "$ARCH" ] && {
 log "starting atomic tree creation"
-git clone https://git.fedorahosted.org/git/fedora-atomic.git $ATOMIC
-pushd $ATOMIC
- sed -i -e 's|mirrorlist=https://mirrors.fedoraproject.org/metalink?repo=fedora-21&arch=$basearch|baseurl=http://kojipkgs.fedoraproject.org/mash/branched/$basearch/os/|g' fedora*repo
- $MOCK -r $MOCKCONFIG --uniqueext=$DATE --init
- $MOCK -r $MOCKCONFIG --uniqueext=$DATE --install rpm-ostree
- $MOCK -r $MOCKCONFIG --uniqueext=$DATE --shell "if [ ! -d $ATOMICDEST ]; then ostree init --repo=$ATOMICDEST ;fi"
- $MOCK -r $MOCKCONFIG --uniqueext=$DATE --shell "rpm-ostree compose tree --repo=$ATOMICDEST $ATOMIC/fedora-atomic-docker-host.json"
-popd
+MOCKCONFIG="fedora-${DIST}-compose-x86_64"
+$MOCK -r $MOCKCONFIG --uniqueext=$DATE --init
+$MOCK -r $MOCKCONFIG --uniqueext=$DATE --install rpm-ostree git
+$MOCK -r $MOCKCONFIG --uniqueext=$DATE --shell "if [ ! -d $ATOMICDEST ]; then ostree init --repo=$ATOMICDEST ;fi"
+$MOCK -r $MOCKCONFIG --uniqueext=$DATE --shell "git clone https://git.fedorahosted.org/git/fedora-atomic.git $ATOMIC"
+$MOCK -r $MOCKCONFIG --uniqueext=$DATE --shell "cd $ATOMIC && sed -i -e 's|mirrorlist=https://mirrors.fedoraproject.org/metalink?repo=fedora-21&arch=$basearch|baseurl=http://kojipkgs.fedoraproject.org/mash/branched/$basearch/os/|g' fedora*repo"
+$MOCK -r $MOCKCONFIG --uniqueext=$DATE --shell "rpm-ostree compose tree --repo=$ATOMICDEST $ATOMIC/fedora-atomic-docker-host.json"
 log "finished atomic tree creation"
+}
 
 send_fedmsg start pungify.start
 
