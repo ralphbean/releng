@@ -24,8 +24,10 @@ fi
 
 if [ "$COMPOSE" == "nightly" ]; then
     url=http://kojipkgs.fedoraproject.org/mash/$BRANCH-$BUILD/$VERSION/\$arch/os/
+    atomicurl=http://kojipkgs.fedoraproject.org/mash/atomic/$VERSION/
 else
     url=http://compose-x86-02.phx2.fedoraproject.org/compose/$RELEASE$COMPOSE/$RELEASE/Cloud/\$arch/os/
+    atomicurl=http://compose-x86-02.phx2.fedoraproject.org/compose/atomic/
 fi
 
 for spin in Base
@@ -46,8 +48,10 @@ do
     kickstart=fedora-cloud-$lspin-$GITHASH.ks
     ksflatten -c fedora-cloud-$lspin.ks -o $kickstart >& /dev/null
     echo "url --url=$url"|sed -e 's|$arch|$basearch|g' >> $kickstart
+    sed -i -e "s|--url=http://compose-x86-02.phx2.fedoraproject.org/compose/atomic/|--url=$atomicurl|g" $kickstart
+
  #koji image-build fedora-cloud-$spin $VERSION --distro Fedora-20 $TARGET --ksurl=git://git.fedorahosted.org/git/spin-kickstarts.git?#$GITHASH --kickstart=fedora-cloud-$lspin.ks $url x86_64 i386 --format=qcow2 --format=raw --release=$VERSION --scratch --repo=$url --nowait --disk-size=3
-    koji image-build Fedora-Cloud-$spin $BUILD --distro Fedora-20 $TARGET  --kickstart=fedora-cloud-$lspin-$GITHASH.ks $url x86_64 --format=qcow2 --format=raw-xz --release=$RELEASE --scratch --repo=$url --nowait --disk-size=3
+    koji image-build Fedora-Cloud-$spin $BUILD --distro Fedora-20 $TARGET  --kickstart=fedora-cloud-$lspin-$GITHASH.ks $url x86_64 --format=qcow2 --format=raw-xz --release=$RELEASE --scratch --repo=$url --nowait --disk-size=5
 done
 
 for spin in Base
