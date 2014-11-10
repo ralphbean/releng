@@ -112,15 +112,17 @@ log "mock init"
 $MOCK -r $MOCKCONFIG --uniqueext=$DATE --init
 log "mock install base packages"
 $MOCK -r $MOCKCONFIG --uniqueext=$DATE --no-clean --install koji yum createrepo cvs make intltool findutils mash yum-utils rsync repoview hardlink
-# until we move to bodhi lets not be strict about the gpg keys
-$MOCK -r $MOCKCONFIG --uniqueext=$DATE --chroot "sed -i -e 's|strict_keys = True|strict_keys = False|g' /etc/mash/${DIST}.mash"
-#disable delta close to release as we do not want them in the final trees
-$MOCK -r $MOCKCONFIG --uniqueext=$DATE --chroot "sed -i -e 's|delta = True|delta = False|g' /etc/mash/${DIST}.mash"
-# secondary arches are a bit harder to make sure everything is signed lets not be too strict, but actual release compsoes need to be.
-[ -n "$ARCH" ] && {
-$MOCK -r $MOCKCONFIG --uniqueext=$DATE --chroot "sed -i -e 's|strict_keys = True|strict_keys = False|g' /etc/mash/${DIST}.$ARCH.mash"
-}
-
+if [[ "${DIST}" == "branched" ]]
+then
+    # until we move to bodhi lets not be strict about the gpg keys
+    $MOCK -r $MOCKCONFIG --uniqueext=$DATE --chroot "sed -i -e 's|strict_keys = True|strict_keys = False|g' /etc/mash/${DIST}.mash"
+    #disable delta close to release as we do not want them in the final trees
+    $MOCK -r $MOCKCONFIG --uniqueext=$DATE --chroot "sed -i -e 's|delta = True|delta = False|g' /etc/mash/${DIST}.mash"
+    # secondary arches are a bit harder to make sure everything is signed lets not be too strict, but actual release compsoes need to be.
+    [ -n "$ARCH" ] && {
+    $MOCK -r $MOCKCONFIG --uniqueext=$DATE --chroot "sed -i -e 's|strict_keys = True|strict_keys = False|g' /etc/mash/${DIST}.$ARCH.mash"
+    }
+fi
 # Copy in the hosts file so that we get the right address for koji
 log "mock setup /etc/hosts"
 $MOCK -r $MOCKCONFIG --uniqueext=$DATE --copyin /etc/hosts /etc/hosts >/dev/null 2>&1 # this reports to fail, but actually works
@@ -136,7 +138,12 @@ send_fedmsg done mash.complete
 log "finished mash"
 log "starting hardlink"
 # hardlink the noarch deltarpms between x86_64 and i386 
-$MOCK -r $MOCKCONFIG --uniqueext=$DATE --chroot "hardlink -v -c ${MASHDIR}/$BRANCHED$EXPANDARCH"
+if [[ "${DIST}" == "branched" ]]
+then
+    $MOCK -r $MOCKCONFIG --uniqueext=$DATE --chroot "hardlink -v -c ${MASHDIR}/$BRANCHED$EXPANDARCH"
+else
+    $MOCK -r $MOCKCONFIG --uniqueext=$DATE --chroot "hardlink -v -c ${MASHDIR}/$BRANCHED$EXPANDARCH/*/os/drpms/"
+fi
 log "finished hardlink"
 
 log "starting repodiff"
