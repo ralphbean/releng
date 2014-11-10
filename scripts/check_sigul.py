@@ -27,8 +27,10 @@ if __name__ == "__main__":
 
     # FIXME: Make this a config option
     fedora_user = getpass.getuser()
+    mail_from = "nobody@fedoraproject.org"
+    mail_to = [fedora_user, "releng-cron@lists.fedoraproject.org"]
     mail_logger = SubjectSMTPHandler(
-        "127.0.0.1", fedora_user, [fedora_user], "Sigul check log event")
+        "127.0.0.1", mail_from, mail_to, "Sigul check log event")
     mail_logger.subject_prefix = "Sigul check: "
     mail_logger.setLevel(logging.WARNING)
     mail_logger.setFormatter(formatter)
