@@ -272,7 +272,9 @@ class AutoSigner(object):
             self.signers[signer_id] = signer
 
         signing_task = signer.sign(signing_task=signing_task)
-        if signing_task.unsigned:
+        if signing_task is not None:
+            return False
+        elif signing_task.unsigned:
             signing_task.error_count += 1
             signing_task.last_attempt = time.time()
             self.incomplete.append(signing_task)
