@@ -51,7 +51,7 @@ do
     sed -i -e "s|--url=http://compose-x86-02.phx2.fedoraproject.org/compose/atomic/|--url=$atomicurl|g" $kickstart
 
  #koji image-build fedora-cloud-$spin $VERSION --distro Fedora-20 $TARGET --ksurl=git://git.fedorahosted.org/git/spin-kickstarts.git?#$GITHASH --kickstart=fedora-cloud-$lspin.ks $url x86_64 i386 --format=qcow2 --format=raw --release=$VERSION --scratch --repo=$url --nowait --disk-size=3
-    koji image-build Fedora-Cloud-$spin $BUILD --distro Fedora-20 $TARGET  --kickstart=fedora-cloud-$lspin-$GITHASH.ks $url x86_64 --format=qcow2 --format=raw-xz --release=$RELEASE --scratch --repo=$url --nowait --disk-size=5
+    koji image-build Fedora-Cloud-$spin $BUILD --distro Fedora-20 $TARGET  --kickstart=fedora-cloud-$lspin-$GITHASH.ks $url x86_64 --format=qcow2 --format=raw-xz --release=$RELEASE --scratch --repo=$url --nowait --disk-size=6
 done
 
 for spin in Base
