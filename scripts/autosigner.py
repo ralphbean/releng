@@ -373,8 +373,10 @@ def setup_logging():
 
     # FIXME: Make this a config option
     fedora_user = getpass.getuser()
+    mail_from = "nobody@fedoraproject.org"
+    mail_to = [fedora_user, "releng-cron@lists.fedoraproject.org"]
     mail_logger = SubjectSMTPHandler(
-        "127.0.0.1", fedora_user, [fedora_user], "Autosigner log event")
+        "127.0.0.1", mail_from, mail_to, "Autosigner log event")
     mail_logger.subject_prefix = "Autosigner: "
     mail_logger.setLevel(logging.ERROR)
     mail_logger.setFormatter(formatter)
