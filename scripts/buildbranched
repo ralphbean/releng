@@ -4,6 +4,7 @@
 # SPDX-License-Identifier:  GPL-2.0+
 
 # runs currently on releng03.phx2.fedoraproject.org
+set -x
 
 DATE=$1
 ARCH=$2

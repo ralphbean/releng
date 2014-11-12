@@ -1,7 +1,7 @@
 # Copyright (C) 2012 Red Hat Inc.
 # SPDX-License-Identifier:  GPL-2.0+
 # Sourced by buildbranched and buildrawhide
-
+set -x
 
 [ -n "$ARCH" ] && {
 TREEPREFIX="/mnt/koji/tree"
