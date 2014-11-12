@@ -43,7 +43,7 @@ touch "${logfile}"
 function log()
 {
     message="${1}"
-    echo "$(date --utc) build${DIST}: ${message}" >> "${logfile}"
+    echo "$(date --utc) build${DIST}: ${message}" | tee -a "${logfile}" >&2
 }
 
 function send_fedmsg()
