@@ -141,7 +141,7 @@ log "starting atomic tree creation"
 MOCKCONFIG="fedora-${DIST}-compose-x86_64"
 $MOCK -r $MOCKCONFIG --uniqueext=$DATE --init
 $MOCK -r $MOCKCONFIG --uniqueext=$DATE --install rpm-ostree git
-$MOCK -r $MOCKCONFIG --uniqueext=$DATE --shell "if [ ! -d $ATOMICDEST ]; then ostree init --repo=$ATOMICDEST ;fi"
+$MOCK -r $MOCKCONFIG --uniqueext=$DATE --shell "if [ ! -d $ATOMICDEST ]; then ostree init --repo=$ATOMICDEST --mode=archive-z2;fi"
 $MOCK -r $MOCKCONFIG --uniqueext=$DATE --shell "git clone https://git.fedorahosted.org/git/fedora-atomic.git $ATOMIC && pushd $ATOMIC && git log -n 1 --pretty='%h: %ci - %s' && git checkout ${GIT_BRANCH}"
 $MOCK -r $MOCKCONFIG --uniqueext=$DATE --shell "cd $ATOMIC && sed -i -e 's|mirrorlist=.*$|baseurl=http://kojipkgs.fedoraproject.org/mash/${DIST}/x86_64/os/|g' fedora*repo"
 $MOCK -r $MOCKCONFIG --uniqueext=$DATE --shell "rpm-ostree compose tree --repo=$ATOMICDEST $ATOMIC/fedora-atomic-docker-host.json >$logdir/atomic"
