@@ -3,6 +3,12 @@
 # Sourced by buildbranched and buildrawhide
 set -x
 
+function echogit() {
+    echo "Using GIT revision: $(git log -n 1 --pretty="%h: %ci - %s")"
+}
+
+echogit
+
 [ -n "$ARCH" ] && {
 TREEPREFIX="/mnt/koji/tree"
 EXPANDARCH="-$ARCH"
@@ -73,6 +79,7 @@ log "git clone of comps started"
 pushd $TMPDIR
 git clone https://git.fedorahosted.org/git/comps.git && {
     pushd comps
+    echogit
     make "${COMPSFILE}"
     cp "${COMPSFILE}" $logdir/
     popd
@@ -135,7 +142,7 @@ MOCKCONFIG="fedora-${DIST}-compose-x86_64"
 $MOCK -r $MOCKCONFIG --uniqueext=$DATE --init
 $MOCK -r $MOCKCONFIG --uniqueext=$DATE --install rpm-ostree git
 $MOCK -r $MOCKCONFIG --uniqueext=$DATE --shell "if [ ! -d $ATOMICDEST ]; then ostree init --repo=$ATOMICDEST ;fi"
-$MOCK -r $MOCKCONFIG --uniqueext=$DATE --shell "git clone https://git.fedorahosted.org/git/fedora-atomic.git $ATOMIC && pushd $ATOMIC && git checkout ${GIT_BRANCH}"
+$MOCK -r $MOCKCONFIG --uniqueext=$DATE --shell "git clone https://git.fedorahosted.org/git/fedora-atomic.git $ATOMIC && pushd $ATOMIC && git log -n 1 --pretty='%h: %ci - %s' && git checkout ${GIT_BRANCH}"
 $MOCK -r $MOCKCONFIG --uniqueext=$DATE --shell "cd $ATOMIC && sed -i -e 's|mirrorlist=.*$|baseurl=http://kojipkgs.fedoraproject.org/mash/${DIST}/x86_64/os/|g' fedora*repo"
 $MOCK -r $MOCKCONFIG --uniqueext=$DATE --shell "rpm-ostree compose tree --repo=$ATOMICDEST $ATOMIC/fedora-atomic-docker-host.json >$logdir/atomic"
 log "finished atomic tree creation"
@@ -213,6 +220,7 @@ pushd ../
 git clone https://git.fedorahosted.org/git/spin-kickstarts.git
 pushd spin-kickstarts
 git checkout "${GIT_BRANCH}"
+echogit
 log "finished checking out spin-kickstarts"
 log "started building live/arm/cloud images"
 ../releng/scripts/build-livecds $BRANCHED $DATE $BRANCHED
