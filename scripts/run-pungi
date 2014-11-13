@@ -37,6 +37,7 @@ pushd $ATOMIC
  echo '[fedora-bleed]
 name=fedora-bleed
 gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-21-$basearch
 enabled=1
 baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/$basearch/' > fedora-bleed.repo
  sed -i -e 's|mirrorlist=https://mirrors.fedoraproject.org/metalink?repo=fedora-21&arch=$basearch|baseurl=http://kojipkgs.fedoraproject.org/mash/branched/$basearch/os/|g' fedora*repo
