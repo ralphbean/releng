@@ -47,7 +47,7 @@ popd
 [ -f $MASHDIR/comps-f$BRANCHED.xml ] || exit 1
 
 mock -r $MOCKCONFIG --uniqueext=$COMPOSE --init
-mock -r $MOCKCONFIG --uniqueext=$COMPOSE --no-clean --install koji yum createrepo cvs make intltool findutils mash yum-utils rsync repoview hardlink
+mock -r $MOCKCONFIG --uniqueext=$COMPOSE --no-clean --install koji yum createrepo make intltool findutils mash yum-utils rsync repoview hardlink
 # disable deltas
 mock -r $MOCKCONFIG --uniqueext=$COMPOSE --chroot "sed -i -e 's|delta = True|delta = False|g' /etc/mash/branched.mash"
 mock -r $MOCKCONFIG --uniqueext=$COMPOSE --chroot "sed -i -e 's|[$BRANCHED]|[Everything]|g' /etc/mash/branched.mash"

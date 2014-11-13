@@ -92,7 +92,7 @@ log "git clone of comps finished"
 log "mock init"
 $MOCK -r $MOCKCONFIG --uniqueext=$DATE --init
 log "mock install base packages"
-$MOCK -r $MOCKCONFIG --uniqueext=$DATE --no-clean --install koji yum createrepo cvs make intltool findutils mash yum-utils rsync repoview hardlink
+$MOCK -r $MOCKCONFIG --uniqueext=$DATE --no-clean --install koji yum createrepo make intltool findutils mash yum-utils rsync repoview hardlink
 if [[ "${DIST}" == "branched" ]]
 then
     # until we move to bodhi lets not be strict about the gpg keys

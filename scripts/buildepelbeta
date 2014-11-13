@@ -39,7 +39,7 @@ popd
 [ -f /mnt/koji/mash/epel-$DATE/logs/comps-epel7.xml ] || exit 1
 
 mock -r $MOCKCONFIG --uniqueext=$DATE --init
-mock -r $MOCKCONFIG --uniqueext=$DATE --no-clean --install koji yum createrepo cvs make intltool findutils mash yum-utils rsync repoview
+mock -r $MOCKCONFIG --uniqueext=$DATE --no-clean --install koji yum createrepo make intltool findutils mash yum-utils rsync repoview
 # Copy in the hosts file so that we get the right address for koji
 mock -r $MOCKCONFIG --uniqueext=$DATE --copyin /etc/hosts /etc/hosts >/dev/null 2>&1 # this reports to fail, but actually works
 mock -r $MOCKCONFIG --uniqueext=$DATE --copyin /etc/mash/epel7.mash /etc/mash/epel7.mash > /dev/null 2>&1 # this reports to fail, but actually works
