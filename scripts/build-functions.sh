@@ -196,7 +196,7 @@ $RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS $RSYNC_EXTRA_OPTS --exclude repodata/ ${
 # repodata & cleanup
 $RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS $RSYNC_EXTRA_OPTS --delete --delete-after ${MASHDIR}/$BRANCHED$EXPANDARCH/ $DESTPATH
 #rsync teh atomic tree
-$RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS $RSYNC_EXTRA_OPTS --delete --delete-after $ATOMICREPO $ATOMICDEST
+$RSYNCPREFIX /usr/bin/rsync $RSYNC_OPTS --delete --delete-after $ATOMICREPO $ATOMICDEST
 log "finished compose sync"
 
 if [ "$?" = "0" ]; then
