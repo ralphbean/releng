@@ -160,10 +160,10 @@ def get_gpg_agent_passphrase(cache_id, ask=False, error_message="X",
 
     response, error = gpg_agent.communicate(cmdline)
     if gpg_agent.returncode != 0:
-        raise RuntimeError("gpg-agent-connect error: {}:{}".format(
+        raise RuntimeError("gpg-agent-connect error: {0}:{1}".format(
             gpg_agent.returncode, error))
     elif not response.startswith("OK"):
-        raise RuntimeError("gpg-agent-connect error message: {}".format(
+        raise RuntimeError("gpg-agent-connect error message: {0}".format(
             response))
     else:
         passphrase = response[3:-1].decode("hex")
@@ -341,7 +341,7 @@ class SigulHelper(object):
             except:
                 fas_username = getpass.getuser()
 
-            cache_id = "sigul:{}:{}".format(fas_username, key)
+            cache_id = "sigul:{0}:{1}".format(fas_username, key)
             try:
                 self.password = get_gpg_agent_passphrase(cache_id,
                                                          ask=ask_with_agent)
