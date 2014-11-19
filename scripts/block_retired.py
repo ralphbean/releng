@@ -165,12 +165,16 @@ def block_package(packages, branch="master", staging=False):
 
     mapper = ReleaseMapper(staging=staging)
     tag = mapper.koji_tag(branch)
-    run_koji(["block-pkg", tag] + packages)
-
     epel_build_tag = mapper.epel_build_tag(branch)
 
+    # Untag builds first due to koji/mash bug:
+    # https://fedorahosted.org/koji/ticket/299
     if epel_build_tag:
         run_koji(["untag-build", "--all", tag] + packages)
+
+    run_koji(["block-pkg", tag] + packages)
+
+    if epel_build_tag:
         run_koji(["unblock-pkg", epel_build_tag] + packages)
 
 
