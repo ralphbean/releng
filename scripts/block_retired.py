@@ -169,6 +169,8 @@ def block_package(packages, branch="master", staging=False):
 
     # Untag builds first due to koji/mash bug:
     # https://fedorahosted.org/koji/ticket/299
+    # FIXME: This introduces a theoretical race condition when a package is
+    # built after all builds were untagged and before the package is blocked
     if epel_build_tag:
         run_koji(["untag-build", "--all", tag] + packages)
 
