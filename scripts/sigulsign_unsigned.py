@@ -140,8 +140,9 @@ def get_key_info(source, filename=False):
 
 def get_gpg_agent_passphrase(cache_id, ask=False, error_message="X",
                              prompt="X", description=None):
-    gpg_agent = subprocess.Popen(["gpg-connect-agent"], stdin=subprocess.PIPE,
-                                 stdout=subprocess.PIPE)
+    gpg_agent = subprocess.Popen(
+        ["gpg-connect-agent"], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE)
 
     cmdline = ["GET_PASSPHRASE"]
     if not ask:
