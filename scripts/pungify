@@ -36,13 +36,7 @@ set -x
 mkdir -p /tmp/treebuild.$TREE/{output,cache,$BRANCH}
 cd /tmp/treebuild.$TREE
 touch rawhide.ks
-echo "repo --name=fedora --baseurl=file:///tmp/treebuild.$TREE/output/$BRANCH/$ARCH/os/" > rawhide.ks
-echo "%packages
-@anaconda-tools
--fedora-productimg-cloud
--fedora-productimg-server
--fedora-productimg-workstation
-%end" >> rawhide.ks
+echo "repo --name=fedora --baseurl=file:///tmp/treebuild.$TREE/output/$BRANCH/$ARCH/os/ --exclude=fedora-productimg-cloud,fedora-productimg-server,fedora-productimg-workstation" > rawhide.ks
 mount -t nfs -o ro,nolock vtap-fedora-nfs01.storage.phx2.redhat.com:/vol/fedora_koji/koji/mash/$DIST-$TREE/$BRANCH $BRANCH
 rm -f /var/lib/rpm/__db*
 mkdir -p output/$BRANCH/$ARCH/os/
