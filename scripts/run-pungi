@@ -25,8 +25,12 @@ FULLPATH=$(pwd)
 pushd $KICKSTARTS
 git reset --hard
 git pull --rebase
-sed -i -e 's|repo --name=fedora .*$|repo --name=fedora --baseurl=http://kojipkgs.fedoraproject.org/mash/branched/$basearch/os/\nrepo --name=bleed --baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/$basearch|g' fedora-install*.ks
-sed -i -e 's|repo --name=fedora-source .*$|repo --name=fedora-source  --baseurl=http://kojipkgs.fedoraproject.org/mash/branched/source/SRPMS/\nrepo --name=bleed-source --baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/SRPMS|g' fedora-install*.ks
+sed -i -e 's|repo --name=fedora .*$|repo --name=fedora --baseurl=http://kojipkgs.fedoraproject.org/mash/branched/$basearch/os/ --excludepkgs=fedora-productimg-workstation,fedora-productimg-server\nrepo --name=bleed --baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/$basearch --excludepkgs=fedora-productimg-workstation,fedora-productimg-server|g' fedora-install-cloud.ks
+sed -i -e 's|repo --name=fedora-source .*$|repo --name=fedora-source  --baseurl=http://kojipkgs.fedoraproject.org/mash/branched/source/SRPMS/\nrepo --name=bleed-source --baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/SRPMS|g' fedora-install-cloud.ks
+sed -i -e 's|repo --name=fedora .*$|repo --name=fedora --baseurl=http://kojipkgs.fedoraproject.org/mash/branched/$basearch/os/ --excludepkgs=fedora-productimg-cloud,fedora-productimg-workstation\nrepo --name=bleed --baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/$basearch --excludepkgs=fedora-productimg-cloud,fedora-productimg-workstation|g' fedora-install-server.ks
+sed -i -e 's|repo --name=fedora-source .*$|repo --name=fedora-source  --baseurl=http://kojipkgs.fedoraproject.org/mash/branched/source/SRPMS/ --excludepkgs=fedora-productimg-cloud,fedora-productimg-workstation\nrepo --name=bleed-source --baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/SRPMS --excludepkgs=fedora-productimg-cloud,fedora-productimg-workstation|g' fedora-install-server.ks
+sed -i -e 's|repo --name=fedora .*$|repo --name=fedora --baseurl=http://kojipkgs.fedoraproject.org/mash/branched/$basearch/os/ --excludepkgs=fedora-productimg-cloud,fedora-productimg-server\nrepo --name=bleed --baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/$basearch --excludepkgs=fedora-productimg-cloud,fedora-productimg-server|g' fedora-install-workstation.ks
+sed -i -e 's|repo --name=fedora-source .*$|repo --name=fedora-source  --baseurl=http://kojipkgs.fedoraproject.org/mash/branched/source/SRPMS/ --excludepkgs=fedora-productimg-cloud,fedora-productimg-server\nrepo --name=bleed-source --baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/SRPMS --excludepkgs=fedora-productimg-cloud,fedora-productimg-server|g' fedora-install-workstation.ks
 $FULLPATH/build-livecds "$SHORTVERSION" "$SHORTCOMPOSE" "$BRANCH"
 $FULLPATH/build-arm-images "$SHORTVERSION" "$SHORTCOMPOSE" "$BRANCH"
 pushd
