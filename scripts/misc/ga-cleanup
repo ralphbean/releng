@@ -1,0 +1,29 @@
+#! /bin/sh
+#
+# Copyright (C) 2014 Red Hat, Inc.
+# SPDX-License-Identifier:      GPL-2.0+
+#
+# Authors:
+#	Dan Horák <dan@danny.cz>
+#
+# script to print builds that are tagged both into the GA tag and updates-testing
+# this happens during the final freeze period where updates go through bodhi and
+# are tagged into the release tag from updates-testing tag
+#
+# usage: gq-cleanup <tag>
+#
+# example: ./ga-cleanup f21
+#
+
+if [ $# -ne 1 ]; then
+    echo "usage: $0 <tag>"
+    exit 1
+fi
+
+tag=$1
+
+export LANG=C
+
+koji list-tagged --quiet $tag | gawk '{ print $1 }' > builds-$tag
+koji list-tagged --quiet $tag-updates-testing | gawk '{ print $1 }' > builds-$tag-updates-testing
+comm -12 builds-$tag builds-$tag-updates-testing > builds-to-untag
