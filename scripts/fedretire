@@ -59,6 +59,19 @@ if __name__ == "__main__":
         if reason[-1] != "\n":
             reason += "\n"
 
+    errors = {}
     for pkg in args.pkg:
+        retired = False
         for branch in args.branch:
-            retire(pkg, branch, reason, dryrun=False)
+            for _ in xrange(0, 3):
+                try:
+                    retire(pkg, branch, reason, dryrun=False)
+                    retired = True
+                    break
+                except subprocess.CalledProcessError:
+                    pass
+            if not retired:
+                errors.setdefault(branch, []).append(pkg)
+
+    if errors:
+        print("Errors: " + repr(errors))
