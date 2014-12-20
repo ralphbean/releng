@@ -592,7 +592,7 @@ def maintainer_info(affected_people):
 
 
 def package_info(unblocked, dep_map, depchecker, orphans=None, failed=None,
-                 week_limit=6):
+                 week_limit=6, release=""):
     info = ""
     pkgdb_dict = depchecker.pkgdb_dict
 
@@ -603,6 +603,11 @@ def package_info(unblocked, dep_map, depchecker, orphans=None, failed=None,
 
     info += "Affected (co)maintainers\n"
     info += maintainer_info(affected_people)
+
+    if release:
+        release_text = " ({})".format(release)
+    else:
+        release_text = ""
 
     wrapper = textwrap.TextWrapper(
         break_long_words=False, subsequent_indent="    ",
@@ -629,22 +634,24 @@ def package_info(unblocked, dep_map, depchecker, orphans=None, failed=None,
             (pkgdb_dict[o].age.days / 7) >= week_limit]
 
         info += wrap_and_format(
-            "Orphans for at least {} weeks (dependend on)".format(week_limit),
+            "Orphans{} for at least {} weeks (dependend on)".format(
+                release_text, week_limit),
             orphans_breaking_deps_stale)
 
         orphans_not_breaking_deps = [o for o in orphans if
                                      o not in dep_map or not dep_map[o]]
 
-        info += wrap_and_format("Orphans (not depended on)",
-                                orphans_not_breaking_deps)
+        info += wrap_and_format("Orphans {}(not depended on)".format(
+            release_text),
+            orphans_not_breaking_deps)
 
         orphans_not_breaking_deps_stale = [
             o for o in orphans_not_breaking_deps if
             (pkgdb_dict[o].age.days / 7) >= week_limit]
 
         info += wrap_and_format(
-            "Orphans for at least {} weeks (not dependend on)".format(
-                week_limit),
+            "Orphans{} for at least {} weeks (not dependend on)".format(
+                release_text, week_limit),
             orphans_not_breaking_deps_stale)
 
     breaking = set()
@@ -652,7 +659,8 @@ def package_info(unblocked, dep_map, depchecker, orphans=None, failed=None,
         breaking = breaking.union(set(deps.keys()))
 
     if breaking:
-        info += wrap_and_format("Depending packages", sorted(breaking))
+        info += wrap_and_format("Depending packages" + release_text,
+                                sorted(breaking))
 
         if orphans:
             stale_breaking = set()
@@ -660,24 +668,26 @@ def package_info(unblocked, dep_map, depchecker, orphans=None, failed=None,
                 stale_breaking = stale_breaking.union(
                     set(dep_map[package].keys()))
             info += wrap_and_format(
-                "Packages depending on packages orphaned for more than "
-                "{} weeks".format(week_limit), sorted(stale_breaking))
+                "Packages depending on packages orphaned{} for more than "
+                "{} weeks".format(release_text, week_limit),
+                sorted(stale_breaking))
 
     if failed:
-        info += "\nFTBFS: " + " ".join(failed)
+        info += "\nFTBFS" + release_text + ": " + " ".join(failed)
         info += "\n"
         ftbfs_breaking_deps = [o for o in failed if
                                o in dep_map and dep_map[o]]
-        info += "FTBFS (depended on): " + " ".join(ftbfs_breaking_deps)
+        info += "FTBFS" + release_text + " (depended on): " + " ".join(
+            ftbfs_breaking_deps)
         info += "\n\n"
         ftbfs_not_breaking_deps = [o for o in failed if
                                    o not in dep_map or not dep_map[o]]
-        info += "FTBFS (not depended on): " + " ".join(
+        info += "FTBFS " + release_text + "(not depended on): " + " ".join(
             ftbfs_not_breaking_deps)
         info += "\n\n"
 
     if depchecker.not_in_repo:
-        info += wrap_and_format("Not found in repo",
+        info += wrap_and_format("Not found in repo" + release_text,
                                 sorted(depchecker.not_in_repo))
 
     addresses = ["{0}@fedoraproject.org".format(p)
@@ -727,8 +737,9 @@ def main():
     # TODO: add app args to either depsolve or not
     dep_map = depchecker.recursive_deps(unblocked)
     sys.stderr.write('done\n')
-    info, addresses = package_info(unblocked, dep_map, depchecker,
-                                   orphans=orphans, failed=failed)
+    info, addresses = package_info(
+        unblocked, dep_map, depchecker, orphans=orphans, failed=failed,
+        release=args.release)
     text += "\n"
     text += info
     text += FOOTER
