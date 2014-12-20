@@ -713,7 +713,7 @@ def main():
         sys.stderr.write('done\n')
 
     sys.stderr.write('Getting builds from koji...')
-    koji_tag = RELEASES[args.rellease]["tag"]
+    koji_tag = RELEASES[args.release]["tag"]
     unblocked = unblocked_packages(sorted(list(set(list(orphans) + failed))),
                                    tagID=koji_tag)
     sys.stderr.write('done\n')
