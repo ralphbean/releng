@@ -713,7 +713,9 @@ def main():
         sys.stderr.write('done\n')
 
     sys.stderr.write('Getting builds from koji...')
-    unblocked = unblocked_packages(sorted(list(set(list(orphans) + failed))))
+    koji_tag = RELEASES[args.rellease]["tag"]
+    unblocked = unblocked_packages(sorted(list(set(list(orphans) + failed))),
+                                   tagID=koji_tag)
     sys.stderr.write('done\n')
 
     text = HEADER.format(RELEASES[args.release]["tag"].upper())
