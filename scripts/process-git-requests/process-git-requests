@@ -222,13 +222,13 @@ def edit_package(pkgdb, request):
     LOG.info('Edit package %s in pkgdb', request['pkg'])
     for retry in range(1, config['pkgdb.retries'] + 1):
         try:
-            for i in ([request['owner']] + request['comaintainers']):
+            for person in ([request['owner']] + request['comaintainers']):
                 pkgdb.update_acl(
                     str(request['pkg']),
                     request['newbranches'],
                     ['watchcommits', 'watchbugzilla', 'approveacls', 'commit'],
                     'Approved',
-                    i)
+                    person)
         except AuthError, e:
             if retry >= config['pkgdb.retries']:
                 break
