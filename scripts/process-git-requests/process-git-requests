@@ -33,7 +33,7 @@ import time
 import webbrowser
 import socket
 from configobj import ConfigObj, flatten_errors
-from fedora.client import AccountSystem, AuthError
+from fedora.client import AccountSystem, AuthError, AppError
 from pkgdb2client import PkgDB, PkgDBException
 from optparse import OptionParser
 from validate import Validator
@@ -496,6 +496,31 @@ def process_no_request(bug, allcomments):
     return True
 
 
+def check_owner(fas, owner):
+    """Check if owner is a valid FAS account or group.
+
+    If owner is a valid FAS account, also check if owner is a packager.
+    """
+    warnings = []
+    if owner.startswith('group::'):
+        group_name = owner[7:]
+        try:
+            group = fas.group_by_name(group_name)
+            if not group_name.endswith('-sig') and not group['group_type'] == 'pkgdb':
+                warnings.append('WARNING: "%s" is not a valid FAS group.' % group_name)
+        except AppError:
+            warnings.append('WARNING: "%s" could not be found as FAS group.' % group_name)
+    else: # Check if owner is a valid user
+        person = fas.person_by_username(owner)
+        if not 'status' in person:
+            warnings.append('WARNING: "%s" is not a valid FAS account.' % i)
+        else:
+            groups = [g['name'] for g in person.approved_memberships]
+            if not 'packager' in groups:
+                warnings.append('WARNING: "%s" is not in the packager group.' % i)
+    return warnings
+
+
 def check_owners(fas, owner, comaintainers, cc_list):
     print "Checking owners..."
     warnings = []
@@ -503,7 +528,7 @@ def check_owners(fas, owner, comaintainers, cc_list):
     for i in [owner] + comaintainers:
         for retry in range(1, config['pkgdb.retries'] + 1):
             try:
-                person = fas.person_by_username(i)
+                warnings.extend(check_owner(fas, i))
             except AuthError, e:
                 if retry >= config['pkgdb.retries']:
                     break
@@ -513,20 +538,8 @@ def check_owners(fas, owner, comaintainers, cc_list):
             else:
                 break
 
-        if not 'status' in person:
-            warnings.append('WARNING: "%s" is not a valid FAS account.' % i)
-            break
-
-        groups = [g['name'] for g in person.approved_memberships]
-
-        if not 'packager' in groups:
-            warnings.append('WARNING: "%s" is not in the packager group.' % i)
-
     for i in cc_list:
-        person = fas.person_by_username(i)
-        if not 'status' in person:
-            warnings.append('WARNING: "%s" is not a valid FAS account.' % i)
-            break
+        warnings.extend(check_owner(fas, i))
 
     return warnings
 
