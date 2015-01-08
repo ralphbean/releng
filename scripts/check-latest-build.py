@@ -9,6 +9,7 @@
 # It can happen when bodhi pushes multiple builds of one package.
 #
 
+import os
 import argparse
 import logging
 log = logging.getLogger(__name__)
@@ -38,6 +39,10 @@ if args.arch is None:
 else:
     KOJIHUB = 'http://%s.koji.fedoraproject.org/kojihub' % (args.arch)
 
+# Should probably set these from a koji config file
+SERVERCA = os.path.expanduser('~/.fedora-server-ca.cert')
+CLIENTCA = os.path.expanduser('~/.fedora-upload-ca.cert')
+CLIENTCERT = os.path.expanduser('~/.fedora.cert')
 
 def _rpmvercmp((e1, v1, r1), (e2, v2, r2)):
     """find out which build is newer"""
@@ -58,6 +63,7 @@ def _rpmvercmp((e1, v1, r1), (e2, v2, r2)):
 
 
 kojisession = koji.ClientSession(KOJIHUB)
+kojisession.ssl_login(CLIENTCERT, CLIENTCA, SERVERCA)
 
 if args.package == []:
     latest_builds = sorted(kojisession.listTagged(args.tag, latest=True),
@@ -86,10 +92,5 @@ for latest in latest_builds:
         if res == -1:
             print("\t%s < %s" % (latest['nvr'], b['nvr']))
             if args.fix is True:
-                cmd = ["koji", "untag-build", args.tag, b['nvr']]
-                print("running: " + " ".join(cmd))
-                subprocess.check_call(cmd)
-
-                cmd = ["koji", "tag-build", args.tag, b['nvr']]
-                print("running: " + " ".join(cmd))
-                subprocess.check_call(cmd)
+                kojisession.tagBuildBypass(args.tag, b['nvr'], force=True)
+                print("retagged %s to %s" % (b['nvr'], args.tag))
