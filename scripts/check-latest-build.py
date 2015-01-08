@@ -94,3 +94,6 @@ for latest in latest_builds:
             if args.fix is True:
                 kojisession.tagBuildBypass(args.tag, b['nvr'], force=True)
                 print("retagged %s to %s" % (b['nvr'], args.tag))
+
+            latest = b
+            latest_evr = (str(latest['epoch']), latest['version'], latest['release'])
