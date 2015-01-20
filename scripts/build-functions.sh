@@ -137,6 +137,10 @@ log "starting spam-o-matic"
 $MOCK -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic $DEPOPTS ${MASHDIR}/$BRANCHED$EXPANDARCH >$logdir/depcheck" &
 log "finished spam-o-matic"
 
+log "starting mock clean"
+$MOCK -r $MOCKCONFIG --uniqueext=$DATE --clean
+log "finished mock clean"
+
 [ -z "$ARCH" ] && {
 log "starting atomic tree creation"
 MOCKCONFIG="fedora-${DIST}-compose-x86_64"
