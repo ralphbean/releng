@@ -112,7 +112,7 @@ send_fedmsg start mash.start
 
 log "starting mash"
 # Drop privs here so that we run as the masher UID
-$MOCK -r $MOCKCONFIG --uniqueext=$DATE --chroot "chown masher:masher /var/cache/mash" || exit 1
+$MOCK -r $MOCKCONFIG --uniqueext=$DATE --chroot "chown masher:mock /var/cache/mash" || exit 1
 $MOCK -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "mash $MASHOPTS -p $TREEPREFIX/development/$BRANCHED -o ${MASHDIR} --compsfile $logdir/${COMPSFILE} $BRANCHED$EXPANDARCH > $logdir/mash.log 2>&1" || exit 1
 
 send_fedmsg done mash.complete
