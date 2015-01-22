@@ -134,7 +134,7 @@ $MOCK -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/bin/repodiff -s -
 log "finished repodiff"
 
 log "starting spam-o-matic"
-$MOCK -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic $DEPOPTS ${MASHDIR}/$BRANCHED$EXPANDARCH >$logdir/depcheck" &
+$MOCK -r $MOCKCONFIG --uniqueext=$DATE --unpriv --chroot "/usr/share/mash/spam-o-matic $DEPOPTS ${MASHDIR}/$BRANCHED$EXPANDARCH >$logdir/depcheck"
 log "finished spam-o-matic"
 
 log "starting mock clean"
