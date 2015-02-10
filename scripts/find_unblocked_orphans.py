@@ -460,7 +460,7 @@ class DepChecker(object):
             while True:
                 sys.stderr.write("to_check ({}): {}\n".format(len(to_check),
                                                               repr(to_check)))
-                check_next = to_check.pop()
+                check_next = to_check.pop(0)
                 seen.append(check_next)
                 dependent_packages = self.find_dependent_packages(check_next,
                                                                   ignore)
