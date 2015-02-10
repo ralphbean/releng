@@ -64,7 +64,7 @@ EPEL7_RELEASE = dict(
 RAWHIDE_RELEASE = dict(
     repo='https://kojipkgs.fedoraproject.org/mash/rawhide/i386/os',
     source_repo='https://kojipkgs.fedoraproject.org/mash/rawhide/source/SRPMS',
-    tag='f22',
+    tag='f23',
     branch='master',
     mailto='devel@lists.fedoraproject.org',
 )
