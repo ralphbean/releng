@@ -3,9 +3,9 @@
 # Copyright (C) 2013 Red Hat, Inc.
 # SPDX-License-Identifier:      GPL-2.0+
 
-tags_updates="f22 f21-updates f20-updates"
-tags_testing="f21-updates-testing f20-updates-testing"
-tags_candidate="f21-updates-candidate f20-updates-candidate"
+tags_updates="f23 f22-updates f21-updates f20-updates"
+tags_testing="f22-updates-testing f21-updates-testing f20-updates-testing"
+tags_candidate="f22-updates-candidate f21-updates-candidate f20-updates-candidate"
 
 for arch in arm ppc s390
 do

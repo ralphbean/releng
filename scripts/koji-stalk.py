@@ -39,10 +39,10 @@ parser.add_option("--threads", type="int", default="3",
 ### Begin Configuration ###
 
 # distributions to build for:
-distronames = ['f18', 'f19', 'f20', 'f21']
+distronames = ['f20', 'f21', 'f22', 'f23']
 
 # which is rawhide?
-rawhide = 'f21'
+rawhide = 'f23'
 
 # koji setup
 auth_cert = os.path.expanduser('~/.fedora.cert')

@@ -73,8 +73,8 @@ BRANCHED_RELEASE = dict(
     repo='https://kojipkgs.fedoraproject.org/mash/branched/i386/os',
     source_repo='https://kojipkgs.fedoraproject.org/mash/branched/source/'
                 'SRPMS',
-    tag='f21',
-    branch='f21',
+    tag='f22',
+    branch='f22',
     mailto='devel@lists.fedoraproject.org',
 )
 
