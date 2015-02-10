@@ -15,7 +15,7 @@ do
 
 arches=$(echo $arch)_arches
 
-if "$arch" = "primary"
+if [ "$arch" == "primary" ]; then
 kojicli=koji
 else
 kojicli=$arch-koji
