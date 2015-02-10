@@ -398,6 +398,12 @@ class DepChecker(object):
             # "foo = 1.fc20" -> "foo"
             base_provide = prov.split()[0]
 
+            # FIXME: Workaround for:
+            # https://bugzilla.redhat.com/show_bug.cgi?id=1191178
+            if base_provide[0] == "/":
+                base_provide = base_provide.replace("[", "?")
+                base_provide = base_provide.replace("]", "?")
+
             # Elide provide if also provided by another package
             for pkg in self.yumbase.pkgSack.searchProvides(base_provide):
                 # FIXME: might miss broken dependencies in case the other
