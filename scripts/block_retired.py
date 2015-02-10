@@ -33,7 +33,7 @@ class ReleaseMapper(object):
 
     def __init__(self, staging=False):
 
-        # git branchname, koji tag, pkgdb version
+        # git branchname, koji tag, epel build tag
         self.mapping = (
             ("master", "f23", ""),
             ("f22", "f22", ""),
