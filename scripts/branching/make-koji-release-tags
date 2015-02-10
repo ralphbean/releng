@@ -1,0 +1,41 @@
+#!/bin/bash
+
+RELEASE=$1
+
+OLDRELEASE=$(bc -l <<< "$RELEASE-1")
+
+primary_arches=armv7hl,i686,x86_64
+arm_arches=aarch64
+ppc_arches=ppc64,ppc64le
+s390_arches=s390x,s390
+
+
+for arch in primary arm ppc s390
+do
+
+arches=$(echo $arch)_arches
+
+if "$arch" = "primary"
+kojicli=koji
+else
+kojicli=$arch-koji
+fi
+
+$kojicli add-tag --parent $OLDRELEASE-updates $RELEASE
+$kojicli add-tag --parent $RELEASE $RELEASE-updates
+$kojicli add-tag --parent $RELEASE-updates $RELEASE-updates-candidate
+$kojicli add-tag --parent $RELEASE-updates $RELEASE-updates-testing
+$kojicli add-tag --parent $RELEASE-updates-testing $RELEASE-updates-testing-pending
+$kojicli add-tag --parent $RELEASE-updates $RELEASE-updates-pending
+$kojicli add-tag --parent $RELEASE-updates $RELEASE-override
+$kojicli add-tag --parent $RELEASE-override --arches=$arches $RELEASE-build
+$kojicli add-tag-inheritance --priority 1 $RELEASE-build $OLDRELEASE-build
+$kojicli edit-tag --perm=fedora-override $RELEASE-override
+$kojicli edit-tag --perm=admin $RELEASE-updates
+$kojicli edit-tag --perm=admin $RELEASE-updates-testing
+$kojicli edit-tag --perm=admin $RELEASE-updates-testing-pending
+$kojicli edit-tag --perm=admin $RELEASE-updates-pending
+
+$kojicli add-target $RELEASE $RELEASE-build
+
+done
