@@ -21,21 +21,22 @@ else
 kojicli=$arch-koji
 fi
 
-$kojicli add-tag --parent $OLDRELEASE-updates $RELEASE
-$kojicli add-tag --parent $RELEASE $RELEASE-updates
-$kojicli add-tag --parent $RELEASE-updates $RELEASE-updates-candidate
-$kojicli add-tag --parent $RELEASE-updates $RELEASE-updates-testing
-$kojicli add-tag --parent $RELEASE-updates-testing $RELEASE-updates-testing-pending
-$kojicli add-tag --parent $RELEASE-updates $RELEASE-updates-pending
-$kojicli add-tag --parent $RELEASE-updates $RELEASE-override
-$kojicli add-tag --parent $RELEASE-override --arches=$arches $RELEASE-build
-$kojicli add-tag-inheritance --priority 1 $RELEASE-build $OLDRELEASE-build
-$kojicli edit-tag --perm=fedora-override $RELEASE-override
-$kojicli edit-tag --perm=admin $RELEASE-updates
-$kojicli edit-tag --perm=admin $RELEASE-updates-testing
-$kojicli edit-tag --perm=admin $RELEASE-updates-testing-pending
-$kojicli edit-tag --perm=admin $RELEASE-updates-pending
+$kojicli add-tag --parent f$OLDRELEASE-updates f$RELEASE
+$kojicli add-tag --parent f$RELEASE f$RELEASE-updates
+$kojicli add-tag --parent f$RELEASE-updates f$RELEASE-updates-candidate
+$kojicli add-tag --parent f$RELEASE-updates f$RELEASE-updates-testing
+$kojicli add-tag --parent f$RELEASE-updates-testing f$RELEASE-updates-testing-pending
+$kojicli add-tag --parent f$RELEASE-updates f$RELEASE-updates-pending
+$kojicli add-tag --parent f$RELEASE-updates f$RELEASE-override
+$kojicli add-tag --parent f$RELEASE-override --arches=$arches f$RELEASE-build
+$kojicli add-tag-inheritance --priority 1 f$RELEASE-build f$OLDRELEASE-build
+$kojicli edit-tag --perm=fedora-override f$RELEASE-override
+$kojicli edit-tag --perm=admin f$RELEASE-updates
+$kojicli edit-tag --perm=admin f$RELEASE-updates-testing
+$kojicli edit-tag --perm=admin f$RELEASE-updates-testing-pending
+$kojicli edit-tag --perm=admin f$RELEASE-updates-pending
 
-$kojicli add-target $RELEASE $RELEASE-build
+$kojicli add-target f$RELEASE f$RELEASE-build
+$kojicli edit-target rawhide --dest-tag=f$RELEASE --build-tag=f$RELEASE-build
 
 done
