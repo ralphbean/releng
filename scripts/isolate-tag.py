@@ -42,11 +42,22 @@ for build in allbuilds:
         tagbuilds.append(build['nvr'])
 
 kojisession.multicall = True
-
+pkgcount = 0
+batch = 1
 # tag builds
 for build in tagbuilds:
-    print "tag %s itno %s" % (build, tag)
+    pkgcount += 1
+    print "tag %s into %s" % (build, tag)
     kojisession.tagBuildBypass(tag, build)
+    if pkgcount == 1000:
+        batch += 1
+        print 'tagging %s builds' % pkgcount
+        result = kojisession.multiCall()
+        pkgcount = 0
+        kojisession.multicall = True
+
+print 'Tagging %s builds.' % pkgcount
+print 'Tagged %s batches' % batch
 
 result = kojisession.multiCall()
 
