@@ -37,6 +37,7 @@ $kojicli edit-tag --perm=admin f$RELEASE-updates-testing-pending
 $kojicli edit-tag --perm=admin f$RELEASE-updates-pending
 
 $kojicli add-target f$RELEASE f$RELEASE-build
+$kojicli add-target f$RELEASE-candidate f$RELEASE-build f$RELEASE
 $kojicli edit-target rawhide --dest-tag=f$RELEASE --build-tag=f$RELEASE-build
 
 done
