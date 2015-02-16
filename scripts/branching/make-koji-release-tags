@@ -40,4 +40,8 @@ $kojicli add-target f$RELEASE f$RELEASE-build
 $kojicli add-target f$RELEASE-candidate f$RELEASE-build f$RELEASE
 $kojicli edit-target rawhide --dest-tag=f$RELEASE --build-tag=f$RELEASE-build
 
+if [ "$arch" == "primary" ]; then
+$kojicli remove-tag-inheritance rawhide f$OLDRELEASE
+$kojicli add-tag-inheritance rawhide f$RELEASE
+fi
 done
