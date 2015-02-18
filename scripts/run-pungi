@@ -41,12 +41,12 @@ pushd $ATOMIC
  echo '[fedora-bleed]
 name=fedora-bleed
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-21-$basearch
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-22-$basearch
 enabled=1
 baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/$basearch/' > fedora-bleed.repo
  sed -i -e 's|mirrorlist=https://mirrors.fedoraproject.org/metalink?repo=fedora-21&arch=$basearch|baseurl=http://kojipkgs.fedoraproject.org/mash/branched/$basearch/os/|g' fedora*repo
  # make sure we add the bleed repo to the json file
- sed -i -e 's|\["fedora-21"\]|\["fedora-21", "fedora-bleed"\]|g' *json
+ sed -i -e 's|\["fedora-22"\]|\["fedora-22", "fedora-bleed"\]|g' *json
  mock -r fedora-branched-compose-x86_64 --init || exit 1
  mock -r fedora-branched-compose-x86_64 --install rpm-ostree || exit 1
  mock -r fedora-branched-compose-x86_64 --shell "rpm-ostree compose tree --repo=$ATOMICDEST $ATOMIC/fedora-atomic-docker-host.json" || exit 1
@@ -65,7 +65,7 @@ for arch in armhfp i386 x86_64
 do
  if [[ $arch == armhfp ]]
   then HOST=arm01-releng00.arm.fedoraproject.org
-  else HOST=compose-x86-02.phx2.fedoraproject.org
+  else HOST=compose-x86-01.phx2.fedoraproject.org
  fi
 
  if [[ $arch == i386 ]]
@@ -95,7 +95,7 @@ popd
 
 hardlink -vvc $FINALDEST/$VERSION/Workstation $FINALDEST/$VERSION/Server $FINALDEST/$VERSION/Cloud
 
-#sg releng "./build_composeinfo $FINALDEST/$VERSION/Workstation"
+sg releng "./build_composeinfo $FINALDEST/$VERSION/Workstation"
 sg releng "./build_composeinfo $FINALDEST/$VERSION/Server"
 sg releng "./build_composeinfo $FINALDEST/$VERSION/Cloud"
 
