@@ -826,15 +826,15 @@ def process_change_request(bug, comment, allcomments, firstfound, pkgdb, branche
                 pass
 
 def create_branches(package, pkghost, pkghostlocal, processed):
-    '''If on pkgs01, run /usr/local/bin/pkgdb2branch.py directly.  Otherwise,
+    '''If on pkgs01, run /usr/local/bin/pkgdb_sync_git_branches.py directly.  Otherwise,
     call ssh.'''
     LOG.info('Create branches in git')
     hostname = os.uname()[1]
     cmd = []
     if hostname != pkghostlocal:
         cmd.extend(['ssh', pkghost])
-    cmd.extend(['/usr/local/bin/pkgdb2branch.py', package])
-    print "Calling pkgdb2branch.py...."
+    cmd.extend(['/usr/local/bin/pkgdb_sync_git_branches.py', package])
+    print "Calling pkgdb_sync_git_branches.py...."
     try:
         proc = subprocess.check_call(cmd, stdout=sys.stdout, stderr=sys.stderr)
     except:
@@ -953,6 +953,6 @@ if __name__ == '__main__':
 
     if len(processed):
         print '\nYou must now run this on the git server\nto set up the git repository:'
-        print '/usr/local/bin/pkgdb2branch.py ' + ' '.join(processed)
+        print '/usr/local/bin/pkgdb_sync_git_branches.py ' + ' '.join(processed)
 
     sys.exit(0)
