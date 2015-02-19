@@ -44,7 +44,7 @@ gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-22-$basearch
 enabled=1
 baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/$basearch/' > fedora-bleed.repo
- sed -i -e 's|mirrorlist=https://mirrors.fedoraproject.org/metalink?repo=fedora-21&arch=$basearch|baseurl=http://kojipkgs.fedoraproject.org/mash/branched/$basearch/os/|g' fedora*repo
+ sed -i -e 's|mirrorlist=https://mirrors.fedoraproject.org/metalink?repo=fedora-22&arch=$basearch|baseurl=http://kojipkgs.fedoraproject.org/mash/branched/$basearch/os/|g' fedora*repo
  # make sure we add the bleed repo to the json file
  sed -i -e 's|\["fedora-22"\]|\["fedora-22", "fedora-bleed"\]|g' *json
  mock -r fedora-branched-compose-x86_64 --init || exit 1
