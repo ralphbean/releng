@@ -23,7 +23,7 @@ f21_rebuild_start = '2013-06-06 00:00:00.000000'
 
 epoch = f20_rebuild_start
 
-kojihub = 'http://koji.fedoraproject.org/kojihub'
+kojihub = 'https://koji.fedoraproject.org/kojihub'
 kojisession = koji.ClientSession(kojihub)
 
 parser = argparse.ArgumentParser()
