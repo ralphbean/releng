@@ -25,7 +25,6 @@ comment = '- Rebuilt for https://fedoraproject.org/wiki/Fedora_21_Mass_Rebuild'
 workdir = os.path.expanduser('~/massbuild')
 enviro = os.environ
 target = 'f21-rebuild'
-enviro['CVS_RSH'] = 'ssh' # use ssh for cvs
 
 pkg_skip_list = ['shim', 'shim-signed', 'kernel', 'grub2']
 
