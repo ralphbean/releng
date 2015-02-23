@@ -825,24 +825,6 @@ def process_change_request(bug, comment, allcomments, firstfound, pkgdb, branche
             else:
                 pass
 
-def create_branches(package, pkghost, pkghostlocal, processed):
-    '''If on pkgs01, run /usr/local/bin/pkgdb_sync_git_branches.py directly.  Otherwise,
-    call ssh.'''
-    LOG.info('Create branches in git')
-    hostname = os.uname()[1]
-    cmd = []
-    if hostname != pkghostlocal:
-        cmd.extend(['ssh', pkghost])
-    cmd.extend(['/usr/local/bin/pkgdb_sync_git_branches.py', package])
-    print "Calling pkgdb_sync_git_branches.py...."
-    try:
-        proc = subprocess.check_call(cmd, stdout=sys.stdout, stderr=sys.stderr)
-    except:
-        processed.append(package)
-    print
-    return processed
-
-
 if __name__ == '__main__':
     processed = []
     options = parse_commandline()
@@ -939,20 +921,17 @@ if __name__ == '__main__':
 
         if type == 'new':
             (package, more) = process_new_request(i, j, comments['bugs'][str(i.id)]['comments'], firstfound, pkgdb, fas, branches)
-            if package:
-                processed = create_branches(package, options.pkghost, options.pkghostlocal, processed)
             if not more:
                 break
         elif type == 'change':
             (package, more) = process_change_request(i, j, comments['bugs'][str(i.id)]['comments'], firstfound, pkgdb, branches)
-            if package:
-                processed = create_branches(package, options.pkghost, options.pkghostlocal, processed)
             if not more:
                 break
         bugcounter = bugcounter + 1
 
     if len(processed):
-        print '\nYou must now run this on the git server\nto set up the git repository:'
+        print '\nThe git repos/branches will be created in the background automagically.'
+        print 'If this does not work, please execute the following commands on pkgs.fedoraproject.org:'
         print '/usr/local/bin/pkgdb_sync_git_branches.py ' + ' '.join(processed)
 
     sys.exit(0)
