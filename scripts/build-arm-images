@@ -17,7 +17,7 @@ fi
 
 GITHASH=$(git rev-parse --short HEAD)
 
-SPINS="Minimal Workstation KDE LXDE Mate SoaS Xfce"
+SPINS="Minimal Workstation Server KDE LXDE Mate SoaS Xfce"
 for spin in $SPINS
 do
     declare -l lspin
