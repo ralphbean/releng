@@ -114,7 +114,7 @@ done
 
 
 pushd $FINALDEST/$VERSION/
-sg releng "mkdir -p Images/armhfp Cloud-Images/Images/i386 Cloud-Images/Images/x86_64 Spins/i386 Spins/x86_64 Live/i386 Live/x86_64 Docker/x86_64 Workstation/armhfp/Images/ Workstation/x86_64/iso Workstation/i386/iso"
+sg releng "mkdir -p Images/armhfp Cloud-Images/Images/i386 Cloud-Images/Images/x86_64 Spins/i386 Spins/x86_64 Live/i386 Server/Images/armhfp Live/x86_64 Docker/x86_64 Workstation/armhfp/Images/ Workstation/x86_64/iso Workstation/i386/iso"
 popd
 
 
@@ -144,32 +144,37 @@ sg releng "mv $FINALDEST/$VERSION/Spins/x86_64/Fedora-Live-LXDE* $FINALDEST/$VER
 sg releng "mv $FINALDEST/$VERSION/Spins/x86_64/Fedora-Live-MATE_Compiz* $FINALDEST/$VERSION/Live/x86_64/"
 
 sg releng "mv $FINALDEST/$VERSION/Images/armhfp/Fedora-Workstation* $FINALDEST/$VERSION/Workstation/armhfp/Images/"
+sg releng "mv $FINALDEST/$VERSION/Images/armhfp/Fedora-Server* $FINALDEST/$VERSION/Server/armhfp/Images/"
 
 for type in Spins Live
 do
 pushd $FINALDEST/$VERSION/$type/
-for arch in i386 x86_64; do pushd $arch; sg releng "sha256sum -b *iso>  Fedora-$type-$arch-$VERSION-CHECKSUM"; popd; done
+for arch in i386 x86_64; do pushd $arch; sg releng "sha256sum --tag -b *iso>  Fedora-$type-$arch-$VERSION-CHECKSUM"; popd; done
 popd
 done
 
 pushd $FINALDEST/$VERSION/Cloud-Images/Images
-for arch in i386 x86_64; do pushd $arch; sg releng "sha256sum -b *qcow2 *raw.xz>  Fedora-Cloud-Images-$arch-$VERSION-CHECKSUM"; popd; done
+for arch in i386 x86_64; do pushd $arch; sg releng "sha256sum --tag -b *qcow2 *raw.xz>  Fedora-Cloud-Images-$arch-$VERSION-CHECKSUM"; popd; done
 popd
 
 pushd $FINALDEST/$VERSION/Workstation/armhfp/Images
-sg releng "sha256sum -b  *raw.xz>  Fedora-Workstation-Images-armhfp-$VERSION-CHECKSUM"
+sg releng "sha256sum --tag -b *raw.xz>  Fedora-Workstation-Images-armhfp-$VERSION-CHECKSUM"
+popd
+
+pushd $FINALDEST/$VERSION/Server/armhfp/Images
+sg releng "sha256sum --tag -b *raw.xz>  Fedora-Server-Images-armhfp-$VERSION-CHECKSUM"
 popd
 
 pushd $FINALDEST/$VERSION/Docker/x86_64
-sg releng "sha256sum -b  *tar.gz>  Fedora-Docker-x86_64-$VERSION-CHECKSUM"
+sg releng "sha256sum --tag -b *tar.gz>  Fedora-Docker-x86_64-$VERSION-CHECKSUM"
 popd
 
 pushd $FINALDEST/$VERSION/Workstation/
-for arch in i386 x86_64; do pushd $arch/iso/; sg releng "sha256sum -b  Fedora-Live-Workstation*iso>>  Fedora-Workstation-$VERSION-$arch-CHECKSUM"; popd; done
+for arch in i386 x86_64; do pushd $arch/iso/; sg releng "sha256sum --tag -b Fedora-Live-Workstation*iso>>  Fedora-Workstation-$VERSION-$arch-CHECKSUM"; popd; done
 popd
 
 pushd $FINALDEST/$VERSION/Images
-for arch in armhfp; do pushd $arch; sg releng "sha256sum -b *qcow2 *raw.xz>  Fedora-Images-$arch-$VERSION-CHECKSUM"; popd; done
+for arch in armhfp; do pushd $arch; sg releng "sha256sum --tag -b *qcow2 *raw.xz>  Fedora-Images-$arch-$VERSION-CHECKSUM"; popd; done
 popd
 
 # stage the composed tree to final locateion
