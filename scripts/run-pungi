@@ -114,7 +114,7 @@ done
 
 
 pushd $FINALDEST/$VERSION/
-sg releng "mkdir -p Images/armhfp Cloud-Images/Images/i386 Cloud-Images/Images/x86_64 Spins/i386 Spins/x86_64 Live/i386 Server/Images/armhfp Live/x86_64 Docker/x86_64 Workstation/armhfp/Images/ Workstation/x86_64/iso Workstation/i386/iso"
+sg releng "mkdir -p Images/armhfp Cloud-Images/Images/i386 Cloud-Images/Images/x86_64 Spins/i386 Spins/x86_64 Live/i386 Server/armhfp/Images Live/x86_64 Docker/x86_64 Workstation/armhfp/Images Workstation/x86_64/iso Workstation/i386/iso"
 popd
 
 
