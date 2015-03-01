@@ -1,8 +1,9 @@
 #!/bin/bash
 
-# Copyright (C) 2013 Red Hat Inc.
+# Copyright (C) 2013-2015 Red Hat Inc.
 # SPDX-License-Identifier:      GPL-2.0+
 
+#TODO: this needs some major refactoring
 
 RELEASE=$1
 BUILD=$2
@@ -54,6 +55,32 @@ do
     koji image-build Fedora-Cloud-$spin $BUILD --distro Fedora-20 $TARGET  --kickstart=fedora-cloud-$lspin-$GITHASH.ks $url x86_64 --format=qcow2 --format=raw-xz --release=$RELEASE --scratch --repo=$url --nowait --disk-size=6
 done
 
+for spin in Atomic-Vagrant
+do
+    declare -l lspin
+    lspin=$spin
+    kickstart=fedora-cloud-$lspin-$GITHASH.ks
+    ksflatten -c fedora-cloud-$lspin.ks -o $kickstart
+    echo "url --url=$url"|sed -e 's|$arch|$basearch|g' >> $kickstart
+    sed -i -e "s|--url=\"http://compose-x86-02.phx2.fedoraproject.org/compose/atomic/\"|--url=\"$atomicurl\"|g" $kickstart
+
+    koji image-build Fedora-Cloud-$spin $BUILD $TARGET $url x86_64 \
+         --repo=$url
+         --release=$RELEASE \
+         --distro Fedora-20 \
+         --kickstart=fedora-cloud-$lspin-$GITHASH.ks \
+         --format=qcow2 --format=raw-xz \
+         --format=vsphere-ova \
+         --format=rhevm-ova \
+         --ova-option vsphere_ova_format=vagrant-virtualbox \
+         --ova-option rhevm_ova_format=vagrant-libvirt \
+         --ova-option vagrant_sync_directory=/home/vagrant/sync \
+         --scratch \
+         --nowait \
+         --disk-size=6
+done
+
+# Docker images
 for spin in Base
 do
     declare -l lspin
