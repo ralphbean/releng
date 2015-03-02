@@ -65,7 +65,7 @@ do
     sed -i -e "s|--url=\"http://compose-x86-02.phx2.fedoraproject.org/compose/atomic/\"|--url=\"$atomicurl\"|g" $kickstart
 
     koji image-build Fedora-Cloud-$spin $BUILD $TARGET $url x86_64 \
-         --repo=$url
+         --repo=$url \
          --release=$RELEASE \
          --distro Fedora-20 \
          --kickstart=fedora-cloud-$lspin-$GITHASH.ks \
