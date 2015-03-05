@@ -24,7 +24,7 @@ BRANCH=branched
 fi
 
 if [ "$COMPOSE" == "nightly" ]; then
-    url=http://kojipkgs.fedoraproject.org/mash/$BRANCH-$RELEASE/$VERSION/\$arch/os/
+    url=http://kojipkgs.fedoraproject.org/mash/$BRANCH-$BUILD/$VERSION/\$arch/os/
     atomicurl=http://kojipkgs.fedoraproject.org/mash/atomic/$VERSION/
 else
     url=http://compose-x86-02.phx2.fedoraproject.org/compose/$RELEASE$COMPOSE/$RELEASE/Cloud/\$arch/os/
