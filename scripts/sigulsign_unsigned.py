@@ -126,7 +126,7 @@ def get_key_info(source, filename=False):
 
         if import_result.imported != 1:
             raise ValueError(
-                "{0} does not contains exactly one GPG key".format(filename))
+                "{0} does not contain exactly one GPG key".format(filename))
 
         imported_fpr = import_result.imports[0][0]
         key = ctx.get_key(imported_fpr)
