@@ -31,7 +31,7 @@ import sigulsign_unsigned as sigulsign
 
 TOPIC_PREFIX = u"org.fedoraproject.prod."
 
-TAG_INFO = {("f22", ): "fedora-22", }
+TAG_INFO = {("f23", ): "fedora-23", }
 secondary_instances = ["arm", "ppc", "s390"]
 
 
