@@ -1,0 +1,76 @@
+#!/bin/bash
+
+
+# Copyright (C) 2015 Red Hat, Inc.
+# SPDX-License-Identifier:      GPL-2.0+
+
+VERSION=$1
+COMPOSE=$2
+DATE=$3
+BRANCH=$(echo $VERSION|sed -e 's|_.*||g')
+DESTDIR=/srv/pungi/$VERSION$COMPOSE/
+FINALDEST=/mnt/fedora_koji/compose/$VERSION$COMPOSE/
+KICKSTARTS=/srv/pungi/spin-kickstarts/
+ATOMIC=/srv/pungi/fedora-atomic/
+ATOMICDEST=/srv/pungi/atomic/
+
+SHORTCOMPOSE=$(echo $COMPOSE|sed -e 's|_RC||g')
+SHORTVERSION=$VERSION
+[ -z "$COMPOSE" ] && {
+        SHORTVERSION=$(echo $VERSION|sed -e 's|_T.*||')
+        SHORTCOMPOSE=$(echo $VERSION|sed -e 's|.*_||g')
+}
+
+FULLPATH=$(pwd)
+pushd $KICKSTARTS
+git reset --hard
+git checkout f$VERSION 
+git pull --rebase
+
+$FULLPATH/build-cloud-images "$VERSION" "$DATE" "$BRANCH" "$COMPOSE"
+popd
+
+
+while true
+do
+  if [ $(koji list-tasks --mine|grep OPEN|grep -e image -e livecd -e appliance|wc -l) -ne 0 ]
+  then
+    echo "image, appliance or livecd tasks running, waiting 2 minutes"
+    sleep 120
+  else
+    break
+  fi
+done
+
+
+pushd $FINALDEST/$VERSION/
+sg releng "mkdir -p Cloud-Images/i386/Images Cloud-Images/x86_64/Images "
+popd
+
+
+USER=$(whoami)
+# stage images
+sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Cloud*$VERSION-$DATE\.i386.raw.xz $FINALDEST/$VERSION/Cloud-Images/i386/Images/"
+sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Cloud*$VERSION-$DATE\.i386.qcow2 $FINALDEST/$VERSION/Cloud-Images/i386/Images/"
+sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Cloud*$VERSION-$DATE\.x86_64.raw.xz $FINALDEST/$VERSION/Cloud-Images/x86_64/Images/"
+sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Cloud*$VERSION-$DATE\.x86_64.qcow2 $FINALDEST/$VERSION/Cloud-Images/x86_64/Images/"
+sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Cloud*$VERSION-$DATE\.x86_64.*.ova $FINALDEST/$VERSION/Cloud-Images/x86_64/Images/"
+sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Docker*-$VERSION-$DATE*tar.gz $FINALDEST/$VERSION/Docker/x86_64/"
+
+
+
+pushd $FINALDEST/$VERSION/Cloud-Images
+for arch in i386 x86_64; do pushd $arch/Images; sg releng "sha256sum --tag -b *qcow2 *raw.xz *ova>  Fedora-Cloud-Images-$arch-$VERSION-CHECKSUM"; popd; done
+popd
+
+pushd $FINALDEST/$VERSION/Docker/x86_64
+sg releng "sha256sum --tag -b *tar.gz>  Fedora-Docker-x86_64-$VERSION-CHECKSUM"
+popd
+
+
+# stage the composed tree to final locateion
+sg releng "mkdir /pub/alt/stage/$VERSION$COMPOSE/"
+sg releng "chmod 700 /pub/alt/stage/$VERSION$COMPOSE/"
+for type in Docker Cloud-Images; do sg releng "rsync -avhH $FINALDEST/$VERSION/$type/ /pub/alt/stage/$VERSION$COMPOSE/$type/"; done
+sg releng "chmod 755 /pub/alt/stage/$VERSION$COMPOSE/"
+

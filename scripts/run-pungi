@@ -24,6 +24,7 @@ SHORTVERSION=$VERSION
 FULLPATH=$(pwd)
 pushd $KICKSTARTS
 git reset --hard
+git checkout f$BRANCH
 git pull --rebase
 sed -i -e 's|repo --name=fedora .*$|repo --name=fedora --baseurl=http://kojipkgs.fedoraproject.org/mash/branched/$basearch/os/ --excludepkgs=fedora-productimg-workstation,fedora-productimg-server\nrepo --name=bleed --baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/$basearch --excludepkgs=fedora-productimg-workstation,fedora-productimg-server|g' fedora-install-cloud.ks
 sed -i -e 's|repo --name=fedora-source .*$|repo --name=fedora-source  --baseurl=http://kojipkgs.fedoraproject.org/mash/branched/source/SRPMS/\nrepo --name=bleed-source --baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/SRPMS|g' fedora-install-cloud.ks
