@@ -244,7 +244,7 @@ for pkg in pkgs:
                                            fname)
 
     if not os.path.isfile(fpath):
-        file = grabber.urlopen(url, progress_obj=pg, text="%s" % (fname))
+        file = grabber.urlopen(url, progress_obj=pg, text=fname)
         out = os.open(fpath, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0666)
         try:
             while 1:
