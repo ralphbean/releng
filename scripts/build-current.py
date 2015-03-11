@@ -9,12 +9,10 @@ import koji
 import logging
 import urlgrabber.grabber as grabber
 import urlgrabber.progress as progress
-import urllib2
 import time
 import random
 import string
 import rpm
-import shutil
 import operator
 
 LOCALKOJIHUB = 'http://arm.koji.fedoraproject.org/kojihub'
