@@ -49,7 +49,7 @@ EEE
 EOF
 # so, so wrong
 rsync -vaH mock@$HOST:/var/lib/mock/fedora-$DIST-pungi-$ARCH-$TREE/root/tmp/treebuild.$TREE/output/$BRANCH/$ARCH/os/ /mnt/koji/mash/$DIST-$TREE/$BRANCH/$ARCH/os/
-rsync -vaH mock@$HOST:/var/lib/mock/fedora-$DIST-pungi-$ARCH-$TREE/root/tmp/treebuild.$TREE/output/logs/* /mnt/koji/mash/$DIST-$TREE/logs/$ARCH/
+rsync -vaH mock@$HOST:/var/lib/mock/fedora-$DIST-pungi-$ARCH-$TREE/root/tmp/treebuild.$TREE/output/logs/ /mnt/koji/mash/$DIST-$TREE/logs/$ARCH/
 ssh mock@$HOST /bin/bash -- << EOF
 	set -x
 	mock -r fedora-$DIST-pungi-$ARCH --uniqueext=$TREE clean
