@@ -14,11 +14,24 @@ KICKSTARTS=/srv/pungi/spin-kickstarts/
 ATOMIC=/srv/pungi/fedora-atomic/
 ATOMICDEST=/srv/pungi/atomic/
 
+# SHORTCOMPOSE: a short reference to the compmose it is 1 for RC1 and TC1 for TC1
+# BUILD: added for QA to refer to the compose by RC1 or TC1
+# MILESTONE: is for QA refers to Alpha/Beta/Final
+# SHORTVERSION: is a shortened version of the Version passed in drops off _TCX
+# COMPOSE: is passed in for RC's only in the format of _RCX
+
 SHORTCOMPOSE=$(echo $COMPOSE|sed -e 's|_RC||g')
+BUILD=$(echo $COMPOSE|sed -e 's|_||g')
+MILESTONE=$(echo $VERSION|sed -e 's|_T.*||' -e 's|.*_||')
 SHORTVERSION=$VERSION
 [ -z "$COMPOSE" ] && {
         SHORTVERSION=$(echo $VERSION|sed -e 's|_T.*||')
         SHORTCOMPOSE=$(echo $VERSION|sed -e 's|.*_||g')
+        BUILD=$(echo $VERSION|sed -e 's|.*_||g')
+}
+
+[ -z "$MILESTONE" ] && {
+       MILESTONE=Final
 }
 
 FULLPATH=$(pwd)
