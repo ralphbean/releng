@@ -33,8 +33,8 @@ elif [ "$COMPOSE" == "updates" ]; then
     atomicurl=http://kojipkgs.fedoraproject.org/mash/atomic/$VERSION/
     REPOS="--repo=$url --repo=$updatesurl"
 else
-    url=http://compose-x86-02.phx2.fedoraproject.org/compose/$RELEASE$COMPOSE/$RELEASE/Cloud/\$arch/os/
-    atomicurl=http://compose-x86-02.phx2.fedoraproject.org/compose/atomic/
+    url=http://compose-x86-01.phx2.fedoraproject.org/compose/$RELEASE$COMPOSE/$RELEASE/Cloud/\$arch/os/
+    atomicurl=http://compose-x86-01.phx2.fedoraproject.org/compose/atomic/
     REPOS="--repo=$url"
 fi
 
@@ -56,7 +56,7 @@ do
     kickstart=fedora-cloud-$lspin-$GITHASH.ks
     ksflatten -c fedora-cloud-$lspin.ks -o $kickstart
     echo "url --url=$url"|sed -e 's|$arch|$basearch|g' >> $kickstart
-    sed -i -e "s|--url=\"http://compose-x86-02.phx2.fedoraproject.org/compose/atomic/\"|--url=\"$atomicurl\"|g" $kickstart
+    sed -i -e "s|--url=\"http://compose-x86-01.phx2.fedoraproject.org/compose/atomic/\"|--url=\"$atomicurl\"|g" $kickstart
 
  #koji image-build fedora-cloud-$spin $VERSION --distro Fedora-20 $TARGET --ksurl=git://git.fedorahosted.org/git/spin-kickstarts.git?#$GITHASH --kickstart=fedora-cloud-$lspin.ks $url x86_64 i386 --format=qcow2 --format=raw --release=$VERSION --scratch --repo=$url --nowait --disk-size=3
     koji image-build Fedora-Cloud-$spin $RELEASE --distro Fedora-20 $TARGET  --kickstart=fedora-cloud-$lspin-$GITHASH.ks $url x86_64 --format=qcow2 --format=raw-xz --release=$BUILD --scratch --repo=$url --nowait --disk-size=6
@@ -69,7 +69,7 @@ do
     kickstart=fedora-cloud-$lspin-$GITHASH.ks
     ksflatten -c fedora-cloud-$lspin.ks -o $kickstart
     echo "url --url=$url"|sed -e 's|$arch|$basearch|g' >> $kickstart
-    sed -i -e "s|--url=\"http://compose-x86-02.phx2.fedoraproject.org/compose/atomic/\"|--url=\"$atomicurl\"|g" $kickstart
+    sed -i -e "s|--url=\"http://compose-x86-01.phx2.fedoraproject.org/compose/atomic/\"|--url=\"$atomicurl\"|g" $kickstart
 
     koji image-build Fedora-Cloud-$spin $RELEASE $TARGET $url x86_64 \
          $REPOS \
