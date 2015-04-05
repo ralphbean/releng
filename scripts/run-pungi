@@ -136,7 +136,7 @@ sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora
 sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Cloud*$VERSION-$DATE\.x86_64.raw.xz $FINALDEST/$VERSION/Cloud-Images/x86_64/Images/"
 sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Cloud*$VERSION-$DATE\.x86_64.qcow2 $FINALDEST/$VERSION/Cloud-Images/x86_64/Images/"
 sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Cloud*$VERSION-$DATE\.x86_64.*.ova $FINALDEST/$VERSION/Cloud-Images/x86_64/Images/"
-sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Docker*-$VERSION-$DATE*tar.gz $FINALDEST/$VERSION/Docker/x86_64/"
+sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Docker*-$VERSION-$DATE*tar.xz $FINALDEST/$VERSION/Docker/x86_64/"
 
 sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task*/*i686*$SHORTVERSION-$SHORTCOMPOSE.iso $FINALDEST/$VERSION/Spins/i386/"
 sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task*/*x86_64*$SHORTVERSION-$SHORTCOMPOSE.iso $FINALDEST/$VERSION/Spins/x86_64/"
@@ -177,7 +177,7 @@ sg releng "sha256sum --tag -b *raw.xz>  Fedora-Server-Images-armhfp-$VERSION-CHE
 popd
 
 pushd $FINALDEST/$VERSION/Docker/x86_64
-sg releng "sha256sum --tag -b *tar.gz>  Fedora-Docker-x86_64-$VERSION-CHECKSUM"
+sg releng "sha256sum --tag -b *tar.xz>  Fedora-Docker-x86_64-$VERSION-CHECKSUM"
 popd
 
 pushd $FINALDEST/$VERSION/Workstation/
