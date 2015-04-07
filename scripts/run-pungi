@@ -58,9 +58,12 @@ baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/$basearch/' > fedora-bleed.
  # make sure we add the bleed repo to the json file
  sed -i -e 's|\["fedora-22"\]|\["fedora-22", "fedora-bleed"\]|g' *json
  mock -r fedora-branched-compose-x86_64 --init || exit 1
- mock -r fedora-branched-compose-x86_64 --install rpm-ostree || exit 1
+ mock -r fedora-branched-compose-x86_64 --install rpm-ostree lorax || exit 1
  mock -r fedora-branched-compose-x86_64  --shell "if [ ! -d $ATOMICDEST ]; then ostree init --repo=$ATOMICDEST --mode=archive-z2;fi"
  mock -r fedora-branched-compose-x86_64 --shell "rpm-ostree compose tree --repo=$ATOMICDEST $ATOMIC/fedora-atomic-docker-host.json" || exit 1
+ mock -r fedora-branched-compose-x86_64 --shell "lorax --nomacboot --add-template=$KICKSTARTS/atomic-installer/lorax-embed-repo.tmpl -p Fedora -v $VERSION -r $SHORTCOMPOSE -s http://kojipkgs.fedoraproject.org/mash/branched/$basearch/os/  -s http://kojipkgs.fedoraproject.org/mash/bleed/$basearch/ -i fedora-productimg-atomic -t Cloud-Atomic --tmp /tmp/ --logfile=$DESTDIR/logs/atomic --add-template /srv/pungi/spin-kickstarts/atomic-installer/lorax-configure-repo.tmpl --add-template-var=ostree_osname=Fedora-Cloud-Atomic  --add-arch-template-var=ostree_repo=http://127.0.0.1/fedora-atomic/repo --add-template-var=ostree_ref=fedora-atomic/f22/x86_64/docker-host --add-arch-template /srv/pungi/spin-kickstarts/atomic-installer/lorax-embed-repo.tmpl --add-arch-template-var=ostree_osname=Fedora-Cloud-Atomic --add-arch-template-var=ostree_ref=fedora-atomic/f22/x86_64/docker-host $DESTDIR " || exit 1
+ #mock -r fedora-branched-compose-x86_64 --shell "livemedia-creator " || exit 1
+
 popd
 
 for arch in armhfp i386 x86_64
