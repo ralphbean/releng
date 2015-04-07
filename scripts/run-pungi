@@ -78,7 +78,7 @@ done
 for arch in armhfp i386 x86_64
 do
  if [[ $arch == armhfp ]]
-  then HOST=arm01-releng00.arm.fedoraproject.org
+  then HOST=arm01-releng02.arm.fedoraproject.org
   else HOST=compose-x86-01.phx2.fedoraproject.org
  fi
 
