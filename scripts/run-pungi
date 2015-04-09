@@ -34,7 +34,7 @@ SHORTVERSION=$VERSION
        MILESTONE=Final
 }
 
-mkdir -p $DESTDIR/logs
+sg releng "mkdir -p $DESTDIR/logs"
 
 FULLPATH=$(pwd)
 pushd $KICKSTARTS
