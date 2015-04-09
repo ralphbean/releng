@@ -61,7 +61,25 @@ baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/$basearch/' > fedora-bleed.
  mock -r fedora-branched-compose-x86_64 --install rpm-ostree lorax || exit 1
  mock -r fedora-branched-compose-x86_64  --shell "if [ ! -d $ATOMICDEST ]; then ostree init --repo=$ATOMICDEST --mode=archive-z2;fi"
  mock -r fedora-branched-compose-x86_64 --shell "rpm-ostree compose tree --repo=$ATOMICDEST $ATOMIC/fedora-atomic-docker-host.json" || exit 1
- mock -r fedora-branched-compose-x86_64 --shell "lorax --nomacboot --add-template=$KICKSTARTS/atomic-installer/lorax-embed-repo.tmpl -p Fedora -v $VERSION -r $SHORTCOMPOSE -s http://kojipkgs.fedoraproject.org/mash/branched/$basearch/os/  -s http://kojipkgs.fedoraproject.org/mash/bleed/$basearch/ -i fedora-productimg-atomic -t Cloud-Atomic --tmp /tmp/ --logfile=$DESTDIR/logs/atomic --add-template /srv/pungi/spin-kickstarts/atomic-installer/lorax-configure-repo.tmpl --add-template-var=ostree_osname=Fedora-Cloud-Atomic  --add-arch-template-var=ostree_repo=http://127.0.0.1/fedora-atomic/repo --add-template-var=ostree_ref=fedora-atomic/f22/x86_64/docker-host --add-arch-template /srv/pungi/spin-kickstarts/atomic-installer/lorax-embed-repo.tmpl --add-arch-template-var=ostree_osname=Fedora-Cloud-Atomic --add-arch-template-var=ostree_ref=fedora-atomic/f22/x86_64/docker-host $DESTDIR " || exit 1
+ mock -r fedora-branched-compose-x86_64 --shell "mkdir -p $DESTDIR/$VERSION$COMPOSE/Cloud_Atomic/x86_64/os/ $DESTDIR/$VERSION$COMPOSE/Cloud_Atomic/x86_64/iso"
+ mock -r fedora-branched-compose-x86_64 --shell "lorax --nomacboot -p Fedora -v $SHORTVERSION -r $SHORTCOMPOSE \
+                                                 -s http://kojipkgs.fedoraproject.org/mash/branched/\$basearch/os/ \
+                                                 -s http://kojipkgs.fedoraproject.org/mash/bleed/\$basearch/ \
+                                                 -i fedora-productimg-atomic \
+                                                 -t Cloud_Atomic \
+                                                 --tmp /tmp/ \
+                                                 --logfile=$DESTDIR/logs/atomic \
+                                                 --add-template /srv/pungi/spin-kickstarts/atomic-installer/lorax-configure-repo.tmpl \
+                                                 --add-template-var=ostree_osname=Fedora-Cloud_Atomic \
+                                                 --add-arch-template-var=ostree_repo=http://compose-x86-01.phx2.fedoraproject.org/compose/atomic/ \
+                                                 --add-template-var=ostree_ref=fedora-atomic/f22/x86_64/docker-host \
+                                                 --add-arch-template /srv/pungi/spin-kickstarts/atomic-installer/lorax-embed-repo.tmpl \
+                                                 --add-arch-template-var=ostree_osname=Fedora-Cloud_Atomic \
+                                                 --add-arch-template-var=ostree_ref=fedora-atomic/f22/x86_64/docker-host \
+                                                 $DESTDIR/$VERSION$COMPOSE/Cloud_Atomic/x86_64/os/ " || exit 1
+ mock -r fedora-branched-compose-x86_64 --shell "cp -l $DESTDIR/$VERSION$COMPOSE/Cloud_Atomic/x86_64/os/images/boot.iso $DESTDIR/$VERSION$COMPOSE/Cloud_Atomic/x86_64/iso/Fedora-Cloud_Atomic-x86_64-$VERSION$COMPOSE.iso"
+ mock -r fedora-branched-compose-x86_64 --shell "sha256sum -b --tags $DESTDIR/$VERSION$COMPOSE/Cloud_Atomic/x86_64/iso/*iso >$DESTDIR/$VERSION$COMPOSE/Cloud_Atomic/x86_64/iso/Fedora-Cloud_Atomic-$VERSION$COMPOSE-x86_64-CHECKSUM"
+
  #mock -r fedora-branched-compose-x86_64 --shell "livemedia-creator " || exit 1
 
 popd
@@ -194,7 +212,7 @@ popd
 # stage the composed tree to final locateion
 sg releng "mkdir /pub/alt/stage/$VERSION$COMPOSE/"
 sg releng "chmod 700 /pub/alt/stage/$VERSION$COMPOSE/"
-for type in Docker Workstation Server Cloud Cloud-Images Spins Live Images; do sg releng "rsync -avhH $FINALDEST/$VERSION/$type/ /pub/alt/stage/$VERSION$COMPOSE/$type/"; done
+for type in Docker Workstation Server Cloud Cloud_Atomic Cloud-Images Spins Live Images; do sg releng "rsync -avhH $FINALDEST/$VERSION/$type/ /pub/alt/stage/$VERSION$COMPOSE/$type/"; done
 #sg releng "chmod 755 /pub/alt/stage/$VERSION$COMPOSE/"
 
 echo "======= compose output for trac ======="
