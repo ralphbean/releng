@@ -145,18 +145,18 @@ done
 
 
 pushd $FINALDEST/$VERSION/
-sg releng "mkdir -p Images/armhfp Cloud-Images/i386/Images Cloud-Images/x86_64/Images Spins/i386 Spins/x86_64 Live/i386 Server/armhfp/Images Live/x86_64 Docker/x86_64 Workstation/armhfp/Images Workstation/x86_64/iso Workstation/i386/iso"
+sg releng "mkdir -p Images/armhfp Cloud_Images/i386/Images Cloud_Images/x86_64/Images Spins/i386 Spins/x86_64 Live/i386 Server/armhfp/Images Live/x86_64 Docker/x86_64 Workstation/armhfp/Images Workstation/x86_64/iso Workstation/i386/iso"
 popd
 
 
 USER=$(whoami)
 # stage images
 sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora*armhfp-$SHORTVERSION-$SHORTCOMPOSE-sda.raw.xz $FINALDEST/$VERSION/Images/armhfp/"
-sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Cloud*$VERSION-$DATE\.i386.raw.xz $FINALDEST/$VERSION/Cloud-Images/i386/Images/"
-sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Cloud*$VERSION-$DATE\.i386.qcow2 $FINALDEST/$VERSION/Cloud-Images/i386/Images/"
-sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Cloud*$VERSION-$DATE\.x86_64.raw.xz $FINALDEST/$VERSION/Cloud-Images/x86_64/Images/"
-sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Cloud*$VERSION-$DATE\.x86_64.qcow2 $FINALDEST/$VERSION/Cloud-Images/x86_64/Images/"
-sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Cloud*$VERSION-$DATE\.x86_64.*.ova $FINALDEST/$VERSION/Cloud-Images/x86_64/Images/"
+sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Cloud*$VERSION-$DATE\.i386.raw.xz $FINALDEST/$VERSION/Cloud_Images/i386/Images/"
+sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Cloud*$VERSION-$DATE\.i386.qcow2 $FINALDEST/$VERSION/Cloud_Images/i386/Images/"
+sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Cloud*$VERSION-$DATE\.x86_64.raw.xz $FINALDEST/$VERSION/Cloud_Images/x86_64/Images/"
+sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Cloud*$VERSION-$DATE\.x86_64.qcow2 $FINALDEST/$VERSION/Cloud_Images/x86_64/Images/"
+sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Cloud*$VERSION-$DATE\.x86_64.*.ova $FINALDEST/$VERSION/Cloud_Images/x86_64/Images/"
 sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Docker*-$VERSION-$DATE*tar.xz $FINALDEST/$VERSION/Docker/x86_64/"
 
 sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task*/*i686*$SHORTVERSION-$SHORTCOMPOSE.iso $FINALDEST/$VERSION/Spins/i386/"
@@ -185,8 +185,8 @@ for arch in i386 x86_64; do pushd $arch; sg releng "sha256sum --tag -b *iso>  Fe
 popd
 done
 
-pushd $FINALDEST/$VERSION/Cloud-Images
-for arch in i386 x86_64; do pushd $arch/Images; sg releng "sha256sum --tag -b *qcow2 *raw.xz *ova>  Fedora-Cloud-Images-$arch-$VERSION-CHECKSUM"; popd; done
+pushd $FINALDEST/$VERSION/Cloud_Images
+for arch in i386 x86_64; do pushd $arch/Images; sg releng "sha256sum --tag -b *qcow2 *raw.xz *ova>  Fedora-Cloud_Images-$arch-$VERSION-CHECKSUM"; popd; done
 popd
 
 pushd $FINALDEST/$VERSION/Workstation/armhfp/Images
@@ -212,7 +212,7 @@ popd
 # stage the composed tree to final locateion
 sg releng "mkdir /pub/alt/stage/$VERSION$COMPOSE/"
 sg releng "chmod 700 /pub/alt/stage/$VERSION$COMPOSE/"
-for type in Docker Workstation Server Cloud Cloud_Atomic Cloud-Images Spins Live Images; do sg releng "rsync -avhH $FINALDEST/$VERSION/$type/ /pub/alt/stage/$VERSION$COMPOSE/$type/"; done
+for type in Docker Workstation Server Cloud Cloud_Atomic Cloud_Images Spins Live Images; do sg releng "rsync -avhH $FINALDEST/$VERSION/$type/ /pub/alt/stage/$VERSION$COMPOSE/$type/"; done
 #sg releng "chmod 755 /pub/alt/stage/$VERSION$COMPOSE/"
 
 echo "======= compose output for trac ======="
