@@ -61,7 +61,7 @@ baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/$basearch/' > fedora-bleed.
  mock -r fedora-branched-compose-x86_64 --install rpm-ostree lorax || exit 1
  mock -r fedora-branched-compose-x86_64  --shell "if [ ! -d $ATOMICDEST ]; then ostree init --repo=$ATOMICDEST --mode=archive-z2;fi"
  mock -r fedora-branched-compose-x86_64 --shell "rpm-ostree compose tree --repo=$ATOMICDEST $ATOMIC/fedora-atomic-docker-host.json" || exit 1
- mock -r fedora-branched-compose-x86_64 --shell "mkdir -p $DESTDIR/$VERSION/Cloud_Atomic/x86_64/os/ $DESTDIR/$VERSION/Cloud_Atomic/x86_64/iso"
+ mock -r fedora-branched-compose-x86_64 --shell "mkdir -p $DESTDIR/$VERSION/Cloud_Atomic/x86_64/iso"
  mock -r fedora-branched-compose-x86_64 --shell "lorax --nomacboot -p Fedora -v $SHORTVERSION -r $SHORTCOMPOSE \
                                                  -s http://kojipkgs.fedoraproject.org/mash/branched/\$basearch/os/ \
                                                  -s http://kojipkgs.fedoraproject.org/mash/bleed/\$basearch/ \
