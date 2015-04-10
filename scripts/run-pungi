@@ -79,8 +79,8 @@ baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/$basearch/' > fedora-bleed.
                                                  --add-arch-template-var=ostree_osname=Fedora-Cloud_Atomic \
                                                  --add-arch-template-var=ostree_ref=fedora-atomic/f22/x86_64/docker-host \
                                                  $DESTDIR/$VERSION/Cloud_Atomic/x86_64/os/ " || exit 1
- mock -r fedora-branched-compose-x86_64 --shell "cp -l $DESTDIR/$VERSION/Cloud_Atomic/x86_64/os/images/boot.iso $DESTDIR/$VERSION/Cloud_Atomic/x86_64/iso/Fedora-Cloud_Atomic-x86_64-$VERSION.iso"
- mock -r fedora-branched-compose-x86_64 --shell "sha256sum -b --tags $DESTDIR/$VERSION/Cloud_Atomic/x86_64/iso/*iso >$DESTDIR/$VERSION/Cloud_Atomic/x86_64/iso/Fedora-Cloud_Atomic-$VERSION-x86_64-CHECKSUM"
+ mock -r fedora-branched-compose-x86_64 --shell "cp -l $DESTDIR/$VERSION/Cloud_Atomic/x86_64/os/images/boot.iso $DESTDIR/$VERSION/Cloud_Atomic/x86_64/iso/Fedora-Cloud_Atomic-x86_64-$VERSION.iso" || exit 1
+ mock -r fedora-branched-compose-x86_64 --shell "pushd $DESTDIR/$VERSION/Cloud_Atomic/x86_64/iso/ ;sha256sum -b --tags *iso >Fedora-Cloud_Atomic-$VERSION-x86_64-CHECKSUM; popd" || exit 1
 
  #mock -r fedora-branched-compose-x86_64 --shell "livemedia-creator " || exit 1
 
