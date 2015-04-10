@@ -55,7 +55,7 @@ sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora
 sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Cloud*$VERSION-$DATE\.x86_64.raw.xz $FINALDEST/Cloud-Images/x86_64/Images/"
 sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Cloud*$VERSION-$DATE\.x86_64.qcow2 $FINALDEST/Cloud-Images/x86_64/Images/"
 sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Cloud*$VERSION-$DATE\.x86_64.*.ova $FINALDEST/Cloud-Images/x86_64/Images/"
-sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Docker*-$VERSION-$DATE*tar.gz $FINALDEST//Docker/x86_64/"
+sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Docker*-$VERSION-$DATE*tar.xz $FINALDEST//Docker/x86_64/"
 
 
 
@@ -64,7 +64,7 @@ for arch in i386 x86_64; do pushd $arch/Images; sg releng "sha256sum --tag -b *q
 popd
 
 pushd $FINALDEST/Docker/x86_64
-sg releng "sha256sum --tag -b *tar.gz>  Fedora-Docker-x86_64-$VERSION-CHECKSUM"
+sg releng "sha256sum --tag -b *tar.xz>  Fedora-Docker-x86_64-$VERSION-CHECKSUM"
 popd
 
 
