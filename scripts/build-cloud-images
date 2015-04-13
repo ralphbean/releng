@@ -35,7 +35,7 @@ elif [ "$COMPOSE" == "updates" ]; then
 else
     url=http://compose-x86-01.phx2.fedoraproject.org/compose/$RELEASE$COMPOSE/$RELEASE/Cloud/\$arch/os/
     atomicurl=http://compose-x86-01.phx2.fedoraproject.org/compose/atomic/
-    REPOS="--repo=$url"
+    REPOS="--repo=$url --repo=https://kojipkgs.fedoraproject.org/mash/bleed/\$arch/"
 fi
 
 for spin in Base
