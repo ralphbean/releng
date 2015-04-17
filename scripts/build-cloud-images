@@ -49,6 +49,25 @@ do
     koji image-build Fedora-Cloud-$spin $RELEASE --distro Fedora-20 $TARGET  --kickstart=fedora-cloud-$lspin-$GITHASH.ks $url x86_64 i386 --format=qcow2 --format=raw-xz --release=$BUILD --scratch $REPOS --nowait --disk-size=3
 done
 
+for spin in Base-Vagrant
+do
+    declare -l lspin
+    lspin=$spin
+    kickstart=fedora-cloud-$lspin-$GITHASH.ks
+    ksflatten -c fedora-cloud-$lspin.ks -o $kickstart
+    echo "url --url=$url"|sed -e 's|$arch|$basearch|g' >> $kickstart
+    koji image-build Fedora-Cloud-$spin $RELEASE $TARGET $url x86_64 \
+         $REPOS \
+         --release=$BUILD \
+         --distro Fedora-20 \
+         --kickstart=fedora-cloud-$lspin-$GITHASH.ks \
+         --format=vagrant-libvirt \
+         --format=vagrant-virtualbox \
+         --scratch \
+         --nowait \
+         --disk-size=40
+done
+
 for spin in Atomic
 do
     declare -l lspin
@@ -76,11 +95,8 @@ do
          --release=$BUILD \
          --distro Fedora-20 \
          --kickstart=fedora-cloud-$lspin-$GITHASH.ks \
-         --format=qcow2 --format=raw-xz \
-         --format=vsphere-ova \
-         --format=rhevm-ova \
-         --ova-option vsphere_ova_format=vagrant-virtualbox \
-         --ova-option rhevm_ova_format=vagrant-libvirt \
+         --format=vagrant-virtualbox \
+         --format=vagrant-libvirt \
          --ova-option vagrant_sync_directory=/home/vagrant/sync \
          --scratch \
          --nowait \
