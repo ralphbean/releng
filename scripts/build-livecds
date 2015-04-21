@@ -33,7 +33,7 @@ do
    done
 done
 
-SPINS="Games Electronic_Lab Robotics Scientific_KDE"
+SPINS="Games Robotics Scientific_KDE"
 for spin in $SPINS
 do
     declare -l lspin
