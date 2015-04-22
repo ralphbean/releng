@@ -27,7 +27,7 @@ TOMAIL="devel@lists.fedoraproject.org test@lists.fedoraproject.org"
 SUBJECT='rawhide report: '$DATE' changes'
 FROM="Fedora Rawhide Report <rawhide@fedoraproject.org>"
 RSYNCPREFIX="sudo -u ftpsync"
-ATOMIC=$(mktemp -d /tmp/atomici.${DIST}.$DATE.XXXX)
+ATOMIC=$(mktemp -d /tmp/atomic.${DIST}.$DATE.XXXX)
 ATOMICREPO="/mnt/koji/mash/atomic/$BRANCHED/"
 ATOMICDEST="/pub/fedora/linux/atomic/$BRANCHED/"
 
