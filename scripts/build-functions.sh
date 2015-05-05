@@ -119,13 +119,9 @@ send_fedmsg done mash.complete
 
 log "finished mash"
 log "starting hardlink"
-# hardlink the noarch deltarpms between x86_64 and i386 
-if [[ "${DIST}" == "branched" ]]
-then
+# hardlink the noarch deltarpms between all arches
     $MOCK -r $MOCKCONFIG --uniqueext=$DATE --chroot "hardlink -v -c ${MASHDIR}/$BRANCHED$EXPANDARCH"
-else
-    $MOCK -r $MOCKCONFIG --uniqueext=$DATE --chroot "hardlink -v -c ${MASHDIR}/$BRANCHED$EXPANDARCH/*/os/drpms/"
-fi
+#    $MOCK -r $MOCKCONFIG --uniqueext=$DATE --chroot "hardlink -v -c ${MASHDIR}/$BRANCHED$EXPANDARCH/*/os/drpms/"
 log "finished hardlink"
 
 log "starting repodiff"
