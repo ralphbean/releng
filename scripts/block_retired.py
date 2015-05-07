@@ -157,16 +157,30 @@ def block_package(packages, branch="master", staging=False):
     if len(packages) == 0:
         return None
 
-    def run_koji(koji_params):
+    def run_koji(koji_params, output=False):
         url = PRODUCTION_KOJI if not staging else STAGING_KOJI
         koji_cmd = ["koji", "--server", url]
         cmd = koji_cmd + koji_params
         log.debug("Running: %s", " ".join(cmd))
-        return subprocess.check_call(cmd)
+        if output:
+            return subprocess.check_output(cmd)
+        else:
+            return subprocess.check_call(cmd)
 
     mapper = ReleaseMapper(staging=staging)
     tag = mapper.koji_tag(branch)
     epel_build_tag = mapper.epel_build_tag(branch)
+
+    # Due to race conditions, puppet:configs/system/owner-sync-pkgdb might not
+    # have added the package to the tag, e.g. for EPEL only packages. Therefore
+    # process only packages that are actually in the tag
+    for package in list(packages):
+        tags = run_koji(["list-tags", "--package", package],
+                        output=True).splitlines()
+        if tag not in tags:
+            packages.remove(package)
+    if not packages:
+        return None
 
     # Untag builds first due to koji/mash bug:
     # https://fedorahosted.org/koji/ticket/299
