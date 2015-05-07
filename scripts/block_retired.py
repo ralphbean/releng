@@ -70,14 +70,17 @@ class ReleaseMapper(object):
         return None
 
 
-def blocked_packages(branch="master", staging=False):
+def unblocked_packages(branch="master", staging=False):
+    """
+    Get a list of all unblocked pacakges in a branch.
+    """
     mapper = ReleaseMapper(staging=staging)
     tag = mapper.koji_tag(branch)
     url = PRODUCTION_KOJI if not staging else STAGING_KOJI
     kojisession = koji.ClientSession(url)
     pkglist = kojisession.listPackages(tagID=tag, inherited=True)
-    blocked = [p["package_name"] for p in pkglist if p.get("blocked")]
-    return blocked
+    unblocked = [p["package_name"] for p in pkglist if not p.get("blocked")]
+    return unblocked
 
 
 def get_retired_packages(branch="master", staging=False):
@@ -171,17 +174,6 @@ def block_package(packages, branch="master", staging=False):
     tag = mapper.koji_tag(branch)
     epel_build_tag = mapper.epel_build_tag(branch)
 
-    # Due to race conditions, puppet:configs/system/owner-sync-pkgdb might not
-    # have added the package to the tag, e.g. for EPEL only packages. Therefore
-    # process only packages that are actually in the tag
-    for package in list(packages):
-        tags = run_koji(["list-tags", "--package", package],
-                        output=True).splitlines()
-        if tag not in tags:
-            packages.remove(package)
-    if not packages:
-        return None
-
     # Untag builds first due to koji/mash bug:
     # https://fedorahosted.org/koji/ticket/299
     # FIXME: This introduces a theoretical race condition when a package is
@@ -230,11 +222,15 @@ def block_all_retired(branches=RETIRING_BRANCHES, staging=False):
             log.warning('%s not handled in staging..' % branch)
             continue
         retired = get_retired_packages(branch, staging)
-        blocked = blocked_packages(branch, staging)
-
         unblocked = []
+
+        # Check which packages are included in a tag but not blocked, this
+        # ensures that no packages not included in a tag are tried to be
+        # blocked. Packages might not be in the rawhide tag if they are retired
+        # too fast, e.g. because they are EPEL-only
+        allunblocked = unblocked_packages(branch, staging)
         for pkg in retired:
-            if pkg not in blocked:
+            if pkg in allunblocked:
                 unblocked.append(pkg)
 
         if unblocked:
