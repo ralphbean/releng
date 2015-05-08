@@ -153,22 +153,23 @@ def get_retirement_info(message):
     return None
 
 
+def run_koji(koji_params, output=False, staging=False):
+    url = PRODUCTION_KOJI if not staging else STAGING_KOJI
+    koji_cmd = ["koji", "--server", url]
+    cmd = koji_cmd + koji_params
+    log.debug("Running: %s", " ".join(cmd))
+    if output:
+        return subprocess.check_output(cmd)
+    else:
+        return subprocess.check_call(cmd)
+
+
 def block_package(packages, branch="master", staging=False):
     if isinstance(packages, basestring):
         packages = [packages]
 
     if len(packages) == 0:
         return None
-
-    def run_koji(koji_params, output=False):
-        url = PRODUCTION_KOJI if not staging else STAGING_KOJI
-        koji_cmd = ["koji", "--server", url]
-        cmd = koji_cmd + koji_params
-        log.debug("Running: %s", " ".join(cmd))
-        if output:
-            return subprocess.check_output(cmd)
-        else:
-            return subprocess.check_call(cmd)
 
     mapper = ReleaseMapper(staging=staging)
     tag = mapper.koji_tag(branch)
@@ -179,12 +180,12 @@ def block_package(packages, branch="master", staging=False):
     # FIXME: This introduces a theoretical race condition when a package is
     # built after all builds were untagged and before the package is blocked
     if epel_build_tag:
-        run_koji(["untag-build", "--all", tag] + packages)
+        run_koji(["untag-build", "--all", tag] + packages, staging=staging)
 
-    run_koji(["block-pkg", tag] + packages)
+    run_koji(["block-pkg", tag] + packages, staging=staging)
 
     if epel_build_tag:
-        run_koji(["unblock-pkg", epel_build_tag] + packages)
+        run_koji(["unblock-pkg", epel_build_tag] + packages, staging=staging)
 
 
 def handle_message(message, retiring_branches=RETIRING_BRANCHES,
