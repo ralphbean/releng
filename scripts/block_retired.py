@@ -310,7 +310,7 @@ def setup_logging(debug=False, mail=False):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser("Block retired packages")
+    parser = argparse.ArgumentParser(description="Block retired packages")
     parser.add_argument("--debug", default=False, action="store_true")
     parser.add_argument("packages", nargs="*", metavar="package",
                         help="Packages to block, default all retired packages")
