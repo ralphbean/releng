@@ -247,9 +247,11 @@ def block_all_retired(branches=RETIRING_BRANCHES, staging=False):
             if pkg in allunblocked:
                 unblocked.append(pkg)
 
-        if unblocked:
-            errors = block_package(unblocked, branch, staging=staging)
-            log.info("Blocked packages %s on %s", unblocked, branch)
+        # Block packages individually so that errors with one package does not
+        # stop the other packages to be blocked
+        for package in unblocked:
+            errors = block_package(package, branch, staging=staging)
+            log.info("Blocked %s on %s", package, branch)
             for error in errors:
                 log.error(error)
 
