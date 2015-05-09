@@ -70,16 +70,33 @@ class ReleaseMapper(object):
         return None
 
 
+def get_packages(tag, staging=False):
+    """
+    Get a list of all blocked and unblocked packages in a branch.
+    """
+    url = PRODUCTION_KOJI if not staging else STAGING_KOJI
+    kojisession = koji.ClientSession(url)
+    pkglist = kojisession.listPackages(tagID=tag, inherited=True)
+    blocked = []
+    unblocked = []
+
+    for p in pkglist:
+        pkgname = p["package_name"]
+        if p.get("blocked"):
+            blocked.append(pkgname)
+        else:
+            unblocked.append(pkgname)
+
+    return unblocked, blocked
+
+
 def unblocked_packages(branch="master", staging=False):
     """
     Get a list of all unblocked pacakges in a branch.
     """
     mapper = ReleaseMapper(staging=staging)
     tag = mapper.koji_tag(branch)
-    url = PRODUCTION_KOJI if not staging else STAGING_KOJI
-    kojisession = koji.ClientSession(url)
-    pkglist = kojisession.listPackages(tagID=tag, inherited=True)
-    unblocked = [p["package_name"] for p in pkglist if not p.get("blocked")]
+    unblocked, _ = get_packages(tag, staging)
     return unblocked
 
 
