@@ -153,15 +153,15 @@ def get_retirement_info(message):
     return None
 
 
-def run_koji(koji_params, output=False, staging=False):
+def run_koji(koji_params, staging=False):
     url = PRODUCTION_KOJI if not staging else STAGING_KOJI
     koji_cmd = ["koji", "--server", url]
     cmd = koji_cmd + koji_params
     log.debug("Running: %s", " ".join(cmd))
-    if output:
-        return subprocess.check_output(cmd)
-    else:
-        return subprocess.check_call(cmd)
+    process = subprocess.Popen(cmd, stderr=subprocess.PIPE,
+                               stdout=subprocess.PIPE)
+    stdout, stderr = process.communicate()
+    return process, stdout, stderr
 
 
 def block_package(packages, branch="master", staging=False):
@@ -175,17 +175,30 @@ def block_package(packages, branch="master", staging=False):
     tag = mapper.koji_tag(branch)
     epel_build_tag = mapper.epel_build_tag(branch)
 
+    errors = []
+
+    def catch_koji_errors(cmd):
+        process, stdout, stderr = run_koji(cmd, staging=staging)
+        if process.returncode != 0:
+            errors.append("{0} stdout: {1!r} stderr: {2!r}".format(cmd, stdout,
+                                                                   stderr))
+
     # Untag builds first due to koji/mash bug:
     # https://fedorahosted.org/koji/ticket/299
     # FIXME: This introduces a theoretical race condition when a package is
     # built after all builds were untagged and before the package is blocked
     if epel_build_tag:
-        run_koji(["untag-build", "--all", tag] + packages, staging=staging)
+        cmd = ["untag-build", "--all", tag] + packages
+        catch_koji_errors(cmd)
 
-    run_koji(["block-pkg", tag] + packages, staging=staging)
+    cmd = ["block-pkg", tag] + packages
+    catch_koji_errors(cmd)
 
     if epel_build_tag:
-        run_koji(["unblock-pkg", epel_build_tag] + packages, staging=staging)
+        cmd = ["unblock-pkg", epel_build_tag] + packages
+        catch_koji_errors(cmd)
+
+    return errors
 
 
 def handle_message(message, retiring_branches=RETIRING_BRANCHES,
@@ -235,8 +248,10 @@ def block_all_retired(branches=RETIRING_BRANCHES, staging=False):
                 unblocked.append(pkg)
 
         if unblocked:
+            errors = block_package(unblocked, branch, staging=staging)
             log.info("Blocked packages %s on %s", unblocked, branch)
-            block_package(unblocked, branch, staging=staging)
+            for error in errors:
+                log.error(error)
 
 
 def setup_logging(debug=False, mail=False):
