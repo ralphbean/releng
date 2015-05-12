@@ -357,8 +357,9 @@ class DepChecker(object):
         """ Return packages depending on packages built from SRPM ``srpmname``
             that are built from different SRPMS not specified in ``ignore``.
 
-            :param ignore: list of SRPMs of packages that will not be returned
-                as dependent packages.
+            :param ignore: list of binary package names that will not be
+                returned as dependent packages or considered as alternate
+                providers
             :type ignore: list() of str()
 
             :returns: OrderedDict dependent_package: list of requires only
@@ -413,7 +414,11 @@ class DepChecker(object):
             for pkg in self.yumbase.pkgSack.searchProvides(base_provide):
                 # FIXME: might miss broken dependencies in case the other
                 # provider depends on a to-be-removed package as well
-                if pkg.sourcerpm.rsplit('-', 2)[0] not in ignore:
+                if pkg.name in ignore:
+                    #sys.stderr.write("Ignoring provider package %s\n" %
+                    #                  pkg.name)
+                    pass
+                else:
                     break
             else:
                 for dependent_pkg in self.yumbase.pkgSack.searchRequires(
