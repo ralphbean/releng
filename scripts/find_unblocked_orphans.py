@@ -305,12 +305,17 @@ def unblocked_packages(packages, tagID=RAWHIDE_RELEASE["tag"]):
 
 
 class DepChecker(object):
-    def __init__(self, release):
+    def __init__(self, release, repo=None, source_repo=None):
         self._src_by_bin = None
         self._bin_by_src = None
         self.release = release
-        yumbase = setup_yum(repo=RELEASES[release]["repo"],
-                            source_repo=RELEASES[release]["source_repo"])
+        if repo is None:
+            repo = RELEASES[release]["repo"]
+
+        if source_repo is None:
+            source_repo = RELEASES[release]["source_repo"]
+
+        yumbase = setup_yum(repo=repo, source_repo=source_repo)
         self.yumbase = yumbase
         self.pkgdbinfo_queue = Queue()
         self.pkgdb_cache = "orphans-pkgdb-{}.pickle".format(release)
