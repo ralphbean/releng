@@ -724,11 +724,24 @@ def main():
         "--send", default=False, action="store_true",
         help="Actually send mail including Bcc addresses to mailing list"
     )
+    parser.add_argument("--source-repo", default=None,
+                        help="Source repo URL to use for depcheck")
+    parser.add_argument("--repo", default=None,
+                        help="Repo URL to use for depcheck")
+    parser.add_argument("--no-skip-blocked", default=True,
+                        dest="skipblocked", action="store_false",
+                        help="Do not skip blocked pkgs")
     parser.add_argument("--mailfrom", default="nobody@fedoraproject.org")
     parser.add_argument("failed", nargs="*",
                         help="Additional packages, e.g. FTBFS packages")
     args = parser.parse_args()
     failed = args.failed
+
+    if args.source_repo is not None:
+        RELEASES[args.release]["source_repo"] = args.source_repo
+
+    if args.repo is not None:
+        RELEASES[args.release]["repo"] = args.repo
 
     if args.skip_orphans:
         orphans = []
@@ -740,8 +753,11 @@ def main():
 
     sys.stderr.write('Getting builds from koji...')
     koji_tag = RELEASES[args.release]["tag"]
-    unblocked = unblocked_packages(sorted(list(set(list(orphans) + failed))),
-                                   tagID=koji_tag)
+    allpkgs = sorted(list(set(list(orphans) + failed)))
+    if args.skipblocked:
+        unblocked = unblocked_packages(allpkgs, tagID=koji_tag)
+    else:
+        unblocked = allpkgs
     sys.stderr.write('done\n')
 
     text = HEADER.format(RELEASES[args.release]["tag"].upper())
