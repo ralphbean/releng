@@ -100,7 +100,7 @@ do
          --ova-option vagrant_sync_directory=/home/vagrant/sync \
          --scratch \
          --nowait \
-         --disk-size=6
+         --disk-size=40
 done
 
 # Docker images
