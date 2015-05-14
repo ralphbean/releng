@@ -146,6 +146,12 @@ $MOCK -r $MOCKCONFIG --uniqueext=$DATE --shell "if [ ! -d $ATOMICREPO ]; then os
 $MOCK -r $MOCKCONFIG --uniqueext=$DATE --shell "git clone https://git.fedorahosted.org/git/fedora-atomic.git $ATOMIC && pushd $ATOMIC && git log -n 1 --pretty='%h: %ci - %s' && git checkout ${GIT_BRANCH}"
 $MOCK -r $MOCKCONFIG --uniqueext=$DATE --shell "cd $ATOMIC && sed -i -e 's|mirrorlist=.*$|baseurl=http://kojipkgs.fedoraproject.org/mash/${DIST}/x86_64/os/|g' fedora*repo"
 $MOCK -r $MOCKCONFIG --uniqueext=$DATE --shell "rpm-ostree compose tree --repo=$ATOMICREPO $ATOMIC/fedora-atomic-docker-host.json >$logdir/atomic"
+if [ "$BRANCHED" = "rawhide"]; then
+    # We're only generatic static deltas for rawhide.
+    REF="fedora-atomic/$BRANCHED/x86_64/docker-host"
+    $MOCK -r $MOCKCONFIG --uniqueext=$DATE --shell "ostree --repo=$ATOMICREPO rev-parse ${REF} && ostree --repo=$ATOMICREPO static-delta generate ${REF}"
+    # TODO: GPG sign it
+fi
 log "finished atomic tree creation"
 }
 
