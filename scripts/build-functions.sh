@@ -20,6 +20,9 @@ FROM="${ARCH} ${FROM}"
 RSYNCPREFIX=""
 }
 
+# set the Mockconfig to use for composing, all arches except ppc run on x86 boxes
+MOCKCONFIG="fedora-${DIST}-compose-i386"
+
 [ "$ARCH" == "ppc" ] && {
 MOCKCONFIG="fedora-${DIST}-compose-ppc64"
 

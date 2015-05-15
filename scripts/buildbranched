@@ -22,7 +22,6 @@ EXPANDARCH=""
 DEPOPTS="--treename F-$BRANCHED"
 MASHOPTS=""
 MOCK="/usr/bin/mock"
-MOCKCONFIG="fedora-${DIST}-compose-i386"
 TOMAIL="devel@lists.fedoraproject.org test@lists.fedoraproject.org"
 SUBJECT='F-'$BRANCHED' Branched report: '$DATE' changes'
 FROM="Fedora Branched Report <rawhide@fedoraproject.org>"

@@ -22,7 +22,6 @@ EXPANDARCH=""
 DEPOPTS=""
 MASHOPTS=""
 MOCK="/usr/bin/mock"
-MOCKCONFIG="fedora-${DIST}-compose-i386"
 TOMAIL="devel@lists.fedoraproject.org test@lists.fedoraproject.org"
 SUBJECT='rawhide report: '$DATE' changes'
 FROM="Fedora Rawhide Report <rawhide@fedoraproject.org>"
