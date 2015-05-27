@@ -29,7 +29,7 @@ do
          then BASEARCH=i386
          else BASEARCH=$ARCH
        fi
-    koji spin-livecd --scratch  --release $BUILD --noprogress Fedora-Live-$spin-$ARCH $RELEASE --nowait  --repo=http://infrastructure.fedoraproject.org/pub/fedora/linux/development/$VERSION/$BASEARCH/os/ --repo=http://kojipkgs.fedoraproject.org/mash/bleed/$BASEARCH/ $TARGET $ARCH fedora-livecd-$lspin-$GITHASH.ks
+    koji spin-livecd --scratch  --release $BUILD --noprogress Fedora-Live-$spin-$ARCH $RELEASE --nowait  --repo=http://infrastructure.fedoraproject.org/pub/fedora/linux/development/$VERSION/$BASEARCH/os/ --repo=http://kojipkgs.fedoraproject.org/mash/bleed/$BASEARCH/ $TARGET $ARCH fedora-live-$lspin-$GITHASH.ks
    done
 done
 
