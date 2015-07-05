@@ -15,8 +15,8 @@ import operator
 
 # Set some variables
 # Some of these could arguably be passed in as args.
-target = 'f22' # tag to tag into
-holdingtag = 'f22-ruby' # tag holding the rebuilds
+target = 'f23' # tag to tag into
+holdingtag = 'f23-rebuild' # tag holding the rebuilds
 newbuilds = {} # dict of packages that have a newer build attempt
 tasks = {} # dict of new build task info
 
@@ -104,7 +104,7 @@ for build in builds:
         taglist.append(build['nvr'])
         kojisession.tagBuildBypass(target, build)
         pkgcount += 1
-    if pkgcount == 100:
+    if pkgcount == 1000:
         print 'Tagging %s builds.' % pkgcount
         results = kojisession.multiCall()
         pkgcount = 0

@@ -18,11 +18,11 @@ import sys
 
 # Set some variables
 # Some of these could arguably be passed in as args.
-buildtag = 'f21-rebuild' # tag(s) to check
-target = 'f21'
-updates = 'f21-candidate'
+buildtag = 'f23-rebuild' # tag(s) to check
+target = 'f23'
+updates = 'f23-candidate'
 rawhide = 'rawhide' # Change to dist-f13 after we branch
-epoch = '2014-06-06 00:00:00.000000' # rebuild anything not built after this date
+epoch = '2015-06-16 00:00:00.000000' # rebuild anything not built after this date
 tobuild = {} # dict of owners to lists of packages needing to be built
 unbuilt = [] # raw list of unbuilt packages
 newbuilds = {}
@@ -32,6 +32,7 @@ kojihubs = [
 'http://koji.fedoraproject.org/kojihub',
 'http://s390.koji.fedoraproject.org/kojihub',
 'http://ppc.koji.fedoraproject.org/kojihub',
+'http://arm.koji.fedoraproject.org/kojihub',
 ]
 
 #'http://sparc.koji.fedoraproject.org/kojihub',
@@ -135,7 +136,7 @@ for owner in sorted(tobuild.keys()):
         print '<dd><a href="http://koji.fedoraproject.org/koji/packageinfo?packageID=%s">%s</a></dd>' % (pkg, pkg)
     print '</dl>'
 print '<p>The script that generated this page can be found at '
-print '<a href="https://fedorahosted.org/rel-eng/browser/scripts">https://fedorahosted.org/rel-eng/browser/scripts</a>.'
+print '<a href="https://pagure.io/releng/blob/master/f/scripts">https://pagure.io/releng/blob/master/f/scripts</a>.'
 print 'There you can also report bugs and RFEs.</p>'
 print '</body>'
 print '</html>'

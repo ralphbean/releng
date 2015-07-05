@@ -17,9 +17,9 @@ import datetime
 
 # Set some variables
 # Some of these could arguably be passed in as args.
-buildtag = 'f21-rebuild' # tag to check
-desttag = 'f21' # Tag where fixed builds go
-epoch = '2014-06-06 00:00:00.000000' # Date to check for failures from
+buildtag = 'f23-rebuild' # tag to check
+desttag = 'f23' # Tag where fixed builds go
+epoch = '2015-06-16 00:00:00.000000' # Date to check for failures from
 failures = {} # dict of owners to lists of packages that failed.
 failed = [] # raw list of failed packages
 
@@ -86,7 +86,7 @@ def get_failed_builds(kojisession, epoch, buildtag, desttag):
 
 if __name__ == '__main__':
     # Create a koji session
-    kojisession = koji.ClientSession('https://koji.fedoraproject.org/kojihub')
+    kojisession = koji.ClientSession('http://koji.fedoraproject.org/kojihub')
 
     failbuilds = get_failed_builds(kojisession, epoch, buildtag, desttag)
 
