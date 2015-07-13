@@ -689,18 +689,20 @@ def package_info(unblocked, dep_map, depchecker, orphans=None, failed=None,
                 sorted(stale_breaking))
 
     if failed:
-        info += "\nFTBFS" + release_text + ": " + " ".join(failed)
-        info += "\n"
+        ftbfs_label = "FTBFS" + release_text
+        info += wrap_and_format(ftbfs_label, failed)
+
         ftbfs_breaking_deps = [o for o in failed if
                                o in dep_map and dep_map[o]]
-        info += "FTBFS" + release_text + " (depended on): " + " ".join(
-            ftbfs_breaking_deps)
-        info += "\n\n"
+
+        info += wrap_and_format(ftbfs_label + " (depended on)",
+                                ftbfs_breaking_deps)
+
         ftbfs_not_breaking_deps = [o for o in failed if
                                    o not in dep_map or not dep_map[o]]
-        info += "FTBFS " + release_text + "(not depended on): " + " ".join(
-            ftbfs_not_breaking_deps)
-        info += "\n\n"
+
+        info += wrap_and_format(ftbfs_label + " (not depended on)",
+                                ftbfs_not_breaking_deps)
 
     if depchecker.not_in_repo:
         info += wrap_and_format("Not found in repo" + release_text,
