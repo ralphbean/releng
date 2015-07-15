@@ -10,7 +10,7 @@ DATE=$1
 ARCH=$2
 ENVIRONMENT=${3:-production}
 
-BRANCHED="22"
+BRANCHED="23"
 DIST=branched
 COMPSFILE="comps-f${BRANCHED}.xml"
 GIT_BRANCH="f${BRANCHED}"
