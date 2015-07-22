@@ -9,6 +9,7 @@ RELEASE=$1
 BUILD=$2
 VERSION=$3
 COMPOSE=$4
+KSEXTRAARGS=""
 
 GITHASH=$(git rev-parse --short HEAD)
 
@@ -29,9 +30,14 @@ if [ "$COMPOSE" == "nightly" ]; then
     REPOS="--repo=$url"
 elif [ "$COMPOSE" == "updates" ]; then
     url=http://infrastructure.fedoraproject.org/pub/fedora/linux/releases/$VERSION/Cloud/\$arch/os/
+    if [ "$VERSION" -gt "21" ]; then
+        # we moved where we put the cloud install tree in f22
+        url=http://infrastructure.fedoraproject.org/pub/alt/releases/$VERSION/Cloud/\$arch/os/
+    fi
     updatesurl=http://infrastructure.fedoraproject.org/pub/fedora/linux/updates/$VERSION/\$arch/
     atomicurl=http://kojipkgs.fedoraproject.org/mash/atomic/$VERSION/
     REPOS="--repo=$url --repo=$updatesurl"
+    KSEXTRAARGS="-v F21"
 else
     url=http://compose-x86-01.phx2.fedoraproject.org/compose/$RELEASE$COMPOSE/$RELEASE/Cloud/\$arch/os/
     atomicurl=http://compose-x86-01.phx2.fedoraproject.org/compose/atomic/
@@ -43,7 +49,7 @@ do
     declare -l lspin
     lspin=$spin
     kickstart=fedora-cloud-$lspin-$GITHASH.ks
-    ksflatten -c fedora-cloud-$lspin.ks -o $kickstart
+    ksflatten $KSEXTRAARGS -c fedora-cloud-$lspin.ks -o $kickstart
     echo "url --url=$url"|sed -e 's|$arch|$basearch|g' >> $kickstart
  #koji image-build fedora-cloud-$spin $VERSION --distro Fedora-20 $TARGET --ksurl=git://git.fedorahosted.org/git/spin-kickstarts.git?#$GITHASH --kickstart=fedora-cloud-$lspin.ks $url x86_64 i386 --format=qcow2 --format=raw --release=$VERSION --scratch --repo=$url --nowait --disk-size=3
     koji image-build Fedora-Cloud-$spin $RELEASE --distro Fedora-20 $TARGET  --kickstart=fedora-cloud-$lspin-$GITHASH.ks $url x86_64 i386 --format=qcow2 --format=raw-xz --release=$BUILD --scratch $REPOS --nowait --disk-size=3
@@ -54,7 +60,7 @@ do
     declare -l lspin
     lspin=$spin
     kickstart=fedora-cloud-$lspin-$GITHASH.ks
-    ksflatten -c fedora-cloud-$lspin.ks -o $kickstart
+    ksflatten $KSEXTRAARGS -c fedora-cloud-$lspin.ks -o $kickstart
     echo "url --url=$url"|sed -e 's|$arch|$basearch|g' >> $kickstart
     koji image-build Fedora-Cloud-$spin $RELEASE $TARGET $url x86_64 \
          $REPOS \
@@ -73,7 +79,7 @@ do
     declare -l lspin
     lspin=$spin
     kickstart=fedora-cloud-$lspin-$GITHASH.ks
-    ksflatten -c fedora-cloud-$lspin.ks -o $kickstart
+    ksflatten $KSEXTRAARGS -c fedora-cloud-$lspin.ks -o $kickstart
     echo "url --url=$url"|sed -e 's|$arch|$basearch|g' >> $kickstart
     sed -i -e "s|--url=\"http://kojipkgs.fedoraproject.org/mash/atomic/22/\"|--url=\"$atomicurl\"|g" $kickstart
 
@@ -86,7 +92,7 @@ do
     declare -l lspin
     lspin=$spin
     kickstart=fedora-cloud-$lspin-$GITHASH.ks
-    ksflatten -c fedora-cloud-$lspin.ks -o $kickstart
+    ksflatten $KSEXTRAARGS -c fedora-cloud-$lspin.ks -o $kickstart
     echo "url --url=$url"|sed -e 's|$arch|$basearch|g' >> $kickstart
     sed -i -e "s|--url=\"http://compose-x86-01.phx2.fedoraproject.org/compose/atomic/\"|--url=\"$atomicurl\"|g" $kickstart
 
@@ -109,7 +115,7 @@ do
     declare -l lspin
     lspin=$spin
     kickstart=fedora-docker-$lspin-$GITHASH.ks
-    ksflatten -c fedora-docker-$lspin.ks -o $kickstart
+    ksflatten $KSEXTRAARGS -c fedora-docker-$lspin.ks -o $kickstart
     echo "url --url=$url"|sed -e 's|$arch|$basearch|g' >> $kickstart
  #koji image-build fedora-cloud-$spin $VERSION --distro Fedora-20 $TARGET --ksurl=git://git.fedorahosted.org/git/spin-kickstarts.git?#$GITHASH --kickstart=fedora-cloud-$lspin.ks $url x86_64 i386 --format=qcow2 --format=raw --release=$VERSION --scratch --repo=$url --nowait --disk-size=3
     koji image-build Fedora-Docker-$spin $RELEASE --distro Fedora-20 $TARGET  --kickstart=fedora-docker-$lspin-$GITHASH.ks $url x86_64  --format=docker --release=$BUILD --scratch $REPOS --nowait --disk-size=3
