@@ -9,7 +9,7 @@ RELEASE=$1
 BUILD=$2
 VERSION=$3
 COMPOSE=$4
-KSEXTRAARGS=""
+KSEXTRAARGS="-v F21"
 
 GITHASH=$(git rev-parse --short HEAD)
 
