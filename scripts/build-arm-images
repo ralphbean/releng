@@ -8,6 +8,7 @@ ARCHES="armv7hl"
 RELEASE=$1
 BUILD=$2
 VERSION=$3
+KSEXTRAARGS="-v F21"
 
 if [ "$VERSION" == "rawhide" ]; then
 TARGET=rawhide
@@ -22,7 +23,7 @@ for spin in $SPINS
 do
     declare -l lspin
     lspin=$spin
-    ksflatten -c fedora-arm-$lspin.ks -o fedora-arm-$lspin-$GITHASH.ks >& /dev/null
+    ksflatten $KSEXTRAARGS -c fedora-arm-$lspin.ks -o fedora-arm-$lspin-$GITHASH.ks >& /dev/null
     for ARCH in $ARCHES
     do
        if [[ $ARCH == armv7hl ]]
