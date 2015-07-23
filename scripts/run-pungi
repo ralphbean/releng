@@ -53,12 +53,12 @@ pushd $ATOMIC
  echo '[fedora-bleed]
 name=fedora-bleed
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-22-$basearch
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-23-$basearch
 enabled=1
 baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/$basearch/' > fedora-bleed.repo
- sed -i -e 's|mirrorlist=https://mirrors.fedoraproject.org/metalink?repo=fedora-22&arch=$basearch|baseurl=http://kojipkgs.fedoraproject.org/mash/branched/$basearch/os/|g' fedora*repo
+ sed -i -e 's|mirrorlist=https://mirrors.fedoraproject.org/metalink?repo=fedora-23&arch=$basearch|baseurl=http://kojipkgs.fedoraproject.org/mash/branched/$basearch/os/|g' fedora*repo
  # make sure we add the bleed repo to the json file
- sed -i -e 's|\["fedora-22"\]|\["fedora-22", "fedora-bleed"\]|g' *json
+ sed -i -e 's|\["fedora-23"\]|\["fedora-23", "fedora-bleed"\]|g' *json
  mock -r fedora-branched-compose-x86_64 --init || exit 1
  mock -r fedora-branched-compose-x86_64 --install rpm-ostree lorax || exit 1
  mock -r fedora-branched-compose-x86_64  --shell "if [ ! -d $ATOMICDEST ]; then ostree init --repo=$ATOMICDEST --mode=archive-z2;fi"
@@ -74,10 +74,10 @@ baseurl=http://kojipkgs.fedoraproject.org/mash/bleed/$basearch/' > fedora-bleed.
                                                  --add-template /srv/pungi/spin-kickstarts/atomic-installer/lorax-configure-repo.tmpl \
                                                  --add-template-var=ostree_osname=fedora-atomic \
                                                  --add-arch-template-var=ostree_repo=http://compose-x86-01.phx2.fedoraproject.org/compose/atomic/ \
-                                                 --add-template-var=ostree_ref=fedora-atomic/f22/x86_64/docker-host \
+                                                 --add-template-var=ostree_ref=fedora-atomic/f23/x86_64/docker-host \
                                                  --add-arch-template /srv/pungi/spin-kickstarts/atomic-installer/lorax-embed-repo.tmpl \
                                                  --add-arch-template-var=ostree_osname=fedora-atomic \
-                                                 --add-arch-template-var=ostree_ref=fedora-atomic/f22/x86_64/docker-host \
+                                                 --add-arch-template-var=ostree_ref=fedora-atomic/f23/x86_64/docker-host \
                                                  $DESTDIR/$VERSION/Cloud_Atomic/x86_64/os/ " || exit 1
  mock -r fedora-branched-compose-x86_64 --shell "cp -l $DESTDIR/$VERSION/Cloud_Atomic/x86_64/os/images/boot.iso $DESTDIR/$VERSION/Cloud_Atomic/x86_64/iso/Fedora-Cloud_Atomic-x86_64-$VERSION.iso" || exit 1
  mock -r fedora-branched-compose-x86_64 --shell "pushd $DESTDIR/$VERSION/Cloud_Atomic/x86_64/iso/ ;sha256sum -b --tag *iso >Fedora-Cloud_Atomic-$VERSION-x86_64-CHECKSUM; popd" || exit 1
