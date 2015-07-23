@@ -18,7 +18,7 @@ fi
 
 GITHASH=$(git rev-parse --short HEAD)
 
-SPINS="Cinnamon Design_suite Games Jam_KDE KDE LXDE MATE_Compiz Robotics Scientific_KDE Security SoaS Workstation Xfce"
+SPINS="Cinnamon Design_suite KDE LXDE MATE_Compiz Robotics Scientific_KDE Security SoaS Workstation Xfce"
 for spin in $SPINS
 do
     declare -l lspin
