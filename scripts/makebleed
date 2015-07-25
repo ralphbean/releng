@@ -9,7 +9,7 @@ pushd $BLEEDDIR
 
 for pkg in $PKGS
 do
-  sg releng "koji download-build --key=8e1431d5 $pkg"
+  sg releng "koji download-build --key=34ec9cba $pkg"
 done
 
 sg releng "mv *src.rpm SRPMS/;mv *i686.rpm i386/ ; mv *x86_64.rpm x86_64/; mv *armv7hl.rpm armhfp/"
