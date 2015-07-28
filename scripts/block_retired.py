@@ -6,6 +6,7 @@ import argparse
 import datetime
 import getpass
 import logging
+import os
 import subprocess
 import time
 
@@ -24,6 +25,11 @@ STAGING_PKGDB = "https://admin.stg.fedoraproject.org/pkgdb"
 
 PRODUCTION_KOJI = "https://koji.fedoraproject.org/kojihub"
 STAGING_KOJI = "https://koji.stg.fedoraproject.org/kojihub"
+
+# Should probably set these from a koji config file
+SERVERCA = os.path.expanduser('~/.fedora-server-ca.cert')
+CLIENTCA = os.path.expanduser('~/.fedora-upload-ca.cert')
+CLIENTCERT = os.path.expanduser('~/.fedora.cert')
 
 
 class ReleaseMapper(object):
@@ -76,6 +82,7 @@ def get_packages(tag, staging=False):
     """
     url = PRODUCTION_KOJI if not staging else STAGING_KOJI
     kojisession = koji.ClientSession(url)
+    kojisession.ssl_login(CLIENTCERT, CLIENTCA, SERVERCA)
     pkglist = kojisession.listPackages(tagID=tag, inherited=True)
     blocked = []
     unblocked = []
