@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: GPL-2.0+
 
 import argparse
+import datetime
 import os
 import shutil
 import subprocess
@@ -64,6 +65,10 @@ if __name__ == "__main__":
         reason = args.reason
     elif args.orphan:
         reason = ORPHAN_REASON
+
+    date = datetime.datetime.now().strftime("%Y-%m-%d: ")
+    if not reason.startswith(date):
+        reason = date + reason
 
     if reason[-1] != "\n":
         reason += "\n"
