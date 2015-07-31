@@ -12,7 +12,7 @@ echogit
 [ -n "$ARCH" ] && {
 TREEPREFIX="/mnt/koji/tree"
 EXPANDARCH="-$ARCH"
-DEPOPTS="%{DEPOPTS} --nomail"
+DEPOPTS="${DEPOPTS} --nomail"
 MASHOPTS="-c /etc/mash/mash.$ARCH.conf"
 TOMAIL="secondary@lists.fedoraproject.org $ARCH@lists.fedoraproject.org"
 SUBJECT="${ARCH} ${SUBJECT}"
