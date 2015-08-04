@@ -17,14 +17,14 @@ import operator
 
 # Set some variables
 # Some of these could arguably be passed in as args.
-buildtag = 'f23' # tag to build from
+buildtag = 'f23-boost' # tag to build from
 targets = ['f23-candidate', 'rawhide', 'f23'] # tag to build from
 epoch = '2015-06-16 00:00:00.000000' # rebuild anything not built after this date
 user = 'Fedora Release Engineering <rel-eng@lists.fedoraproject.org>'
-comment = '- Rebuilt for https://fedoraproject.org/wiki/Fedora_23_Mass_Rebuild'
-workdir = os.path.expanduser('~/massbuild')
+comment = '- Rebuilt for https://fedoraproject.org/wiki/Changes/F23Boost159'
+workdir = os.path.expanduser('~/massbuild-boost')
 enviro = os.environ
-target = 'f23-rebuild'
+target = 'f23-boost'
 
 pkg_skip_list = ['shim', 'shim-signed', 'kernel', 'grub2']
 
@@ -67,39 +67,22 @@ def runmeoutput(cmd, action, pkg, env, cwd=workdir):
 kojisession = koji.ClientSession('http://koji.fedoraproject.org/kojihub')
 
 # Generate a list of packages to iterate over
-pkgs = kojisession.listPackages(buildtag, inherited=True)
+pkgs = ['0ad', 'CGAL', 'Coin3', 'Field3D', 'FlightCrew', 'FlightGear', 'FlightGear-Atlas', 'IQmol', 'LuxRender', 'Macaulay2', 'MyPasswordSafe', 'OpenImageIO', 'QuantLib', 'Shinobi', 'SimGear', 'SkyX', 'abiword', 'adobe-source-libraries', 'airinv', 'airrac', 'airtsp', 'akonadi', 'anyterm', 'apt-cacher-ng', 'aqsis', 'ardour', 'ardour2', 'ardour3', 'ardour4', 'asc', 'asio', 'assimp', 'autowrap', 'avogadro', 'barry', 'bastet', 'bibletime', 'blender', 'bookkeeper', 'boost-gdb-printers', 'calligra', 'cclive', 'cegui', 'ceph', 'clementine', 'clucene', 'codeblocks', 'collada-dom', 'compat-qpid-cpp', 'console-bridge', 'csdiff', 'csound', 'curlpp', 'cvc4', 'cyphesis', 'dans-gdal-scripts', 'davix', 'device-mapper-persistent-data', 'diet', 'dmlite', 'dmlite-plugins-s3', 'dolphin-connector', 'dyninst', 'easystroke', 'edb', 'ekiga', 'enblend', 'erlang-basho_metrics', 'exempi', 'fawkes', 'fgrun', 'fife', 'fityk', 'flowcanvas', 'freecad', 'fritzing', 'fts', 'fuse-encfs', 'galera', 'gappa', 'gazebo', 'gearmand', 'gecode', 'gfal2-plugin-xrootd', 'gfal2-python', 'glob2', 'glogg', 'glom', 'gnash', 'gnote', 'gnuradio', 'gource', 'gpick', 'gpsdrive', 'gqrx', 'gr-air-modes', 'gr-osmosdr', 'grfcodec', 'gromacs', 'guitarix', 'hamlib', 'highlight', 'hokuyoaist', 'hugin', 'inkscape', 'iwhd', 'k3d', 'kcm_systemd', 'kdenetwork-strigi-analyzers', 'kdepim', 'kdepimlibs', 'kdevelop', 'kdevplatform', 'kea', 'kf5-kactivities', 'kgraphviewer', 'kicad', 'kig', 'kmymoney', 'kpilot', 'kradio4', 'ktorrent', 'ladish', 'launchy', 'libabw', 'libcdr', 'libclaw', 'libcmis', 'libcutl', 'libe-book', 'libepubgen', 'libetonyek', 'libflatarray', 'libftdi', 'libgltf', 'libint2', 'libixion', 'libkindrv', 'libkni3', 'libkolabxml', 'libktorrent', 'liblas', 'libmspub', 'libmwaw', 'libodb-boost', 'libodfgen', 'libopenraw', 'libopkele', 'liborcus', 'liborigin2', 'libpagemaker', 'libpst', 'librecad', 'libreoffice', 'librevenge', 'librime', 'librvngabw', 'libvisio', 'libwps', 'libyui', 'libyui-bindings', 'libyui-gtk', 'libyui-ncurses', 'libyui-qt', 'licq', 'logstalgia', 'lrslib', 'luabind', 'lucene++', 'luminance-hdr', 'lv2-c++-tools', 'lv2-sorcer', 'lyx', 'mapnik', 'mariadb', 'mbox2eml', 'mdds', 'meson', 'mesos', 'milia', 'minion', 'mkvtoolnix', 'mlpack', 'mmseq', 'mongo-cxx-driver', 'mongodb', 'monotone', 'mrpt', 'ncbi-blast+', 'ncmpcpp', 'nemiver', 'nodejs-mapnik', 'nodejs-mapnik-vector-tile', 'normaliz', 'nss-gui', 'ogre', 'ompl', 'openms', 'openoffice.org-diafilter', 'openscad', 'orthanc', 'osm2pgsql', 'oyranos', 'paraview', 'pcl', 'pdfedit', 'pdns', 'pdns-recursor', 'percolator', 'permlib', 'pgRouting', 'pingus', 'plasma-desktop', 'plasma-workspace', 'player', 'plee-the-bear', 'poedit', 'pokerth', 'polybori', 'polymake', 'povray', 'psi4', 'ptlib', 'pulseview', 'pyexiv2', 'python-lmiwbem', 'python-tag', 'python-ufc', 'python-visual', 'qbittorrent', 'qpid-cpp', 'qpid-qmf', 'qt-gstreamer', 'rb_libtorrent', 'rcsslogplayer', 'rcssmonitor', 'rcssserver', 'rcssserver3d', 'resiprocate', 'rmol', 'rocs', 'rospack', 'scantailor', 'schroot', 'scidavis', 'scribus', 'scummvm-tools', 'sdcc', 'sdformat', 'seqan', 'sevmgr', 'shiny', 'sigil', 'sim', 'simcrs', 'simfqt', 'simspark', 'sinfo', 'slic3r', 'smesh', 'snapper', 'soci', 'sord', 'source-highlight', 'source-highlight-qt', 'spring', 'springlobby', 'srecord', 'stdair', 'stellarium', 'stp', 'supertux', 'swift', 'swig', 'swig2', 'sympol', 'syncevolution', 'synfig', 'tcpflow', 'thrift', 'tintii', 'tncfhh', 'tomahawk', 'trademgen', 'trafficserver', 'travelccm', 'uhd', 'umbrello', 'undertaker', 'urbanlightscape', 'urdfdom', 'urg', 'uwsgi', 'valyriatear', 'vdrift', 'vegastrike', 'vfrnav', 'vigra', 'vios-proxy', 'votca-tools', 'vsqlite++', 'vtk', 'websocketpp', 'wesnoth', 'widelands', 'writerperfect', 'wt', 'xboxdrv', 'xmlcopyeditor', 'xmms2', 'xsd', 'xylib', 'yadex', 'yaml-cpp', 'yoshimi', 'zookeeper', 'zorba']
+
 
 # reduce the list to those that are not blocked and sort by package name
-pkgs = sorted([pkg for pkg in pkgs if not pkg['blocked']],
-              key=operator.itemgetter('package_name'))
 
 print 'Checking %s packages...' % len(pkgs)
 
 # Loop over each package
 for pkg in pkgs:
-    name = pkg['package_name']
-    id = pkg['package_id']
+    name = pkg
 
     # some package we just dont want to ever rebuild
     if name in pkg_skip_list:
         print 'Skipping %s, package is explicitely skipped'
         continue
 
-    # Query to see if a build has already been attempted
-    # this version requires newer koji:
-    builds = kojisession.listBuilds(id, createdAfter=epoch)
-    newbuild = False
-    # Check the builds to make sure they were for the target we care about
-    for build in builds:
-        buildtarget = kojisession.getTaskInfo(build['task_id'],
-                                   request=True)['request'][1]
-        if buildtarget == target or buildtarget in targets:
-            # We've already got an attempt made, skip.
-            newbuild = True
-            break
-    if newbuild:
-        print 'Skipping %s, already attempted.' % name
-        continue
 
     # Check out git
     fedpkgcmd = ['fedpkg', 'clone', name]
