@@ -235,11 +235,11 @@ def main(opts):
             continue
         if root == []:
             continue
-        if root.endswith('debug'):
+        if root.find('debug'):
             continue
-        if root.endswith('drpms'):
+        if root.find('drpms'):
             continue
-        if root.endswith('SRPMS'):
+        if root.find('SRPMS'):
             sourcerepo.append(root)
         for name in files:
             if name.endswith('rpm') and not name.endswith('src.rpm'):
