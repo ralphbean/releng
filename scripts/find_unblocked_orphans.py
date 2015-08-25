@@ -114,7 +114,7 @@ FOOTER = """-- \nThe script creating this output is run and developed by Fedora
 Release Engineering. Please report issues at its trac instance:
 https://fedorahosted.org/rel-eng/
 The sources of this script can be found at:
-https://git.fedorahosted.org/cgit/releng/tree/scripts/find_unblocked_orphans.py
+https://pagure.io/releng/blob/master/f/scripts/find_unblocked_orphans.py
 """
 
 
