@@ -38,7 +38,7 @@ git pull --rebase
 
 mock -r fedora-$VERSION-compose-x86_64 --init || exit 1
 mock -r fedora-$VERSION-compose-x86_64 --install lorax rpm-ostree || exit 1
-mock -r fedora-$VERSION-compose-x86_64 --shell "mkdir -p ${DESTDIR}/Cloud_Atomic/x86_64/iso"
+mock -r fedora-$VERSION-compose-x86_64 --shell "mkdir -p ${DESTDIR}/Cloud_Atomic/x86_64/iso;; mkdir -p ${DESTDIR}/logs"
 mock -r fedora-$VERSION-compose-x86_64 --shell "lorax --nomacboot -p Fedora -v ${SHORTVERSION} -r ${SHORTCOMPOSE} \
                                                  -s http://infrastructure.fedoraproject.org/pub/fedora/linux/releases/$VERSION/Everything/x86_64/os/ \
                                                  -i fedora-productimg-atomic \
@@ -54,7 +54,7 @@ mock -r fedora-$VERSION-compose-x86_64 --shell "lorax --nomacboot -p Fedora -v $
                                                  --add-arch-template-var=ostree_ref=fedora-atomic/f${VERSION}/x86_64/docker-host \
                                                  --isfinal \
                                                  ${DESTDIR}/Cloud_Atomic/x86_64/os/ " || exit 1
-mock -r fedora-$VERSION-compose-x86_64 --shell "cp -l ${DESTDIR}/Cloud_Atomic/x86_64/os/images/boot.iso ${DESTDIR}/Cloud_Atomic/x86_64/iso/Fedora-Cloud_Atomic-x86_64-${VERSION}-${DATE}root.iso" || exit 1
+mock -r fedora-$VERSION-compose-x86_64 --shell "cp -l ${DESTDIR}/Cloud_Atomic/x86_64/os/images/boot.iso ${DESTDIR}/Cloud_Atomic/x86_64/iso/Fedora-Cloud_Atomic-x86_64-${VERSION}-${DATE}.iso" || exit 1
 mock -r fedora-$VERSION-compose-x86_64 --shell "pushd ${DESTDIR}/Cloud_Atomic/x86_64/iso/ ;sha256sum -b --tag *iso >Fedora-Cloud_Atomic-${VERSION}-x86_64-CHECKSUM; popd" || exit 1
 
 popd
