@@ -148,15 +148,13 @@ done
 
 
 pushd $FINALDEST/$VERSION/
-sg releng "mkdir -p Images/armhfp Cloud_Images/i386/Images Cloud_Images/x86_64/Images Spins/i386 Spins/x86_64 Live/i386 Server/armhfp/Images Live/x86_64 Docker/x86_64 Workstation/armhfp/Images Workstation/x86_64/iso Workstation/i386/iso"
+sg releng "mkdir -p Images/armhfp Cloud_Images/x86_64/Images Spins/i386 Spins/x86_64 Live/i386 Server/armhfp/Images Live/x86_64 Docker/x86_64 Workstation/armhfp/Images Workstation/x86_64/iso Workstation/i386/iso"
 popd
 
 
 USER=$(whoami)
 # stage images
 sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora*armhfp-$SHORTVERSION-$SHORTCOMPOSE-sda.raw.xz $FINALDEST/$VERSION/Images/armhfp/"
-sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Cloud*$VERSION-$DATE\.i386.raw.xz $FINALDEST/$VERSION/Cloud_Images/i386/Images/"
-sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Cloud*$VERSION-$DATE\.i386.qcow2 $FINALDEST/$VERSION/Cloud_Images/i386/Images/"
 sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Cloud*$VERSION-$DATE\.x86_64.raw.xz $FINALDEST/$VERSION/Cloud_Images/x86_64/Images/"
 sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Cloud*$VERSION-$DATE\.x86_64.qcow2 $FINALDEST/$VERSION/Cloud_Images/x86_64/Images/"
 sg releng "sudo /usr/bin/cp -l /mnt/fedora_koji/koji/scratch/$USER/task_*/Fedora-Cloud*$VERSION-$DATE\.x86_64.*.box $FINALDEST/$VERSION/Cloud_Images/x86_64/Images/"
@@ -191,7 +189,7 @@ popd
 done
 
 pushd $FINALDEST/$VERSION/Cloud_Images
-for arch in i386 x86_64; do pushd $arch/Images; sg releng "sha256sum --tag -b *qcow2 *raw.xz *box>  Fedora-Cloud_Images-$arch-$VERSION-CHECKSUM"; popd; done
+for arch in x86_64; do pushd $arch/Images; sg releng "sha256sum --tag -b *qcow2 *raw.xz *box>  Fedora-Cloud_Images-$arch-$VERSION-CHECKSUM"; popd; done
 popd
 
 pushd $FINALDEST/$VERSION/Workstation/armhfp/Images
