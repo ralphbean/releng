@@ -74,14 +74,20 @@ do
          --disk-size=40
 done
 
+set_ostree_kickstart() {
+    ks=$1
+    url=$2
+    sed -i -e "s|--url=[^ ]*|--url=\"${url}\"|g" ${ks}
+    sed -i -e "s|ostree remote add.*|ostree remote add --set=gpg-verify=false fedora-atomic '"${url}"'|g" ${ks}
+}
+
 for spin in Atomic
 do
     declare -l lspin
     lspin=$spin
     kickstart=fedora-cloud-$lspin-$GITHASH.ks
     ksflatten $KSEXTRAARGS -c fedora-cloud-$lspin.ks -o $kickstart
-    echo "url --url=$url"|sed -e 's|$arch|$basearch|g' >> $kickstart
-    sed -i -e "s|--url=[^ ]*|--url=\"$atomicurl\"|g" $kickstart
+    set_ostree_kickstart ${kickstart} ${atomicurl}
 
  #koji image-build fedora-cloud-$spin $VERSION --distro Fedora-20 $TARGET --ksurl=git://git.fedorahosted.org/git/spin-kickstarts.git?#$GITHASH --kickstart=fedora-cloud-$lspin.ks $url x86_64 i386 --format=qcow2 --format=raw --release=$VERSION --scratch --repo=$url --nowait --disk-size=3
     koji image-build Fedora-Cloud-$spin $RELEASE --distro Fedora-20 $TARGET  --kickstart=fedora-cloud-$lspin-$GITHASH.ks $url x86_64 --format=qcow2 --format=raw-xz --release=$BUILD --scratch --repo=$url --nowait --disk-size=6
@@ -93,8 +99,7 @@ do
     lspin=$spin
     kickstart=fedora-cloud-$lspin-$GITHASH.ks
     ksflatten $KSEXTRAARGS -c fedora-cloud-$lspin.ks -o $kickstart
-    echo "url --url=$url"|sed -e 's|$arch|$basearch|g' >> $kickstart
-    sed -i -e "s|--url=[^ ]*|--url=\"$atomicurl\"|g" $kickstart
+    set_ostree_kickstart ${kickstart} ${atomicurl}
 
     koji image-build Fedora-Cloud-$spin $RELEASE $TARGET $url x86_64 \
          $REPOS \
