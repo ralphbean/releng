@@ -38,7 +38,7 @@ git pull --rebase
 
 mock -r fedora-$VERSION-compose-x86_64 --init || exit 1
 mock -r fedora-$VERSION-compose-x86_64 --install lorax rpm-ostree || exit 1
-mock -r fedora-$VERSION-compose-x86_64 --shell "mkdir -p ${DESTDIR}/Cloud_Atomic/x86_64/iso;; mkdir -p ${DESTDIR}/logs"
+mock -r fedora-$VERSION-compose-x86_64 --shell "mkdir -p ${DESTDIR}/Cloud_Atomic/x86_64/iso; mkdir -p ${DESTDIR}/logs"
 mock -r fedora-$VERSION-compose-x86_64 --shell "lorax --nomacboot -p Fedora -v ${SHORTVERSION} -r ${SHORTCOMPOSE} \
                                                  -s http://infrastructure.fedoraproject.org/pub/fedora/linux/releases/$VERSION/Everything/x86_64/os/ \
                                                  -i fedora-productimg-atomic \
