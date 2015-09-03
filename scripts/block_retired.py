@@ -41,7 +41,8 @@ class ReleaseMapper(object):
 
         # git branchname, koji tag, epel build tag
         self.mapping = (
-            ("master", "f23", ""),
+            ("master", "f24", ""),
+            ("f23", "f23", ""),
             ("f22", "f22", ""),
             ("f21", "f21", ""),
             ("f20", "f20", ""),
