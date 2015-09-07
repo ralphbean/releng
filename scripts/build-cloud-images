@@ -52,7 +52,7 @@ do
     ksflatten $KSEXTRAARGS -c fedora-cloud-$lspin.ks -o $kickstart
     echo "url --url=$url"|sed -e 's|$arch|$basearch|g' >> $kickstart
  #koji image-build fedora-cloud-$spin $VERSION --distro Fedora-20 $TARGET --ksurl=git://git.fedorahosted.org/git/spin-kickstarts.git?#$GITHASH --kickstart=fedora-cloud-$lspin.ks $url x86_64 i386 --format=qcow2 --format=raw --release=$VERSION --scratch --repo=$url --nowait --disk-size=3
-    koji image-build Fedora-Cloud-$spin $RELEASE --distro Fedora-20 $TARGET  --kickstart=fedora-cloud-$lspin-$GITHASH.ks $url x86_64 --format=qcow2 --format=raw-xz --release=$BUILD --scratch $REPOS --nowait --disk-size=3
+    koji image-build Fedora-Cloud-$spin $RELEASE --distro Fedora-20 $TARGET  --kickstart=fedora-cloud-$lspin-$GITHASH.ks $url i386 x86_64 --format=qcow2 --format=raw-xz --release=$BUILD --scratch $REPOS --nowait --disk-size=3
 done
 
 for spin in Base-Vagrant
