@@ -51,14 +51,14 @@ logfile="${logdir}/build${DIST}.log"
 touch "${logfile}"
 function log()
 {
-    message="${1}"
+    local message="${1}"
     echo "$(date --utc) build${DIST}: ${message}" | tee -a "${logfile}" >&2
 }
 
 function send_fedmsg()
 {
-    log="${1}"
-    topic="${2}"
+    local log="${1}"
+    local topic="${2}"
     # Emit a message using bodhi's cert (since we should be running as "masher").
     echo "{\"log\": \"${log}\", \"branch\": \"$BRANCHED\", \"arch\": \"$ARCH\"}" | fedmsg-logger \
         --cert-prefix bodhi \
