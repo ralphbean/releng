@@ -13,7 +13,7 @@ FINALDEST=/mnt/fedora_koji/compose/$VERSION-$DATE/
 KICKSTARTS=/srv/pungi/spin-kickstarts/
 ATOMIC=/srv/pungi/fedora-atomic/
 ATOMICDEST=/srv/pungi/atomic/
-
+MIRRORDEST=/pub/alt/atomic/testing/$VERSION-$DATE/
 SHORTCOMPOSE=$(echo $COMPOSE|sed -e 's|_RC||g')
 SHORTVERSION=$VERSION
 [ -z "$COMPOSE" ] && {
@@ -101,8 +101,8 @@ popd
 
 
 # stage the composed tree to final locateion
-sg releng "mkdir /pub/alt/stage/$VERSION-$DATE/"
-sg releng "chmod 700 /pub/alt/stage/$VERSION-$DATE/"
-for type in Cloud_Atomic Docker Cloud-Images Cloud-Images-Untested; do sg releng "rsync -avhH $FINALDEST/$type/ /pub/alt/stage/$VERSION-$DATE/$type/"; done
-sg releng "chmod 755 /pub/alt/stage/$VERSION-$DATE/"
+sg releng "mkdir $MIRRORDEST"
+sg releng "chmod 700 $MIRRORDEST"
+for type in Cloud_Atomic Docker Cloud-Images Cloud-Images-Untested; do sg releng "rsync -avhH $FINALDEST/$type/ $MIRRORDEST/$type/"; done
+sg releng "chmod 755 $MIRRORDEST"
 
