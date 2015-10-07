@@ -47,15 +47,11 @@ COMPOSE_BASEDIR = "/mnt/fedora_koji/compose/"
 ATOMIC_EMAIL_SMTP = "localhost"
 ATOMIC_EMAIL_SENDER = "noreply@fedoraproject.org"
 
-# ATOMIC_EMAIL_RECIPIENTS = [
-#    "cloud@lists.fedoraproject.org",
-#    "rel-eng@lists.fedoraproject.org",
-#    "atomic-devel@projectatomic.io",
-#    "atomic-announce@projectatomic.io",
-# ]
-# FIXME - TESTING ONLY
 ATOMIC_EMAIL_RECIPIENTS = [
-    "maxamillion@fedoraproject.org",
+    "cloud@lists.fedoraproject.org",
+    "rel-eng@lists.fedoraproject.org",
+    "atomic-devel@projectatomic.io",
+    "atomic-announce@projectatomic.io",
 ]
 
 # Full path will be:
