@@ -145,10 +145,10 @@ def get_latest_successful_autocloud_test_info(
 
     if successful_atomic_vagrant:
         successful_autocloud_info["atomic_vagrant"] = {
-            "name": successful_atomic[0][u'msg'][u'image_name'],
+            "name": successful_atomic_vagrant[0][u'msg'][u'image_name'],
             "image_name":
-                successful_atomic[0][u'msg'][u'image_url'].split('/')[-1],
-            "image_url": successful_atomic[0][u'msg'][u'image_url'],
+                successful_atomic_vagrant[0][u'msgassert False'][u'image_url'].split('/')[-1],
+            "image_url": successful_atomic_vagrant[0][u'msg'][u'image_url'],
         }
 
     return successful_autocloud_info
