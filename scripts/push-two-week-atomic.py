@@ -82,6 +82,7 @@ SIGUL_SIGNED_TXT_PATH = "/tmp/signed"
 
 
 def get_latest_successful_autocloud_test_info(
+        release,
         datagrepper_url=DATAGREPPER_URL,
         delta=DATAGREPPER_DELTA,
         category=DATAGREPPER_CATEGORY):
@@ -119,6 +120,8 @@ def get_latest_successful_autocloud_test_info(
         s for s in autocloud_data
         if s[u'msg'][u'status'] == u'success'
         and s[u'msg'][u'image_name'] == u'Fedora-Cloud-Atomic'
+        and u'release' in s[u'msg'].keys()
+        and s[u'msg'][u'release'] == str(release)
         and not build_manually_marked_bad(
             s[u'msg'][u'image_url'].split('/')[-1]
         )
@@ -128,6 +131,8 @@ def get_latest_successful_autocloud_test_info(
         s for s in autocloud_data
         if s[u'msg'][u'status'] == u'success'
         and s[u'msg'][u'image_name'] == u'Fedora-Cloud-Atomic-Vagrant'
+        and u'release' in s[u'msg'].keys()
+        and s[u'msg'][u'release'] == str(release)
         and not build_manually_marked_bad(
             s[u'msg'][u'image_url'].split('/')[-1]
         )
@@ -141,6 +146,7 @@ def get_latest_successful_autocloud_test_info(
             "image_name":
                 successful_atomic[0][u'msg'][u'image_url'].split('/')[-1],
             "image_url": successful_atomic[0][u'msg'][u'image_url'],
+            "release": successful_atomic[0][u'msg'][u'release'],
         }
 
     if successful_atomic_vagrant:
@@ -149,6 +155,7 @@ def get_latest_successful_autocloud_test_info(
             "image_name":
                 successful_atomic_vagrant[0][u'msg'][u'image_url'].split('/')[-1],
             "image_url": successful_atomic_vagrant[0][u'msg'][u'image_url'],
+            "release": successful_atomic_vagrant[0][u'msg'][u'release'],
         }
 
     return successful_autocloud_info
@@ -246,23 +253,14 @@ def stage_atomic_release(
 
     """
 
-    # FIXME - right now the value of compose_id is actually just a date that
-    #         we have to glob search for, this should later just be a join
-    source_loc = glob.glob(
-        os.path.join(
-            compose_basedir,
-            "*{0}".format(compose_id)
-        )
-    )[0]
+    source_loc = os.path.join(compose_basedir, compose_id)
 
-    # FIXME - The --link-dest here is defined based on the stop-gap glob
-    #         and should be altered once this is fixed
     rsync_cmd = [
         'rsync -avhHP --delete-after',
         '--link-dest={0}'.format(
             os.path.join(
                 testing_basedir,
-                source_loc.split('/')[-1]
+                compose_id
             )
         ),
         "{0}/*".format(source_loc),
@@ -386,15 +384,25 @@ if __name__ == '__main__':
         "--key",
         help="signing key to use with sigul",
     )
+    parser.add_argument(
+        "-r",
+        "--release",
+        help="Fedora Release to target for release (Ex: 22, 23, 24, rawhide)",
+    )
     pargs = parser.parse_args()
 
     if not pargs.key:
         log.error("No key passed, see -h for help")
         sys.exit(1)
+    if not pargs.release:
+        log.error("No release arg passed, see -h for help")
+        sys.exit(1)
 
     log.info("Querying datagrepper for latest AutoCloud successful tests")
     # Acquire the latest successful builds from datagrepper
-    tested_autocloud_info = get_latest_successful_autocloud_test_info()
+    tested_autocloud_info = get_latest_successful_autocloud_test_info(
+        pargs.release
+    )
     log.info("Query to datagrepper complete")
     # If the dict is empty, there were no successful builds in the last two
     # weeks, error accordingly
@@ -410,28 +418,20 @@ if __name__ == '__main__':
 
     log.info("Extracting compose_id from the image_url")
     # FIXME - This is a stop-gap until we test against composes and can
-    #         identify this properly (also, this is ugly and I'm sorry)
+    #         identify this properly
     #
     #       For now this is just a date glob, it should be the compose_id once
     #       autocloud is compose based and references that in it's fedmsg
     #       information
-    compose_id = \
+    compose_id = "{0}-".format(pargs.release) + \
         tested_autocloud_info['atomic_qcow2']['image_url'].split(
             '/'
         )[-1].split('.')[0].split('-')[-1]
 
     log.info("Signing image metadata")
-    # FIXME - This is another place where we're having to glob to find the
-    #         actual path we want instead of being able to just join the path
-    #         using the compose_id
     sign_checksum_files(
         pargs.key,
-        glob.glob(
-            os.path.join(
-                COMPOSE_BASEDIR,
-                "*{0}".format(compose_id)
-            )
-        )[0]
+        os.path.join(COMPOSE_BASEDIR, compose_id),
     )
 
     log.info("Staging release content in /pub/alt/atomic/stable/")
