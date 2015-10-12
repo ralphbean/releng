@@ -80,6 +80,9 @@ DATAGREPPER_CATEGORY = "autocloud"
 
 SIGUL_SIGNED_TXT_PATH = "/tmp/signed"
 
+# Number of atomic testing composes to keep around
+ATOMIC_COMPOSE_PERSIST_LIMIT = 20
+
 
 def get_latest_successful_autocloud_test_info(
         release,
@@ -375,6 +378,31 @@ def fedmsg_publish(topic, msg):
         pass
 
 
+def prune_old_testing_composes(
+        prune_limit=ATOMIC_COMPOSE_PERSIST_LIMIT,
+        prune_base_dir=ATOMIC_TESTING_BASEDIR):
+    """
+    prune_old_testing_composes
+
+        Clean up old testing composes from /pub/alt/
+    """
+
+    prune_candidate_dirs = os.listdir(prune_base_dir)
+
+    for testing_dir in prune_candidate_dirs[prune_limit:]:
+        try:
+            os.rmdir(
+                os.path.join(prune_base_dir, testing_dir)
+            )
+        except OSError, e:
+            log.error(
+                "Error trying to remove directory: {0}\n{1}".format(
+                    testing_dir,
+                    e
+                )
+            )
+
+
 if __name__ == '__main__':
 
     # get args from command line
@@ -457,6 +485,9 @@ if __name__ == '__main__':
             for c_file in glob.glob(os.path.join(full_dir_path, "*CHECKSUM")):
                 email_filelist.append(c_file)
     send_atomic_announce_email(set(email_filelist))
+
+    log.info("Pruning old Atomic test composes")
+    prune_old_testing_composes()
 
     log.info("Two Week Atomic Release Complete!")
 
