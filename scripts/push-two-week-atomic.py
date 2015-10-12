@@ -391,7 +391,7 @@ def prune_old_testing_composes(
 
     for testing_dir in prune_candidate_dirs[prune_limit:]:
         try:
-            os.rmdir(
+            os.removedirs(
                 os.path.join(prune_base_dir, testing_dir)
             )
         except OSError, e:
