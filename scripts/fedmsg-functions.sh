@@ -27,7 +27,6 @@ function send_fedmsg()
     dist="${2}"
     topic="${3}"
 
-    # Emit a message using bodhi's cert (since we should be running as "masher").
     printf ${jsoninput} | fedmsg-logger \
         --cert-prefix ${FEDMSG_CERTPREFIX} \
         --modname ${FEDMSG_MODNAME} \
