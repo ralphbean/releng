@@ -119,7 +119,9 @@ def get_latest_successful_autocloud_test_info(
             params=dict(page=rpage, **request_params)
         ).json()[u'raw_messages']
 
-    successful_atomic = [
+    # FIXME - I would like to find a good way to extract the types from the
+    #         datagrepper query instead of specifying each artifact
+    atomic_qcow2 = [
         s for s in autocloud_data
         if s[u'msg'][u'status'] == u'success'
         and s[u'msg'][u'image_name'] == u'Fedora-Cloud-Atomic'
@@ -130,10 +132,10 @@ def get_latest_successful_autocloud_test_info(
         )
     ]
 
-    successful_atomic_vagrant = [
+    atomic_vagrant_libvirt = [
         s for s in autocloud_data
         if s[u'msg'][u'status'] == u'success'
-        and s[u'msg'][u'image_name'] == u'Fedora-Cloud-Atomic-Vagrant'
+        and s[u'msg'][u'image_name'] == u'Fedora-Cloud-Atomic-Vagrant-Libvirt'
         and u'release' in s[u'msg'].keys()
         and s[u'msg'][u'release'] == str(release)
         and not build_manually_marked_bad(
@@ -141,27 +143,73 @@ def get_latest_successful_autocloud_test_info(
         )
     ]
 
-    successful_autocloud_info = {}
+    atomic_vagrant_vbox = [
+        s for s in autocloud_data
+        if s[u'msg'][u'status'] == u'success'
+        and s[u'msg'][u'image_name'] == u'Fedora-Cloud-Atomic-Vagrant-Virtualbox'
+        and u'release' in s[u'msg'].keys()
+        and s[u'msg'][u'release'] == str(release)
+        and not build_manually_marked_bad(
+            s[u'msg'][u'image_url'].split('/')[-1]
+        )
+    ]
 
-    if successful_atomic:
-        successful_autocloud_info["atomic_qcow2"] = {
-            "name": successful_atomic[0][u'msg'][u'image_name'],
+    autocloud_info = {}
+
+    if atomic_qcow2:
+        autocloud_info["atomic_qcow2"] = {
+            "name":
+                atomic_qcow2[0][u'msg'][u'image_name'],
             "image_name":
-                successful_atomic[0][u'msg'][u'image_url'].split('/')[-1],
-            "image_url": successful_atomic[0][u'msg'][u'image_url'],
-            "release": successful_atomic[0][u'msg'][u'release'],
+                atomic_qcow2[0][u'msg'][u'image_url'].split('/')[-1],
+            "image_url":
+                atomic_qcow2[0][u'msg'][u'image_url'],
+            "release":
+                atomic_qcow2[0][u'msg'][u'release'],
         }
 
-    if successful_atomic_vagrant:
-        successful_autocloud_info["atomic_vagrant"] = {
-            "name": successful_atomic_vagrant[0][u'msg'][u'image_name'],
+        # FIXME - This is a bit of a hack right now, but the raw image is what
+        #         the qcow2 is made of so only qcow2 is tested and infers the
+        #         success of both qcow2 and raw.xz
+        autocloud_info["atomic_raw"] = {
+            "name":
+                atomic_qcow2[0][u'msg'][u'image_name'] + '-Raw',
             "image_name":
-                successful_atomic_vagrant[0][u'msg'][u'image_url'].split('/')[-1],
-            "image_url": successful_atomic_vagrant[0][u'msg'][u'image_url'],
-            "release": successful_atomic_vagrant[0][u'msg'][u'release'],
+                atomic_qcow2[0][u'msg'][u'image_url'].split('/')[-1].replace(
+                    "qcow2",
+                    "raw.xz"
+                ),
+            "image_url":
+                atomic_qcow2[0][u'msg'][u'image_url'],
+            "release":
+                atomic_qcow2[0][u'msg'][u'release'],
         }
 
-    return successful_autocloud_info
+    if atomic_vagrant_libvirt:
+        autocloud_info["atomic_vagrant_libvirt"] = {
+            "name":
+                atomic_vagrant_libvirt[0][u'msg'][u'image_name'],
+            "image_name":
+                atomic_vagrant_libvirt[0][u'msg'][u'image_url'].split('/')[-1],
+            "image_url":
+                atomic_vagrant_libvirt[0][u'msg'][u'image_url'],
+            "release":
+                atomic_vagrant_libvirt[0][u'msg'][u'release'],
+        }
+
+    if atomic_vagrant_vbox:
+        autocloud_info["atomic_vagrant_virtualbox"] = {
+            "name":
+                atomic_vagrant_vbox[0][u'msg'][u'image_name'],
+            "image_name":
+                atomic_vagrant_vbox[0][u'msg'][u'image_url'].split('/')[-1],
+            "image_url":
+                atomic_vagrant_vbox[0][u'msg'][u'image_url'],
+            "release":
+                atomic_vagrant_vbox[0][u'msg'][u'release'],
+        }
+
+    return autocloud_info
 
 
 def build_manually_marked_bad(build_id, bad_builds=MARK_ATOMIC_BAD_BUILDS):
