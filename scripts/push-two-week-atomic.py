@@ -180,7 +180,10 @@ def get_latest_successful_autocloud_test_info(
                     "raw.xz"
                 ),
             "image_url":
-                atomic_qcow2[0][u'msg'][u'image_url'],
+                atomic_qcow2[0][u'msg'][u'image_url'].replace(
+                    "qcow2",
+                    "raw.xz"
+                ),
             "release":
                 atomic_qcow2[0][u'msg'][u'release'],
         }
