@@ -75,8 +75,20 @@ Then
     $ cd /var/cache/sigul
     $ sudo -u masher bodhi-push --releases '22 21 5 6 7' --username <username>
 
-Sign the packages.
-------------------
+Pushing Stable updates during freeze
+------------------------------------
+
+During feezes we need to push to stable builds included in the compose.  QA
+will file a ticket with the nvrs to push
+
+::
+
+    $ cd /var/cache/sigul
+    $ sudo -u masher bodhi-push --builds '<nvr1> <nvr2> ...' --username <username>
+
+
+Sign the packages
+-----------------
 
 * Sign builds using scripts/sigulsign_unsigned.py from releng git repo
 
