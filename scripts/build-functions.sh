@@ -65,11 +65,14 @@ FEDMSG_CERTPREFIX="bodhi"
 log "started"
 send_fedmsg ${fedmsg_json_start} ${DIST} start
 
-log "blocking retired packages"
-if [ "$ENVIRONMENT" == "production" ]; then
-    ./scripts/block_retired.py
-else
-    ./scripts/block_retired.py  --staging
+# Block pkgs only when running for primary
+if [[ -z "${ARCH}" ]]; then
+    log "blocking retired packages"
+    if [ "$ENVIRONMENT" == "production" ]; then
+        ./scripts/block_retired.py
+    else
+        ./scripts/block_retired.py  --staging
+    fi
 fi
 
 
