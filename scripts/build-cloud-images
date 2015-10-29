@@ -78,7 +78,6 @@ set_ostree_kickstart() {
     local ks=$1
     local url=$2
     sed -i -e "s|--url=[^ ]*|--url=\"${url}\"|g" ${ks}
-    sed -i -e "s|ostree remote add.*|ostree remote add --set=gpg-verify=false fedora-atomic '"${url}"'|g" ${ks}
 }
 
 for spin in Atomic
