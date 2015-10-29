@@ -17,7 +17,8 @@ ORPHAN_DEPENDENT_REASON = """Retired because it depends on {package}, which was
 retired, because it was orphaned for more than six weeks.
 """
 
-ORPHAN_NOT_BUILT = """Retired orphaned package, because it was not built."""
+ORPHAN_NOT_FOUND = """Retired orphaned package, because it was not built or
+published."""
 
 
 def retire(pkg, branch, reason, dryrun=False):
@@ -54,7 +55,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--orphan-dependent", default=None,
         help="Use reason for package depending on orphaned package")
-    parser.add_argument("--unbuilt-orphan", default=False, action="store_true",
+    parser.add_argument("--notfound-orphan", default=False,
+                        action="store_true",
                         help="Use reason for unbuilt orphaned package")
     parser.add_argument("pkg", nargs="+")
     args = parser.parse_args()
@@ -68,8 +70,8 @@ if __name__ == "__main__":
         reason = ORPHAN_REASON
     elif args.orphan_dependent:
         reason = ORPHAN_DEPENDENT_REASON.format(package=args.orphan_dependent)
-    elif args.unbuilt_orphan:
-        reason = ORPHAN_NOT_BUILT
+    elif args.notfound_orphan:
+        reason = ORPHAN_NOT_FOUND
     else:
         reasonfile = tempfile.NamedTemporaryFile(delete=False)
         filename = reasonfile.name
