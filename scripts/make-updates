@@ -1,5 +1,6 @@
 #!/bin/bash
 
+umask 002
 
 # Copyright (C) 2015 Red Hat, Inc.
 # SPDX-License-Identifier:      GPL-2.0+
