@@ -17,14 +17,13 @@ aren't the only ones that can fix a problem.
 
 The Community
 =============
-The SOP section of the wiki is left in the public because it is our hope that
-others in the community will add common problems, fix our steps and just in
-general look over what we're doing and help us when we're doing something
-stupid. This is a wiki and in true wiki fashion we encourage anyone interested
-to go over our processes with a fine tooth comb. It'll make us better and
-we'll probably learn something in the process. General rule, make change first,
-ask questions later.  Many people are watching the wiki so if something is not
-right, we'll fix it or revert the page.
+The SOP section is left in the public because it is our hope that others in the
+community will add common problems, fix our steps and just in general look over
+what we're doing and help us when we're doing something stupid. We encourage
+anyone interested to go over our processes with a fine tooth comb. It'll make
+us better and we'll probably learn something in the process. Therefore please
+open a `pull request`_ to suggest improvements.
+
 
 Procedures
 ==========
@@ -68,3 +67,4 @@ Standard Operating Procedures
     sop_update_critpath
     sop_updating_comps
 
+.. _pull request: https://pagure.io/releng/pull-requests

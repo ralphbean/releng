@@ -52,14 +52,15 @@ the remaining `packages are retired`_
 
 Bugs
 ^^^^
-This procedure probably leaves open bugs for the d packages behind. It is not
-within the scope of releng to take care of these. If bugs are closed, only bugs
-targeted at Rawhide should be affected, since other branches might still be
-maintained.
+This procedure probably leaves open bugs for the retired packages behind. It is
+not within the scope of release engineering to take care of these. If bugs are
+closed, only bugs targeted at Rawhide should be affected, since other branches
+might still be maintained.
 
 Verification
 ============
-To verify that the packages were blocked correctly we can use the ``latest-pk`` ``koji`` action.
+To verify that the packages were blocked correctly we can use the
+``latest-pkg`` ``koji`` action.
 
 ::
 

@@ -39,7 +39,7 @@ Team Composition
 
 * `Dennis Gilmore (dgilmore) <https://fedoraproject.org/wiki/User:Ausil>`_ (Lead)
 * `Kevin Fenzi (nirik) <https://fedoraproject.org/wiki/User:kevin>`_
-* `Till Mass (tyll) <https://fedoraproject.org/wiki/User:till>`_
+* `Till Maas (tyll) <https://fedoraproject.org/wiki/User:till>`_
 * `Jon Disnard (masta) <https://fedoraproject.org/wiki/User:parasense>`_
 * `Dan Horák (sharkcz) <https://fedoraproject.org/wiki/User:sharkcz>`_ (secondary arches)
 * `Peter Robinson (pbrobinson) <https://fedoraproject.org/wiki/User:pbrobinson>`_
@@ -136,7 +136,7 @@ Meeting Minutes
 ---------------
 Minutes are posted to the rel-eng mailing list. They are also available at the
 `Meetbot team page for releng
-<http://meetbot.fedoraproject.org/sresults/?group_id=releng&type=team>`_
+<https://meetbot.fedoraproject.org/sresults/?group_id=releng&type=team>`_
 
 There are also `historical Meeting Minutes for 2007-04-16 to 2009-05-04
 <https://fedoraproject.org/wiki/ReleaseEngineering/Meetings>`_.
