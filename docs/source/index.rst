@@ -39,7 +39,7 @@ Team Composition
 
 * `Dennis Gilmore (dgilmore) <https://fedoraproject.org/wiki/User:Ausil>`_ (Lead)
 * `Kevin Fenzi (nirik) <https://fedoraproject.org/wiki/User:kevin>`_
-* `Till Mass (tyll) <https://fedoraproject.org/wiki/User:till>`_
+* `Till Maas (tyll) <https://fedoraproject.org/wiki/User:till>`_
 * `Jon Disnard (masta) <https://fedoraproject.org/wiki/User:parasense>`_
 * `Dan Horák (sharkcz) <https://fedoraproject.org/wiki/User:sharkcz>`_ (secondary arches)
 * `Peter Robinson (pbrobinson) <https://fedoraproject.org/wiki/User:pbrobinson>`_
