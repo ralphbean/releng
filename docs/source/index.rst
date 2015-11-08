@@ -136,7 +136,7 @@ Meeting Minutes
 ---------------
 Minutes are posted to the rel-eng mailing list. They are also available at the
 `Meetbot team page for releng
-<http://meetbot.fedoraproject.org/sresults/?group_id=releng&type=team>`_
+<https://meetbot.fedoraproject.org/sresults/?group_id=releng&type=team>`_
 
 There are also `historical Meeting Minutes for 2007-04-16 to 2009-05-04
 <https://fedoraproject.org/wiki/ReleaseEngineering/Meetings>`_.
