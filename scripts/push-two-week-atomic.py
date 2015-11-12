@@ -84,6 +84,17 @@ SIGUL_SIGNED_TXT_PATH = "/tmp/signed"
 ATOMIC_COMPOSE_PERSIST_LIMIT = 20
 
 
+def construct_url(msg):
+    """ Construct the final URL from koji URL.
+
+    Takes an autocloud fedmsg message and returns the image name and final url.
+    """
+    dest_dir = ATOMIC_STABLE_DESTINATION + 'Cloud-Images/x86_64/Images/'
+    image_name = msg[u'msg'][u'image_url'].split('/')[-1]
+    image_url = dest_dir + image_name
+    return image_name, image_url
+
+
 def get_latest_successful_autocloud_test_info(
         release,
         datagrepper_url=DATAGREPPER_URL,
@@ -157,59 +168,40 @@ def get_latest_successful_autocloud_test_info(
     autocloud_info = {}
 
     if atomic_qcow2:
+        image_name, image_url = construct_url(atomic_qcow2[0])
         autocloud_info["atomic_qcow2"] = {
-            "name":
-                atomic_qcow2[0][u'msg'][u'image_name'],
-            "image_name":
-                atomic_qcow2[0][u'msg'][u'image_url'].split('/')[-1],
-            "image_url":
-                atomic_qcow2[0][u'msg'][u'image_url'],
-            "release":
-                atomic_qcow2[0][u'msg'][u'release'],
+            "name": atomic_qcow2[0][u'msg'][u'image_name'],
+            "release": atomic_qcow2[0][u'msg'][u'release'],
+            "image_name": image_name,
+            "image_url": image_url,
         }
 
         # FIXME - This is a bit of a hack right now, but the raw image is what
         #         the qcow2 is made of so only qcow2 is tested and infers the
         #         success of both qcow2 and raw.xz
         autocloud_info["atomic_raw"] = {
-            "name":
-                atomic_qcow2[0][u'msg'][u'image_name'] + '-Raw',
-            "image_name":
-                atomic_qcow2[0][u'msg'][u'image_url'].split('/')[-1].replace(
-                    "qcow2",
-                    "raw.xz"
-                ),
-            "image_url":
-                atomic_qcow2[0][u'msg'][u'image_url'].replace(
-                    "qcow2",
-                    "raw.xz"
-                ),
-            "release":
-                atomic_qcow2[0][u'msg'][u'release'],
+            "name": atomic_qcow2[0][u'msg'][u'image_name'] + '-Raw',
+            "release": atomic_qcow2[0][u'msg'][u'release'],
+            "image_name": image_name.replace('qcow2', 'raw.xz'),    # HACK
+            "image_url": image_url.replace('qcow2', 'raw.xz'),      # HACK
         }
 
     if atomic_vagrant_libvirt:
+        image_name, image_url = construct_url(atomic_vagrant_libvirt[0])
         autocloud_info["atomic_vagrant_libvirt"] = {
-            "name":
-                atomic_vagrant_libvirt[0][u'msg'][u'image_name'],
-            "image_name":
-                atomic_vagrant_libvirt[0][u'msg'][u'image_url'].split('/')[-1],
-            "image_url":
-                atomic_vagrant_libvirt[0][u'msg'][u'image_url'],
-            "release":
-                atomic_vagrant_libvirt[0][u'msg'][u'release'],
+            "name": atomic_vagrant_libvirt[0][u'msg'][u'image_name'],
+            "release": atomic_vagrant_libvirt[0][u'msg'][u'release'],
+            "image_name": image_name,
+            "image_url": image_url,
         }
 
     if atomic_vagrant_vbox:
+        image_name, image_url = construct_url(atomic_vagrant_vbox[0])
         autocloud_info["atomic_vagrant_virtualbox"] = {
-            "name":
-                atomic_vagrant_vbox[0][u'msg'][u'image_name'],
-            "image_name":
-                atomic_vagrant_vbox[0][u'msg'][u'image_url'].split('/')[-1],
-            "image_url":
-                atomic_vagrant_vbox[0][u'msg'][u'image_url'],
-            "release":
-                atomic_vagrant_vbox[0][u'msg'][u'release'],
+            "name": atomic_vagrant_vbox[0][u'msg'][u'image_name'],
+            "release": atomic_vagrant_vbox[0][u'msg'][u'release'],
+            "image_name": image_name,
+            "image_url": image_url,
         }
 
     return autocloud_info
